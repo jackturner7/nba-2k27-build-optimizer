@@ -20,9 +20,20 @@ builder's restrictions — not simply the highest one.
 > and takeover thresholds; the attribute list; the 5'9"–7'4" builder height
 > range; and the *direction* of each body setting's effect on caps.
 >
-> **Still invented:** attribute **cap magnitudes**, **cost curves**, the **build
-> point budget**, the badge **token-earning formula**, the per-discipline **slot
-> split**, cap breaker counts, and badge boost slots.
+> **Read off the real builder** (NBA 2K HQ app): all 21 attribute **caps** for one
+> body — PF 6'11" / 210 lb / 6'11", which the app names **Bucket Chaser** — and
+> that body's full **cap breaker table**: five slots per attribute, each worth a
+> different amount, gains diminishing down the row, seven attributes locked out
+> entirely. Having one real table made it possible to score the linear cap model
+> for the first time: **12.9 points mean absolute error**, biased high on 19 of 21
+> attributes. It was not refit — one body cannot calibrate four coefficients per
+> attribute — so every *other* body still carries that error, and the UI says so
+> per body.
+>
+> **Still invented:** attribute **cap magnitudes for every other body**, **cost
+> curves**, the **build point budget**, the badge **token-earning formula**, the
+> per-discipline **slot split**, **how many cap breakers** a player may claim, and
+> badge boost slots.
 >
 > **Inferred:** token costs for the 11 Rebounding/Physicals badges, whose cost
 > charts were never supplied. Flagged as estimated everywhere they are used.
@@ -172,10 +183,18 @@ file changes the app's behaviour with no code change.
 
 ## Known limitations
 
-- **Caps, cost curves and the budget are still invented.** Builds will pick the
-  right thresholds but may be affordable when they should not be. This is the
-  most valuable thing left to replace — the NBA 2K HQ app's builder is the place
-  to read exact caps off and paste them into `caps.json` → `overrides.entries`.
+- **Caps are real for exactly one body.** PF 6'11" / 210 / 6'11" has verified
+  caps and a verified cap breaker table; every other body uses a linear model
+  measured 12.9 points off and biased high at that body, so those builds look
+  more affordable than they are. This is still the most valuable thing left to
+  replace — read caps off the NBA 2K HQ app's builder and paste them into
+  `caps.json` → `overrides.entries`, one body per entry.
+- **How many cap breakers you get is unknown.** The per-slot *gains* are read
+  straight off the builder and are exact. The app assumes a shared pool of five
+  across all attributes, which is the conservative of the two readings the
+  builder's display supports.
+- **Cost curves and the budget are still invented**, and are calibrated jointly
+  with each other rather than against the game.
 - **The size of your token pool is a guess**, because it depends on how much you
   have played. The default is calibrated so badge *slots* bind rather than
   tokens. Type your real per-discipline counts into the UI to plan against those.

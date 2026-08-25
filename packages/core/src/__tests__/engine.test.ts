@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadDatasetFromDisk, loadSecondSources } from '../data/node-loader.js';
 import { crossCheckBadges } from '../data/crosscheck.js';
-import { verificationReport } from '../data/loader.js';
+import { checkReferentialIntegrity, verificationReport } from '../data/loader.js';
 import { datasetCoverage } from '../data/coverage.js';
 import { collectBreakpoints, lastUsefulBreakpoint } from '../engine/breakpoints.js';
-import { computeBudget, computeCaps } from '../engine/caps.js';
+import { capBreakerGain, capBreakerTableFor, computeBudget, computeCaps } from '../engine/caps.js';
+import { planCapBreakers, unlockValue } from '../engine/plans.js';
 import { costModelFor } from '../engine/cost.js';
 import { evaluateBuild } from '../engine/evaluate.js';
 import { optimize } from '../engine/optimize.js';
@@ -352,10 +353,117 @@ describe('evaluation report', () => {
     const build = optimize(ds, request).builds[0]!;
     for (const rec of build.capBreakerPlan) {
       expect(rec.from).toBe(build.caps[rec.attribute]!);
-      expect(rec.breakersUsed).toBeLessThanOrEqual(ds.capBreakers.maxPerAttribute);
     }
     const used = build.capBreakerPlan.reduce((a, r) => a + r.breakersUsed, 0);
-    expect(used + build.capBreakersRemaining).toBeLessThanOrEqual(ds.capBreakers.totalAvailable);
+    expect(used + build.capBreakersRemaining).toBeLessThanOrEqual(ds.capBreakers.allocation.poolSize);
+  });
+
+  it('plans no cap breakers for a body with no transcribed gain table', () => {
+    const request = requestFromArchetype(ds, 'inside_center');
+    const build = optimize(ds, request).builds[0]!;
+    const hasTable = capBreakerTableFor(ds, build.body) !== null;
+    if (!hasTable) {
+      // Gains run from +1 to +7 on the one frame that is transcribed, so an
+      // untranscribed body must get nothing rather than an extrapolation.
+      expect(build.capBreakerPlan).toEqual([]);
+      expect(build.capBreakerStatus.kind).toBe('no-data');
+    } else {
+      expect(build.capBreakerStatus.kind).toBe('planned');
+    }
+  });
+
+  it('respects locked slots and the published newCap on a transcribed body', () => {
+    const [key, table] = Object.entries(ds.capBreakers.gainTables.entries)[0] ?? [];
+    if (!key || !table) return;
+    const [position, h, w, ws] = key.split('|');
+    const body = {
+      position: position!,
+      heightInches: Number(h),
+      weightPounds: Number(w),
+      wingspanInches: Number(ws),
+    };
+    const caps = computeCaps(ds, body);
+    // Every attribute pinned to its cap: the only state where a breaker does
+    // anything, and the state the builder screenshots were taken in.
+    const atCap = { ...caps };
+    const plan = planCapBreakers(ds, atCap, body, caps, {});
+
+    expect(plan.status.kind).toBe('planned');
+    for (const rec of plan.plan) {
+      const row = table.attributes[rec.attribute]!;
+      expect(row.slots[0]).not.toBeNull();
+      expect(rec.to).toBeLessThanOrEqual(row.newCap);
+      expect(rec.to).toBe(caps[rec.attribute]! + capBreakerGain(row, rec.breakersUsed));
+    }
+    const used = plan.plan.reduce((a, r) => a + r.breakersUsed, 0);
+    expect(used).toBeLessThanOrEqual(ds.capBreakers.allocation.poolSize);
+  });
+
+  it('catches a mis-transcribed cap breaker row', () => {
+    // The gain table and the cap table are both read off screenshots by eye, so
+    // newCap is deliberately redundant: original cap + slots must equal it. This
+    // proves the check is load-bearing rather than decorative.
+    const key = Object.keys(ds.capBreakers.gainTables.entries)[0];
+    if (!key) return;
+    const table = ds.capBreakers.gainTables.entries[key]!;
+    const attr = Object.keys(table.attributes)[0]!;
+    const tampered = {
+      ...ds,
+      capBreakers: {
+        ...ds.capBreakers,
+        gainTables: {
+          entries: {
+            ...ds.capBreakers.gainTables.entries,
+            [key]: {
+              ...table,
+              attributes: {
+                ...table.attributes,
+                [attr]: { ...table.attributes[attr]!, newCap: table.attributes[attr]!.newCap + 3 },
+              },
+            },
+          },
+        },
+      },
+    };
+    const errors = checkReferentialIntegrity(tampered).filter((i) => i.severity === 'error');
+    expect(errors.some((e) => e.message.includes('does not add up'))).toBe(true);
+  });
+
+  it('spends breakers on a run of slots when no single slot crosses anything', () => {
+    // Pass Accuracy's slots are +2 each on the transcribed frame, and none of
+    // them alone crosses a threshold — but three together do. A planner that
+    // only looked one slot ahead saw a zero gain, stopped, and left all five
+    // breakers unplaced. This is that bug.
+    const key = 'PF|83|210|83';
+    const table = ds.capBreakers.gainTables.entries[key];
+    if (!table) return;
+    const body = { position: 'PF', heightInches: 83, weightPounds: 210, wingspanInches: 83 };
+    const caps = computeCaps(ds, body);
+    const plan = planCapBreakers(ds, { ...caps }, body, caps, {});
+
+    expect(plan.plan.length).toBeGreaterThan(0);
+    const multi = plan.plan.find((p) => p.breakersUsed > 1);
+    expect(multi).toBeDefined();
+    expect(multi!.unlocks.length).toBeGreaterThan(0);
+    // And a single slot on that same attribute really would have unlocked nothing.
+    const row = table.attributes[multi!.attribute]!;
+    const oneSlot = { ...caps, [multi!.attribute]: caps[multi!.attribute]! + (row.slots[0] ?? 0) };
+    expect(unlockValue(ds, oneSlot, body, {})).toBe(unlockValue(ds, { ...caps }, body, {}));
+  });
+
+  it('matches the transcribed builder caps exactly for a body with an override', () => {
+    for (const [key, entry] of Object.entries(ds.caps.overrides)) {
+      const [position, h, w, ws] = key.split('|');
+      const caps = computeCaps(ds, {
+        position: position!,
+        heightInches: Number(h),
+        weightPounds: Number(w),
+        wingspanInches: Number(ws),
+      });
+      for (const [attr, cap] of Object.entries(entry.caps)) {
+        expect(caps[attr]).toBe(cap);
+      }
+    }
   });
 
   it('never boosts a badge it does not hold', () => {

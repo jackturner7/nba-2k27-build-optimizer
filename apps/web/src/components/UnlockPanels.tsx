@@ -1,4 +1,4 @@
-import { formatHeight, meetsBody, type BuildEvaluation, type Dataset } from '@2k27/core';
+import { capBreakerTableFor, formatHeight, meetsBody, type BuildEvaluation, type Dataset } from '@2k27/core';
 import { BadgeLevelChip, Empty, GapPills, Panel, VerificationChip } from './Bits';
 
 /** "6'5\" and up" / "up to 6'9\"" — the height band a badge is available in. */
@@ -208,6 +208,7 @@ export function TakeoverPanel({ build }: { build: BuildEvaluation }) {
 export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: BuildEvaluation }) {
   const cb = dataset.capBreakers;
   const used = build.capBreakerPlan.reduce((a, r) => a + r.breakersUsed, 0);
+  const table = capBreakerTableFor(dataset, build.body);
 
   if (!cb.enabled) {
     return (
@@ -217,36 +218,75 @@ export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: B
     );
   }
 
+  // A body nobody has transcribed gets no plan at all: gains run from +1 to +7
+  // between attributes on the one frame we have, so there is nothing safe to
+  // extrapolate. Say that plainly instead of showing an empty list.
+  if (!table) {
+    return (
+      <Panel title="Cap breakers" right={<VerificationChip verification={cb.verification} />}>
+        <Empty>
+          No cap breaker table for this body yet. Each slot is worth a different amount on every
+          attribute — +7 Steal but +1 Close Shot on the one build that has been read off the NBA 2K HQ
+          app — so nothing is extrapolated to bodies that have not been transcribed.
+        </Empty>
+        <div className="row-note" style={{ marginTop: 10 }}>
+          {Object.keys(cb.gainTables.entries).length} body
+          {Object.keys(cb.gainTables.entries).length === 1 ? '' : ' types'} transcribed so far.
+        </div>
+      </Panel>
+    );
+  }
+
+  const locked = Object.entries(table.attributes)
+    .filter(([, row]) => row.slots[0] === null || row.slots[0] === undefined)
+    .map(([id]) => dataset.attributes.find((a) => a.id === id)?.name ?? id);
+
+  const poolNote =
+    cb.allocation.mode === 'shared-pool'
+      ? `${cb.allocation.poolSize} to place across all attributes`
+      : 'every attribute fills its own slots';
+
   return (
     <Panel
       title="Cap breakers"
-      count={`${used}/${cb.totalAvailable} placed`}
+      count={`${used}/${cb.allocation.poolSize} placed`}
       right={<VerificationChip verification={cb.verification} />}
     >
       <div className="row-note" style={{ marginBottom: 10 }}>
-        {cb.totalAvailable} available · max {cb.maxPerAttribute} per attribute · +{cb.raisePerBreaker} each ·
-        ceiling {cb.absoluteCeiling}.
+        {cb.slotsPerAttribute} slots per attribute · {poolNote} · ceiling {cb.absoluteCeiling}.
+        {table.label ? ` Table: ${table.label}.` : ''}
       </div>
 
       {build.capBreakerPlan.length === 0 ? (
         <Empty>
-          Nothing to place: no attribute is sitting at its cap with a threshold within reach. Save them
-          until the build changes.
+          Nothing to place: no attribute is sitting at its cap with an unlocked slot and a threshold
+          within reach.
         </Empty>
       ) : (
         <div className="row-list">
-          {build.capBreakerPlan.map((r) => (
-            <div className="row-item" key={r.attribute}>
-              <div className="row-main">
-                <div className="row-title">
-                  {r.attributeName} {r.from} → <span style={{ color: 'var(--good)' }}>{r.to}</span>
-                  <span className="chip verified">×{r.breakersUsed}</span>
+          {build.capBreakerPlan.map((r) => {
+            const row = table.attributes[r.attribute];
+            return (
+              <div className="row-item" key={r.attribute}>
+                <div className="row-main">
+                  <div className="row-title">
+                    {r.attributeName} {r.from} → <span style={{ color: 'var(--good)' }}>{r.to}</span>
+                    <span className="chip verified">
+                      {r.breakersUsed} slot{r.breakersUsed === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <div className="row-note">{r.reason}</div>
+                  {row && (
+                    <div className="row-note">
+                      Slots: {row.slots.map((s) => (s === null ? '🔒' : `+${s}`)).join(' · ')} · max{' '}
+                      {row.newCap}
+                    </div>
+                  )}
                 </div>
-                <div className="row-note">{r.reason}</div>
+                <div className="row-cost">+{r.scoreGain.toFixed(1)}</div>
               </div>
-              <div className="row-cost">+{r.scoreGain.toFixed(1)}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -256,6 +296,19 @@ export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: B
           threshold worth crossing. The optimizer will not invent a placement for them.
         </div>
       )}
+
+      {locked.length > 0 && (
+        <div className="row-note" style={{ marginTop: 10 }}>
+          No cap breaker can raise {locked.join(', ')} on this frame — every slot is locked.
+        </div>
+      )}
+
+      <div className="row-note severity-info" style={{ marginTop: 10 }}>
+        The gain table above is read straight off the builder and is exact. How many of those gains a
+        player may actually claim is <strong>not published</strong> — the app assumes the conservative
+        reading, {cb.allocation.poolSize} to share across every attribute. If the generous reading is
+        right and each attribute fills its own slots, this frame gains far more than shown.
+      </div>
     </Panel>
   );
 }

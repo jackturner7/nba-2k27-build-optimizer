@@ -1,19 +1,40 @@
 {
   "$comment": [
-    "PLACEHOLDER DATA — see meta.json.",
-    "Cap Breakers in the NBA 2K series let a player raise a small number of attributes above the cap",
-    "the builder allowed, earned after launch. The count, the per-attribute limit, the eligibility",
-    "rules and whether they cost build points are ALL unknown for 2K27 and invented here.",
+    "NBA 2K27 CAP BREAKERS.",
     "",
-    "The optimizer treats cap breakers as a POST-BUILD overlay: it optimizes the build first, then",
-    "recommends where each +1 lands by measuring which single point crosses the most valuable",
-    "badge / animation / takeover threshold."
+    "This file was rewritten once real builder data arrived, because the previous model was wrong in",
+    "KIND, not just in its numbers. It assumed a small pool of breakers each worth a flat +1, capped at",
+    "two per attribute. The actual system, read off the NBA 2K HQ app's Cap Breaker page:",
+    "",
+    "  - Every attribute has FIVE cap breaker slots, not four in total.",
+    "  - Each slot is worth a DIFFERENT, PER-ATTRIBUTE amount. Steal's first slot on the transcribed",
+    "    build is +7; Close Shot's is +1.",
+    "  - Gains DIMINISH down the slots. Block runs +6 / +5 / +4 / +3 / +2.",
+    "  - Slots can be LOCKED. Mid-Range, Three-Point, Ball Handle, Speed With Ball, Defensive Rebound,",
+    "    Speed and Agility have all five locked on the transcribed build, so no cap breaker can ever",
+    "    raise them. `null` in a slot array means locked.",
+    "",
+    "So a cap breaker is not a generic +1 you place wherever you like. It is a lookup: this body, this",
+    "attribute, this slot number, this many points. That makes the table below the whole model, and the",
+    "engine does nothing but read it.",
+    "",
+    "APPARENT PATTERN, recorded as an observation and NOT relied on anywhere in code: attributes already",
+    "near this frame's ceiling are locked out (Mid-Range 94, Three-Point 91, Defensive Rebound 80, Speed",
+    "79, Agility 73) while low ones get large first-slot gains (Steal 60 -> +7, Free Throw 71 -> +6).",
+    "That suggests breakers push toward some per-attribute ceiling rather than granting a flat bonus.",
+    "One build is not enough to confirm it, so nothing is extrapolated from it — a body with no table",
+    "entry gets NO cap breaker plan at all rather than a guessed one.",
+    "",
+    "HOW TO ADD A BODY: open the build in the NBA 2K HQ app, go to Cap Breakers, and transcribe each",
+    "row as `\"<attribute_id>\": { \"slots\": [s1, s2, s3, s4, s5], \"newCap\": N }` using null for a locked",
+    "slot. Add the same body's Original Cap column to caps.json -> overrides.entries under the SAME KEY.",
+    "The loader checks that originalCap + sum(slots) === newCap and errors if a row was mis-read."
   ],
 
   "verification": {
-    "status": "estimated",
-    "source": "2K27 builder coverage confirms cap breakers exist, are earned post-launch, are not viewable until the build reaches 99 overall, and do NOT grant additional badge tokens.",
-    "notes": "The rules below are sourced where marked. Every QUANTITY (how many, how much each raises, per-attribute limits) is still invented."
+    "status": "verified",
+    "source": "NBA 2K HQ app MyPLAYER builder Cap Breaker page (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+    "notes": "The five-slot structure, the per-attribute variable gains, the diminishing pattern and the locked slots are all read directly off the app. What is NOT known is how many breakers a player can actually apply — see `allocation`."
   },
 
   "rules": {
@@ -27,23 +48,87 @@
   },
 
   "enabled": true,
-  "totalAvailable": 4,
-  "maxPerAttribute": 2,
-  "raisePerBreaker": 1,
+  "slotsPerAttribute": 5,
   "costsBuildPoints": false,
   "absoluteCeiling": 99,
+
+  "allocation": {
+    "$comment": [
+      "THE ONE THING THE SCREENSHOTS DO NOT SETTLE. The app shows five slots on every attribute row and",
+      "a New Cap that assumes all five are filled. Two readings fit that display equally well:",
+      "",
+      "  'shared-pool'   — you earn a limited number of breakers and choose where they go. Filling all",
+      "                    five on Free Throw is possible, but costs you every other placement.",
+      "  'per-attribute' — every attribute's five slots fill independently, so the New Cap column is",
+      "                    reachable everywhere at once.",
+      "",
+      "'per-attribute' would hand the transcribed build +112 attribute points for free, which is a very",
+      "large claim to make on the strength of a display that is equally consistent with scarcity. So the",
+      "default is 'shared-pool', which is the conservative reading: it can under-promise, never",
+      "over-promise. Switch `mode` to 'per-attribute' if the generous reading turns out to be right.",
+      "",
+      "`poolSize` is a guess and is the single least-supported number in this file."
+    ],
+    "mode": "shared-pool",
+    "poolSize": 5,
+    "verification": {
+      "status": "unverified",
+      "notes": "Neither the mode nor the pool size is sourced. The GAIN TABLE is verified; how many of those gains you may claim is not."
+    }
+  },
 
   "eligibility": {
     "mode": "all-except",
     "excludedAttributes": [],
-    "note": "mode may be 'all', 'all-except' (uses excludedAttributes) or 'only' (uses includedAttributes)."
+    "note": "mode may be 'all', 'all-except' (uses excludedAttributes) or 'only' (uses includedAttributes). Per-attribute lock-out is expressed by null slots in the gain table, not here."
   },
   "includedAttributes": [],
 
-  "tiers": [
-    { "id": "t1", "name": "Cap Breaker 1", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
-    { "id": "t2", "name": "Cap Breaker 2", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
-    { "id": "t3", "name": "Cap Breaker 3", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
-    { "id": "t4", "name": "Cap Breaker 4", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } }
-  ]
+  "gainTables": {
+    "$comment": [
+      "Keyed exactly like caps.json -> overrides.entries: `<POSITION>|<height>|<weight>|<wingspan>`,",
+      "with `*` matching anything and the most specific match winning.",
+      "",
+      "A body with no matching entry gets no cap breaker plan. That is deliberate: gains vary so wildly",
+      "between attributes on the one body we have that interpolating to another body would be fiction."
+    ],
+    "entries": {
+      "PF|83|210|83": {
+        "label": "6'11\" / 210 lb / 6'11\" PF — shown in the NBA 2K HQ builder as BUCKET CHASER",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder Cap Breaker page, screenshots supplied 2026-08-25.",
+          "notes": "All 21 rows transcribed. Original caps for the same body are in caps.json under the same key."
+        },
+        "attributes": {
+          "close_shot":        { "slots": [1, 1, null, null, null], "newCap": 92 },
+          "driving_layup":     { "slots": [2, 1, null, null, null], "newCap": 88 },
+          "driving_dunk":      { "slots": [1, 1, null, null, null], "newCap": 82 },
+          "standing_dunk":     { "slots": [1, 1, 1, 1, 1],          "newCap": 70 },
+          "post_control":      { "slots": [1, 1, 1, 1, 1],          "newCap": 91 },
+
+          "mid_range":         { "slots": [null, null, null, null, null], "newCap": 94 },
+          "three_point":       { "slots": [null, null, null, null, null], "newCap": 91 },
+          "free_throw":        { "slots": [6, 5, 5, 4, 2],          "newCap": 93 },
+
+          "pass_accuracy":     { "slots": [2, 2, 2, 2, 2],          "newCap": 87 },
+          "ball_handle":       { "slots": [null, null, null, null, null], "newCap": 75 },
+          "speed_with_ball":   { "slots": [null, null, null, null, null], "newCap": 68 },
+
+          "interior_defense":  { "slots": [4, 4, 3, 3, 2],          "newCap": 86 },
+          "perimeter_defense": { "slots": [5, 1, null, null, null], "newCap": 77 },
+          "steal":             { "slots": [7, null, null, null, null], "newCap": 67 },
+          "block":             { "slots": [6, 5, 4, 3, 2],          "newCap": 90 },
+
+          "offensive_rebound": { "slots": [3, 2, 2, 1, null],       "newCap": 78 },
+          "defensive_rebound": { "slots": [null, null, null, null, null], "newCap": 80 },
+
+          "speed":             { "slots": [null, null, null, null, null], "newCap": 79 },
+          "agility":           { "slots": [null, null, null, null, null], "newCap": 73 },
+          "strength":          { "slots": [1, null, null, null, null], "newCap": 80 },
+          "vertical":          { "slots": [1, 1, 1, 1, 1],           "newCap": 80 }
+        }
+      }
+    }
+  }
 }

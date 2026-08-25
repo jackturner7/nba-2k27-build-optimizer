@@ -14,6 +14,26 @@
     "`constraints.minimums` are HARD floors the optimizer must satisfy or report as infeasible.",
     "`constraints.softTargets` are 'try to reach' values that add score but are not required."
   ],
+
+  "officialBuildNames": {
+    "$comment": [
+      "2K27's builder names a build itself rather than making you pick an archetype off a list, so these",
+      "are OBSERVED LABELS for specific bodies, not presets a player selects. They are recorded here",
+      "because they are the only confirmed 2K27 build names in the dataset — the eight archetypes below",
+      "still carry community names.",
+      "",
+      "Add one per body as it is seen in the NBA 2K HQ app. Do not guess a name for a body you have not",
+      "opened: the naming rule (body only? body plus allocation?) is not known."
+    ],
+    "verification": {
+      "status": "verified",
+      "source": "NBA 2K HQ app MyPLAYER builder, screenshots supplied 2026-08-25."
+    },
+    "entries": {
+      "PF|83|210|83": "BUCKET CHASER"
+    }
+  },
+
   "archetypes": [
     {
       "id": "three_and_d_wing",
@@ -180,10 +200,22 @@
       },
       "summary": "Pick-and-pop big who drags rim protectors out of the paint.",
       "position": "PF",
+      "$bodyNote": [
+        "Retargeted 2026-08-25 onto 6'11\" / 210 lb / 6'11\", the ONE frame whose caps have been read off",
+        "the real builder. Every other preset sits on modelled caps that measure ~13 points off, so this",
+        "is currently the only preset whose ceilings are facts.",
+        "",
+        "The real caps also vindicate the archetype on this frame: 94 Mid-Range and 91 Three-Point with a",
+        "70 Block and an 80 Defensive Rebound is a stretch big and nothing else. The previous suggestion",
+        "(6'10\" / 235 / 7'3\") had soft targets — Block 84, Defensive Rebound 87, Offensive Rebound 82 —",
+        "that the modelled caps allowed and that may well be unreachable in the real builder.",
+        "",
+        "In-game the NBA 2K HQ builder labels this frame BUCKET CHASER. See officialBuildNames below."
+      ],
       "suggestedBody": {
-        "heightInches": 82,
-        "weightPounds": 235,
-        "wingspanInches": 87
+        "heightInches": 83,
+        "weightPounds": 210,
+        "wingspanInches": 83
       },
       "priorities": {
         "three_point_shooting": 100,
@@ -196,16 +228,20 @@
         "perimeter_defense": 40
       },
       "constraints": {
+        "$note": "Every value below is a real threshold from the sourced data AND is at or under the verified cap for this frame, so none of them is aspirational.",
         "minimums": {
           "three_point": 83
         },
         "softTargets": {
           "three_point": 89,
-          "defensive_rebound": 87,
-          "block": 84,
-          "interior_defense": 80,
-          "strength": 84,
-          "offensive_rebound": 82
+          "mid_range": 91,
+          "close_shot": 86,
+          "post_control": 84,
+          "defensive_rebound": 75,
+          "block": 70,
+          "interior_defense": 65,
+          "strength": 75,
+          "offensive_rebound": 70
         }
       }
     },

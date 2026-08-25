@@ -177,12 +177,32 @@ export interface CapModel {
   kind: string;
   referenceBody: BuildBody;
   verification: Verification;
+  /**
+   * How badly the linear model misses, scored against the exact tables in
+   * `overrides`. Absent until at least one real cap table has been transcribed.
+   */
+  measuredAccuracy?: {
+    measuredAt: string;
+    againstBody: string;
+    meanAbsoluteError: number;
+    worstAttribute: { attribute: AttributeId; error: number };
+    biasedHighOn: number;
+    attributesCompared: number;
+  };
+}
+
+/** An exact cap table read off the real builder, for one specific body. */
+export interface CapOverrideEntry {
+  label: string;
+  verification: Verification;
+  caps: Partial<Record<AttributeId, number>>;
 }
 
 export interface CapsData {
   capModel: CapModel;
   attributeCaps: AttributeCapRule[];
-  overrides: Record<string, Partial<Record<AttributeId, number>>>;
+  /** Keyed `POSITION|height|weight|wingspan`, `*` matching anything. */
+  overrides: Record<string, CapOverrideEntry>;
 }
 
 export interface BudgetData {
@@ -263,16 +283,47 @@ export interface TakeoverDef {
   verification: Verification;
 }
 
+/**
+ * One attribute's cap breaker row for one body. `slots[i]` is the point gain
+ * from filling the i-th breaker slot, or `null` if the builder locks that slot
+ * out — several attributes on a given frame can never be raised at all.
+ */
+export interface CapBreakerRow {
+  slots: (number | null)[];
+  /** The cap with every unlocked slot filled, as the builder displays it. */
+  newCap: number;
+}
+
+export interface CapBreakerTable {
+  label: string;
+  verification: Verification;
+  attributes: Record<AttributeId, CapBreakerRow>;
+}
+
 export interface CapBreakerData {
   enabled: boolean;
-  totalAvailable: number;
-  maxPerAttribute: number;
-  raisePerBreaker: number;
+  slotsPerAttribute: number;
   costsBuildPoints: boolean;
   absoluteCeiling: number;
+  rules: {
+    visibleOnlyAt99Overall: boolean;
+    grantsBadgeTokens: boolean;
+    verification?: Verification;
+    note?: string;
+  };
+  /**
+   * How many of the tabulated gains a player may actually claim. The gain table
+   * is read off the builder; this is not — see the file's own commentary.
+   */
+  allocation: {
+    mode: 'shared-pool' | 'per-attribute';
+    poolSize: number;
+    verification: Verification;
+  };
   eligibility: { mode: 'all' | 'all-except' | 'only'; excludedAttributes: AttributeId[]; note?: string };
   includedAttributes: AttributeId[];
-  tiers: { id: string; name: string; unlockNote: string; verification: Verification }[];
+  /** Keyed `POSITION|height|weight|wingspan`, `*` matching anything. */
+  gainTables: { entries: Record<string, CapBreakerTable> };
   verification: Verification;
 }
 
@@ -476,6 +527,12 @@ export interface Dataset {
   badgeBoosts: BadgeBoostData;
   dependencies: DependencyRule[];
   archetypes: ArchetypeDef[];
+  /**
+   * Build names the real builder assigns, keyed `POSITION|height|weight|wingspan`.
+   * 2K27 names a build for you, so these are the only confirmed 2K27 names —
+   * `archetypes` above use community naming.
+   */
+  officialBuildNames?: { verification: Verification; entries: Record<string, string> };
 }
 
 // ---------------------------------------------------------------------------
@@ -604,6 +661,18 @@ export interface CapBreakerRecommendation {
   scoreGain: number;
 }
 
+/**
+ * Why the cap breaker plan looks the way it does. `no-data` is the common case
+ * and is a statement about the dataset, not about the build: gains are a
+ * per-body lookup, so a body nobody has transcribed gets no plan at all.
+ */
+export interface CapBreakerPlanStatus {
+  kind: 'planned' | 'no-data' | 'disabled' | 'no-breakers';
+  /** Which transcribed body the plan came from, when there is one. */
+  tableLabel?: string;
+  note: string;
+}
+
 export interface BadgeBoostRecommendation {
   slot: 'plusOne' | 'plusTwo';
   badgeId: BadgeId;
@@ -674,6 +743,9 @@ export interface BuildEvaluation {
   takeovers: TakeoverStatus[];
   capBreakerPlan: CapBreakerRecommendation[];
   capBreakersRemaining: number;
+  capBreakerStatus: CapBreakerPlanStatus;
+  /** True when this body's caps came from a transcribed table, not the model. */
+  capsAreExact: boolean;
   badgeBoostPlan: BadgeBoostRecommendation[];
   waste: WasteFinding[];
   dependencyWarnings: { ruleId: string; message: string; severity: 'info' | 'warning' | 'critical' }[];

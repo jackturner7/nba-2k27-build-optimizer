@@ -178,6 +178,17 @@ export const capsSchema = z.object({
   capModel: z.object({
     kind: z.string(),
     verification,
+    /** How badly the model misses, scored against the exact tables in `overrides`. */
+    measuredAccuracy: z
+      .object({
+        measuredAt: z.string(),
+        againstBody: z.string(),
+        meanAbsoluteError: z.number(),
+        worstAttribute: z.object({ attribute: z.string(), error: z.number() }),
+        biasedHighOn: z.number(),
+        attributesCompared: z.number(),
+      })
+      .optional(),
     referenceBody: z.object({
       position: z.string(),
       heightInches: z.number(),
@@ -199,7 +210,16 @@ export const capsSchema = z.object({
     })
   ),
   overrides: z.object({
-    entries: z.record(z.string(), z.record(z.string(), z.number())).default({}),
+    entries: z
+      .record(
+        z.string(),
+        z.object({
+          label: z.string().default(''),
+          verification,
+          caps: z.record(z.string(), z.number()),
+        })
+      )
+      .default({}),
   }),
 });
 
@@ -370,23 +390,52 @@ export const takeoversSchema = z.object({
   ),
 });
 
+/**
+ * One attribute's cap breaker row: five slots, each either a point gain or
+ * `null` for a slot the builder has locked out on this body.
+ */
+const capBreakerRow = z.object({
+  slots: z.array(z.number().int().positive().nullable()),
+  newCap: z.number().int(),
+});
+
 export const capBreakersSchema = z.object({
   verification,
   enabled: z.boolean(),
-  totalAvailable: z.number().int().nonnegative(),
-  maxPerAttribute: z.number().int().nonnegative(),
-  raisePerBreaker: z.number().int().positive(),
+  slotsPerAttribute: z.number().int().nonnegative(),
   costsBuildPoints: z.boolean(),
   absoluteCeiling: z.number().int(),
+  rules: z
+    .object({
+      visibleOnlyAt99Overall: z.boolean().default(true),
+      grantsBadgeTokens: z.boolean().default(false),
+      verification: verification.optional(),
+      note: z.string().optional(),
+    })
+    .default({ visibleOnlyAt99Overall: true, grantsBadgeTokens: false }),
+  allocation: z.object({
+    mode: z.enum(['shared-pool', 'per-attribute']),
+    poolSize: z.number().int().nonnegative(),
+    verification,
+  }),
   eligibility: z.object({
     mode: z.enum(['all', 'all-except', 'only']),
     excludedAttributes: z.array(z.string()).default([]),
     note: z.string().optional(),
   }),
   includedAttributes: z.array(z.string()).default([]),
-  tiers: z
-    .array(z.object({ id: z.string(), name: z.string(), unlockNote: z.string().default(''), verification }))
-    .default([]),
+  gainTables: z.object({
+    entries: z
+      .record(
+        z.string(),
+        z.object({
+          label: z.string().default(''),
+          verification,
+          attributes: z.record(z.string(), capBreakerRow),
+        })
+      )
+      .default({}),
+  }),
 });
 
 const slotCount = z.object({
@@ -444,6 +493,17 @@ export const dependenciesSchema = z.object({
 });
 
 export const archetypesSchema = z.object({
+  /**
+   * Build names observed in the real 2K27 builder, keyed by body. 2K27 names a
+   * build for you rather than offering an archetype list, so these are the only
+   * confirmed names — the archetypes below use community naming.
+   */
+  officialBuildNames: z
+    .object({
+      verification,
+      entries: z.record(z.string(), z.string()).default({}),
+    })
+    .optional(),
   archetypes: z.array(
     z.object({
       id: z.string(),

@@ -31,7 +31,30 @@
     "verification": {
       "status": "estimated",
       "source": "2K27 builder coverage for the DIRECTION and relative importance of each body effect.",
-      "notes": "Directions are sourced. Magnitudes are invented. Replace with an exact table in `overrides`."
+      "notes": "Directions are sourced. Magnitudes are invented, and now MEASURABLY WRONG — see measuredAccuracy. Replace with exact tables in `overrides`."
+    },
+    "measuredAccuracy": {
+      "$comment": [
+        "The first real cap table (PF|83|210|83) makes it possible to score the model for the first time.",
+        "It does badly, and in a specific way worth knowing about:",
+        "",
+        "  - mean absolute error 12.9 points across 21 attributes; worst is Standing Dunk, +28.",
+        "  - it is biased HIGH on 19 of 21 attributes (sum of caps 1849 modelled vs 1609 real), so builds",
+        "    planned off the model look more affordable than they are.",
+        "  - it gets the SIGN wrong on shooting for a slender big. The model reads 6'11\" as a shooting",
+        "    penalty (86 mid-range, 84 three) whereas the builder gives that frame 94 and 91. Weight, not",
+        "    height, appears to drive shooting caps — 210 lb is near the minimum at this height.",
+        "",
+        "The model was NOT refit to this. Fitting four coefficients per attribute to a single body would",
+        "produce something that looks calibrated and is not. It stands as-is, with its error measured, and",
+        "gets replaced body by body as real tables arrive."
+      ],
+      "measuredAt": "2026-08-25",
+      "againstBody": "PF|83|210|83",
+      "meanAbsoluteError": 12.9,
+      "worstAttribute": { "attribute": "standing_dunk", "error": 28 },
+      "biasedHighOn": 19,
+      "attributesCompared": 21
     },
     "referenceBody": {
       "position": "SF",
@@ -70,7 +93,45 @@
   ],
 
   "overrides": {
-    "$comment": "Exact caps keyed by `<POSITION>|<height>|<weight>|<wingspan>`; `*` matches anything. Value is a partial map of attribute id -> cap. Most specific match wins.",
-    "entries": {}
+    "$comment": [
+      "Exact caps keyed by `<POSITION>|<height>|<weight>|<wingspan>`; `*` matches anything. Value is a",
+      "partial map of attribute id -> cap. Most specific match wins.",
+      "",
+      "These are the ONLY verified caps in the dataset. Everything not covered here falls back to the",
+      "invented linear model above. Read more off the NBA 2K HQ app's builder and paste them in."
+    ],
+    "entries": {
+      "PF|83|210|83": {
+        "label": "6'11\" / 210 lb / 6'11\" PF — shown in the NBA 2K HQ builder as BUCKET CHASER",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "Read off the builder's attribute page with every attribute pushed to its ceiling; each value equals the Original Cap column of the same build's Cap Breaker page, so all 21 are maximums, not an allocation."
+        },
+        "caps": {
+          "close_shot": 90,
+          "driving_layup": 85,
+          "driving_dunk": 80,
+          "standing_dunk": 65,
+          "post_control": 86,
+          "mid_range": 94,
+          "three_point": 91,
+          "free_throw": 71,
+          "pass_accuracy": 77,
+          "ball_handle": 75,
+          "speed_with_ball": 68,
+          "interior_defense": 70,
+          "perimeter_defense": 71,
+          "steal": 60,
+          "block": 70,
+          "offensive_rebound": 70,
+          "defensive_rebound": 80,
+          "speed": 79,
+          "agility": 73,
+          "strength": 79,
+          "vertical": 75
+        }
+      }
+    }
   }
 }

@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
 import {
+  capBreakerTableFor,
+  capOverrideFor,
   checkReferentialIntegrity,
   collectBreakpoints,
   crossCheckBadges,
@@ -153,6 +155,14 @@ app.get('/api/datasets/:id/caps', (req, res) => {
     validation: { valid: validation.valid, errors: validation.errors, ranges: validation.ranges },
     caps: computeCaps(dataset, body),
     budget: computeBudget(dataset, body),
+    // Whether these caps came off the real builder or out of the linear model
+    // is the single most important thing to know about them.
+    capsSource: capOverrideFor(dataset, body) ? 'transcribed' : 'modelled',
+    capBreakers: capBreakerTableFor(dataset, body),
+    inGameBuildName:
+      dataset.officialBuildNames?.entries[
+        `${body.position}|${body.heightInches}|${body.weightPounds}|${body.wingspanInches}`
+      ] ?? null,
   });
 });
 

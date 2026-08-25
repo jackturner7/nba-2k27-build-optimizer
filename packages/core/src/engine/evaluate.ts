@@ -2,7 +2,7 @@ import type { AttributeVector, BuildEvaluation, BuildBody, Dataset, ScoreWeights
 import { computeTokens, planBadgeLoadout, planBadgeLoadoutFast } from './tokens.js';
 import { defIndex, priorityWeights } from './score.js';
 import { collectBreakpoints, type BreakpointMap } from './breakpoints.js';
-import { computeBudget, computeCaps } from './caps.js';
+import { capOverrideFor, computeBudget, computeCaps } from './caps.js';
 import { costModelFor } from './cost.js';
 import { findWaste, planBadgeBoosts, planCapBreakers } from './plans.js';
 import { DEFAULT_SCORE_WEIGHTS, dependencyWarnings, effectiveAttributes, scoreBuild } from './score.js';
@@ -114,7 +114,12 @@ export function evaluateBuild(
 
   const capBreaker =
     options.useCapBreakers === false
-      ? { plan: [], remaining: 0, effective: clamped }
+      ? {
+          plan: [],
+          remaining: 0,
+          effective: clamped,
+          status: { kind: 'disabled' as const, note: 'Cap breakers were excluded from this evaluation.' },
+        }
       : planCapBreakers(ds, clamped, body, caps, priorities);
 
   const effective = capBreaker.effective;
@@ -176,6 +181,8 @@ export function evaluateBuild(
     takeovers,
     capBreakerPlan: capBreaker.plan,
     capBreakersRemaining: capBreaker.remaining,
+    capBreakerStatus: capBreaker.status,
+    capsAreExact: capOverrideFor(ds, body) !== null,
     badgeBoostPlan,
     waste: findWaste(ds, clamped, breakpoints, cost),
     dependencyWarnings: dependencyWarnings(ds, clamped),

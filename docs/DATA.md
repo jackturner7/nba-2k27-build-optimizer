@@ -34,20 +34,43 @@ had guessed wrong:
 - **The attribute list.** Stamina is *not* a 2K27 builder attribute (it is
   raised at the in-game Gatorade gym). Acceleration is gone; **Agility** is what
   2K27 badges actually require. Rebounding is its own discipline.
-- **Four badge tiers** — Bronze / Silver / Gold / Hall of Fame. No Legend tier.
+- **Five badge tiers** — Bronze / Silver / Gold / Hall of Fame, plus Legend,
+  which 2K states cannot be obtained at build creation and carries no attribute
+  requirement row.
 - **The direction** of each body setting's effect on caps, including that a wing
   at minimum weight and minimum wingspan takes a real hit to Perimeter Defense
   and Driving Dunk specifically.
-- **That badge tokens exist**, are earned per discipline from attribute
-  investment, must be spent to equip badges, and that cap breakers do not grant
+- **That badge tokens exist**, are earned by *playing* rather than by allocating
+  attributes, must be spent to equip badges, and that cap breakers do not grant
   extra tokens.
+
+### Read off the real builder (NBA 2K HQ app)
+
+- **All 21 attribute caps for one body** — PF, 6'11", 210 lb, 6'11" wingspan,
+  which the app names **Bucket Chaser**. In `caps.json` →
+  `overrides.entries["PF|83|210|83"]`.
+- **That body's full cap breaker table** — five slots per attribute, each worth
+  a different amount, gains diminishing down the row, and seven attributes
+  locked out of breakers entirely.
+
+Having one real cap table made it possible to *score* the linear model for the
+first time: mean absolute error **12.9 points** over 21 attributes, biased high
+on **19 of 21**, and wrong in sign on shooting for a slender big — it predicts
+86 Mid-Range / 84 Three where the builder gives 94 / 91. Recorded in
+`caps.json` → `capModel.measuredAccuracy`.
+
+The model was deliberately **not** refit to it. Fitting four coefficients per
+attribute to a single body produces something that looks calibrated and is not.
 
 ### Not sourced (assume wrong)
 
-- **Attribute caps.** Only directions are known, not magnitudes.
+- **Attribute caps for every body except `PF|83|210|83`.** Only directions are
+  known, not magnitudes, and the magnitudes are measurably ~13 points off.
 - **Cost curves and the build point budget.**
 - **The badge token earning formula** and the per-discipline slot split.
-- **Cap breaker quantities** and **badge boost slot counts**.
+- **How many cap breakers a player may claim**, and **badge boost slot counts**.
+  The per-slot cap breaker *gains* are now verified for one body; the *budget*
+  is not.
 
 ### Inferred
 
@@ -189,12 +212,20 @@ reads as *"no interaction is known"*, not *"no interaction exists"*.
 body settings. Same two-mechanism pattern:
 
 1. `overrides.entries` — keys are `"<POSITION>|<height>|<weight>|<wingspan>"`,
-   `*` matches anything, most specific match wins. Value is a partial map of
-   attribute id → cap:
+   `*` matches anything, most specific match wins. **This is where real data
+   goes**, and it takes precedence over the model entirely:
    ```json
-   "SF|80|215|85": { "three_point": 88, "perimeter_defense": 90 },
-   "C|*|*|*":      { "three_point": 74 }
+   "PF|83|210|83": {
+     "label": "6'11\" / 210 lb / 6'11\" PF — Bucket Chaser",
+     "verification": { "status": "verified", "source": "NBA 2K HQ app builder" },
+     "caps": { "three_point": 91, "block": 70, "…": 0 }
+   }
    ```
+   One body is filled in. Adding another is the single most valuable thing you
+   can do to this dataset — open the build in the NBA 2K HQ app, read the
+   attribute page with everything pushed to its ceiling, and paste the 21
+   numbers in. The UI tells you, per body, whether you are looking at real caps
+   or modelled ones.
 2. `attributeCaps` — the linear model:
    ```
    cap = baseCap
@@ -313,14 +344,44 @@ Takeovers and their unlock tiers. `slots` records how many a player gets — set
 it once 2K27's structure is known.
 
 ### `cap-breakers.json`
-The post-launch above-the-cap mechanic. Count, per-attribute limit, eligibility
-and whether they cost build points are all unknown and invented.
+The post-launch above-the-cap mechanic, and a **per-body lookup table** rather
+than a formula. Every attribute has five slots; each is worth a different,
+per-attribute amount; gains diminish down the row; and slots can be locked out
+entirely. `null` in a slot array means locked.
+
+```json
+"PF|83|210|83": {
+  "label": "…",
+  "verification": { "status": "verified", "source": "NBA 2K HQ app" },
+  "attributes": {
+    "block":     { "slots": [6, 5, 4, 3, 2],                  "newCap": 90 },
+    "steal":     { "slots": [7, null, null, null, null],      "newCap": 67 },
+    "mid_range": { "slots": [null, null, null, null, null],   "newCap": 94 }
+  }
+}
+```
+
+`newCap` is deliberately redundant — the loader checks that the cap in
+`caps.json` under the same key plus the slot gains equals it, and errors if a
+row was mis-read. It also rejects an unlocked slot following a locked one, since
+slots fill in order and that gain would be unreachable.
+
+**A body with no entry gets no cap breaker plan.** Gains run from +1 to +7
+across attributes on a single frame, so there is nothing safe to extrapolate.
 
 The optimizer treats cap breakers as a **post-build overlay**: it optimizes the
-build first, then measures which single `+1` crosses the most valuable
-threshold. It only ever recommends them on attributes already sitting at the
-cap, and it reports leftovers as unplaceable rather than inventing a home for
-them.
+build first, then allocates slots against the table, always taking whichever run
+of slots buys the most unlock value per slot spent. It only recommends them on
+attributes already at their cap, and reports leftovers as unplaceable rather
+than inventing a home for them.
+
+**`allocation` is the open question.** The builder shows five slots per
+attribute and a `newCap` assuming all five are filled, which is equally
+consistent with a scarce shared pool and with every attribute filling its own
+slots independently. The second reading would hand the transcribed frame +112
+attribute points, so the default is `"shared-pool"` with `poolSize: 5` — the
+reading that can under-promise but never over-promise. Flip `mode` to
+`"per-attribute"` if the generous reading turns out to be right.
 
 ### `badge-boosts.json`
 The "maximum +1 / +2 badge boost" mechanic. Slot counts, stacking rules and

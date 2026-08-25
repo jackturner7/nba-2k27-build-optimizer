@@ -2,13 +2,14 @@ import type {
   AttributeVector,
   BadgeBoostRecommendation,
   BuildBody,
+  CapBreakerPlanStatus,
   CapBreakerRecommendation,
   Dataset,
   WasteFinding,
 } from '../types.js';
 import type { BreakpointMap } from './breakpoints.js';
 import { lastUsefulBreakpoint } from './breakpoints.js';
-import { isCapBreakerEligible } from './caps.js';
+import { capBreakerGain, capBreakerTableFor, isCapBreakerEligible, usableSlots } from './caps.js';
 import type { CostModel } from './cost.js';
 import { clauseOptions } from './requirements.js';
 import { priorityWeights } from './score.js';
@@ -66,9 +67,17 @@ const fakeCost = {
 } as unknown as CostModel;
 
 /**
- * Cap breakers are a post-build overlay: the build is already locked in, and
- * each breaker buys exactly one point. So the only question worth asking is
- * "which single point crosses a threshold", which is what this measures.
+ * Cap breakers are a post-build overlay: the build is already locked in, so the
+ * only question is where the raises land.
+ *
+ * Each slot is worth a different, per-attribute amount that the builder
+ * publishes (Steal's first slot is +7 on one frame, Close Shot's is +1), and
+ * gains diminish down the row. So this is not "which single point crosses a
+ * threshold" any more — it is a marginal-value allocation over a real table,
+ * one slot at a time, always taking whichever next slot unlocks the most.
+ *
+ * With no table for this body it plans nothing and says why. Gains vary far too
+ * much between attributes to extrapolate from another frame.
  */
 export function planCapBreakers(
   ds: Dataset,
@@ -76,74 +85,138 @@ export function planCapBreakers(
   body: BuildBody,
   caps: AttributeVector,
   priorities: Record<string, number>
-): { plan: CapBreakerRecommendation[]; remaining: number; effective: AttributeVector } {
+): {
+  plan: CapBreakerRecommendation[];
+  remaining: number;
+  effective: AttributeVector;
+  status: CapBreakerPlanStatus;
+} {
   const cb = ds.capBreakers;
   const effective = { ...attrs };
-  if (!cb.enabled || cb.totalAvailable <= 0) {
-    return { plan: [], remaining: 0, effective };
+  const table = capBreakerTableFor(ds, body);
+
+  if (!cb.enabled) {
+    return { plan: [], remaining: 0, effective, status: { kind: 'disabled', note: 'Cap breakers are disabled in this dataset.' } };
+  }
+  if (!table) {
+    return {
+      plan: [],
+      remaining: 0,
+      effective,
+      status: {
+        kind: 'no-data',
+        note:
+          'No cap breaker table has been transcribed for this body. Gains are per-attribute and vary ' +
+          'from +1 to +7 on the one frame we have, so nothing is extrapolated — read this build off the ' +
+          'NBA 2K HQ app and add it to cap-breakers.json.',
+      },
+    };
+  }
+
+  // 'shared-pool': a scarce resource to distribute. 'per-attribute': every row
+  // fills independently. The file documents why the scarce reading is default.
+  const perAttributeMode = cb.allocation.mode === 'per-attribute';
+  const budget = perAttributeMode ? Number.POSITIVE_INFINITY : cb.allocation.poolSize;
+  if (budget <= 0) {
+    return { plan: [], remaining: 0, effective, status: { kind: 'no-breakers', note: 'This dataset grants no cap breakers.' } };
   }
 
   const pw = priorityWeights(ds, priorities);
   const plan: CapBreakerRecommendation[] = [];
   const usedPerAttribute: Record<string, number> = {};
-  let remaining = cb.totalAvailable;
+  let remaining = budget;
 
   while (remaining > 0) {
-    let best: { attr: string; gain: number; unlocks: string[] } | null = null;
+    let best: { attr: string; slots: number; to: number; gain: number; density: number; unlocks: string[] } | null = null;
     const baseValue = unlockValue(ds, effective, body, pw);
 
     for (const a of ds.attributes) {
       if (!isCapBreakerEligible(ds, a.id)) continue;
+      const row = table.attributes[a.id];
       const used = usedPerAttribute[a.id] ?? 0;
-      if (used >= cb.maxPerAttribute) continue;
+      const available = usableSlots(row) - used;
+      if (available <= 0) continue; // locked, exhausted, or absent from the table
+
       const current = effective[a.id];
       const cap = caps[a.id];
       if (current === undefined || cap === undefined) continue;
-      // A cap breaker is only interesting on an attribute already sitting at
-      // its ceiling; anywhere else, ordinary build points are cheaper.
+      // A breaker raises the CAP, so it does nothing unless the attribute is
+      // already sitting on it — below the cap, ordinary build points are cheaper.
       if (current < cap) continue;
-      const next = Math.min(cb.absoluteCeiling, current + cb.raisePerBreaker);
-      if (next <= current) continue;
 
-      const probe = { ...effective, [a.id]: next };
-      const gain = unlockValue(ds, probe, body, pw) - baseValue;
-      const unlocks = newUnlockNames(ds, effective, probe, body);
-      if (!best || gain > best.gain) best = { attr: a.id, gain, unlocks };
+      // Slots must be considered as RUNS, not one at a time. Pass Accuracy's
+      // slots are +2 each and no single one of them crosses anything, but three
+      // together do. A greedy that only ever looked one slot ahead would see a
+      // zero gain, stop, and leave every remaining breaker unplaced.
+      const maxRun = Math.min(available, Number.isFinite(remaining) ? remaining : available);
+      for (let k = 1; k <= maxRun; k++) {
+        const step = capBreakerGain(row, used + k) - capBreakerGain(row, used);
+        if (step <= 0) continue;
+        const next = Math.min(cb.absoluteCeiling, row!.newCap, current + step);
+        if (next <= current) continue;
+
+        const probe = { ...effective, [a.id]: next };
+        const gain = unlockValue(ds, probe, body, pw) - baseValue;
+        if (gain <= 0) continue;
+        // Rank by value per slot spent, so a cheap unlock beats an expensive one
+        // of the same size; ties go to the shorter run, which leaves more over.
+        const density = gain / k;
+        if (!best || density > best.density) {
+          best = { attr: a.id, slots: k, to: next, gain, density, unlocks: newUnlockNames(ds, effective, probe, body) };
+        }
+      }
     }
 
-    if (!best || best.gain <= 0) break;
+    if (!best) break;
 
     const from = effective[best.attr]!;
-    const to = Math.min(cb.absoluteCeiling, from + cb.raisePerBreaker);
-    effective[best.attr] = to;
-    usedPerAttribute[best.attr] = (usedPerAttribute[best.attr] ?? 0) + 1;
-    remaining--;
+    effective[best.attr] = best.to;
+    usedPerAttribute[best.attr] = (usedPerAttribute[best.attr] ?? 0) + best.slots;
+    remaining -= best.slots;
 
     const existing = plan.find((p) => p.attribute === best!.attr);
     if (existing) {
-      existing.to = to;
-      existing.breakersUsed++;
-      existing.scoreGain += round2(best.gain);
+      existing.to = best.to;
+      existing.breakersUsed += best.slots;
+      existing.scoreGain = round2(existing.scoreGain + best.gain);
       existing.unlocks.push(...best.unlocks);
+      existing.reason = breakerReason(existing.unlocks, existing.from, best.to);
     } else {
       plan.push({
         attribute: best.attr,
         attributeName: ds.attributes.find((a) => a.id === best!.attr)?.name ?? best.attr,
         from,
-        to,
-        breakersUsed: 1,
-        reason:
-          best.unlocks.length > 0
-            ? `Crosses a threshold: ${best.unlocks.join(', ')}.`
-            : 'Highest-value point available at the cap.',
+        to: best.to,
+        breakersUsed: best.slots,
+        reason: breakerReason(best.unlocks, from, best.to),
         unlocks: best.unlocks,
         scoreGain: round2(best.gain),
       });
     }
   }
 
-  // Anything left over has no threshold to chase; say so instead of inventing one.
-  return { plan, remaining, effective };
+  const used = plan.reduce((a, p) => a + p.breakersUsed, 0);
+  const left = perAttributeMode ? 0 : Math.max(0, cb.allocation.poolSize - used);
+  return {
+    plan,
+    remaining: left,
+    effective,
+    status: {
+      kind: 'planned',
+      tableLabel: table.label,
+      note:
+        perAttributeMode
+          ? 'Every attribute fills its own slots independently in this dataset, so this is the full table applied.'
+          : `${cb.allocation.poolSize} breaker${cb.allocation.poolSize === 1 ? '' : 's'} to place across all attributes.`,
+    },
+  };
+}
+
+function breakerReason(unlocks: string[], from: number, to: number): string {
+  const move = `+${to - from} (${from} → ${to})`;
+  return unlocks.length > 0
+    ? `${move}, crossing ${unlocks.join(', ')}.`
+    : `${move}, the largest raise available on an attribute already at its cap.`;
 }
 
 function newUnlockNames(ds: Dataset, before: AttributeVector, after: AttributeVector, body: BuildBody): string[] {

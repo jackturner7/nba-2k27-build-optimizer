@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  capOverrideFor,
   computeBudget,
   formatHeight,
   heightRange,
@@ -114,6 +115,47 @@ export function BodyPanel({
           </div>
         </div>
       </div>
+
+      <CapsProvenance dataset={dataset} body={body} />
     </Panel>
+  );
+}
+
+/**
+ * Caps decide everything downstream, and right now only a handful of bodies
+ * have real ones. Which kind you are looking at is the single most useful thing
+ * to know about a build, so it sits directly under the sliders that choose it.
+ */
+function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }) {
+  const exact = capOverrideFor(dataset, body);
+  const accuracy = dataset.caps.capModel.measuredAccuracy;
+  const key = `${body.position}|${body.heightInches}|${body.weightPounds}|${body.wingspanInches}`;
+  const inGameName = dataset.officialBuildNames?.entries[key];
+
+  if (exact) {
+    return (
+      <>
+        {inGameName && (
+          <div className="summary-cell" style={{ marginTop: 10 }}>
+            <div className="k">In-game build name</div>
+            <div className="v" style={{ fontSize: 15 }}>{inGameName}</div>
+          </div>
+        )}
+        <div className="row-note severity-info" style={{ marginTop: 10 }}>
+          ✅ <strong>Exact caps.</strong> This frame was transcribed from the real builder. Every cap
+          below is what the game gives you.
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="row-note" style={{ marginTop: 10 }}>
+      ⚠️ <strong>Modelled caps.</strong> No real cap table for this frame, so the caps come from the
+      dataset&rsquo;s linear model.
+      {accuracy
+        ? ` Scored against the one frame that does have real caps, that model is off by ${accuracy.meanAbsoluteError} points on average and reads high on ${accuracy.biasedHighOn} of ${accuracy.attributesCompared} attributes — so this build will look more affordable than it is.`
+        : ' The magnitudes are invented.'}
+    </div>
   );
 }
