@@ -2,29 +2,33 @@
   "$schema": "../schema/meta.schema.json",
   "datasetId": "2k27",
   "gameTitle": "NBA 2K27",
-  "datasetVersion": "0.2.0-partial",
+  "datasetVersion": "0.3.0-badges-sourced",
   "schemaVersion": 2,
   "lastUpdated": "2026-08-25",
-
   "provenance": {
     "status": "partial",
-    "headline": "PARTIALLY SOURCED NBA 2K27 DATA. Badges and thresholds are real; caps, costs and the build budget are not.",
+    "headline": "BADGE DATA IS SOURCED FROM NBA 2K LAB. Attribute caps, cost curves and the build budget are still invented.",
     "explanation": [
-      "SOURCED (trust, but re-check): every badge requirement and badge token cost for the Shooting,",
-      "Playmaking, Defense and Finishing disciplines, taken from NBA 2K27 badge cost charts; the",
-      "animation and takeover thresholds named on a community 'best value attribute thresholds' sheet;",
-      "the builder's attribute list; and the direction of each body setting's effect on caps.",
+      "SOURCED (trust, but re-check):",
+      "  - All 53 badges: attribute requirements, AND/OR logic and HEIGHT RANGES, imported from NBA 2K Lab",
+      "    (https://www.nba2klab.com/badge-requirements), collected at NBA 2K27 Community Day. 2K Lab notes",
+      "    2K can still change any of it before full release. Regenerate: node scripts/import-2klab.mjs",
+      "  - Badge TOKEN COSTS for 42 of the 53 badges, from the 2K27 badge cost charts (2K Lab does not",
+      "    publish token costs, so the two sources are complementary).",
+      "  - Animation and takeover thresholds named on a community 'best value attribute thresholds' sheet.",
+      "  - The builder attribute list, and the 5'9\"-7'4\" overall height range.",
+      "  - The direction of each body setting's effect on caps.",
       "",
-      "NOT SOURCED (assume wrong): attribute CAPS (only the direction of each body effect is known,",
-      "not the magnitude), the per-point COST CURVES, the total BUILD POINT BUDGET, cap breaker",
-      "quantities, badge boost slot counts, and the badge token EARNING formula.",
+      "NOT SOURCED (assume wrong): attribute CAP magnitudes, the per-point COST CURVES, the total BUILD",
+      "POINT BUDGET, the badge token EARNING formula, the per-discipline badge SLOT split, cap breaker",
+      "quantities, and badge boost slot counts.",
       "",
-      "MISSING ENTIRELY: the Rebounding and Physicals badge cost charts. The handful of rebounding and",
-      "physicals badges present were reconstructed from single lines on the best-value sheet, carry",
-      "only one tier each, and are flagged with incompleteTiers.",
+      "INFERRED: token costs for the 11 Rebounding and Physicals badges, whose cost charts were never",
+      "supplied. All 42 badges with known costs follow exactly three ladders (1/3/4/5, 2/4/5/6, 3/5/6/7);",
+      "the middle one is used as a fallback. Every badge priced that way is flagged in the UI. Disable it",
+      "via badge-tokens.json -> fallbackTokenCost.enabled.",
       "",
-      "Attribute names are 2K27's. Badge names are 2K27's. Archetype names are community convention,",
-      "not official 2K27 build names."
+      "Attribute and badge names are 2K27's. Archetype names are community convention, not official."
     ],
     "howToReplace": "See docs/DATA.md. Replace values in place and set each record's verification.status with a source. Nothing in the UI or engine hard-codes these numbers.",
     "verificationLevels": {
@@ -35,20 +39,32 @@
       "deprecated": "Known to be wrong / no longer applies. Retained for history, ignored by the engine."
     }
   },
-
   "defaultVerification": {
     "status": "unverified",
     "source": null,
     "notes": "No source recorded for this record.",
     "lastReviewed": "2026-08-25"
   },
-
   "uiWarnings": {
-    "globalBanner": "Badge requirements and token costs are from real NBA 2K27 charts. Attribute CAPS, COST CURVES and the BUILD POINT BUDGET are still placeholders — builds will pick the right thresholds but may be affordable when they should not be. Rebounding and Physicals badge charts are missing entirely.",
+    "globalBanner": "Badge requirements and height gates are sourced from NBA 2K Lab. Attribute CAPS, COST CURVES and the BUILD POINT BUDGET are still placeholders \u2014 builds pick the right thresholds but may be affordable when they should not be. Token costs for the 11 Rebounding/Physicals badges are estimated, not sourced.",
     "showPerRecordBadges": true
   },
-
   "changelog": [
+    {
+      "version": "0.3.0-badges-sourced",
+      "date": "2026-08-25",
+      "changes": [
+        "Imported all 53 badges from NBA 2K Lab: requirements, AND/OR logic and per-badge HEIGHT RANGES.",
+        "Added the missing Rebounding badges (Boxout Boss, Breaker, Crasher, Possession Closer, Sync Snatcher) and Physicals badges (Brick Wall, Bruiser, Flash, Pogo Stick, Slippery Off-Ball, Work Horse).",
+        "Removed Rebound Chaser, which I had reconstructed from a single line of the best-value sheet and which does not exist on 2K Lab.",
+        "Resolved all four rows previously flagged as unreadable from the chart images: Post Fade Phenom Bronze Mid-Range is 60 (not 83, so the ladder is monotonic after all); Pick Dodger, Wall Up and Post Lockdown all had wrong tier values.",
+        "Mini Marksman gained its real attribute requirements (Mid-Range or Three-Point 60/79/94/99) \u2014 the chart image showed only the height gate.",
+        "Badge height gating is now modelled: 25 of 53 badges are height-restricted, so height locks badges out entirely rather than just moving caps.",
+        "Corrected the builder height range to 5'9\"-7'4\", read off 2K Lab's height columns.",
+        "Added a documented fallback price for badges with no sourced token cost, flagged as inferred everywhere it is used.",
+        "Added scripts/import-2klab.mjs so the badge data can be re-imported when 2K Lab updates."
+      ]
+    },
     {
       "version": "0.2.0-partial",
       "date": "2026-08-25",
@@ -64,23 +80,70 @@
         "Rewrote animations and takeovers to only what the best-value threshold sheet names."
       ]
     },
-    { "version": "0.1.0-placeholder", "date": "2026-08-25", "changes": ["Initial scaffold with fully invented placeholder data."] }
+    {
+      "version": "0.1.0-placeholder",
+      "date": "2026-08-25",
+      "changes": [
+        "Initial scaffold with fully invented placeholder data."
+      ]
+    }
   ],
-
   "files": [
-    { "file": "attributes.json", "describes": "Attribute definitions, six disciplines, min/max, cost curve binding." },
-    { "file": "cost-curves.json", "describes": "Per-point upgrade cost curves referenced by attributes. UNSOURCED." },
-    { "file": "positions.json", "describes": "Positions and their body-setting envelopes. UNSOURCED." },
-    { "file": "body.json", "describes": "Height / weight / wingspan legal ranges. UNSOURCED." },
-    { "file": "caps.json", "describes": "How body settings translate into per-attribute maximums. Directions sourced, magnitudes not." },
-    { "file": "budget.json", "describes": "Total build point budget. UNSOURCED." },
-    { "file": "badges.json", "describes": "Badges, tiers, attribute requirements and badge token costs. SOURCED for four of six disciplines." },
-    { "file": "badge-tokens.json", "describes": "Badge token economy: per-discipline pools and badge slots. Mechanic sourced, quantities not." },
-    { "file": "animations.json", "describes": "Animation packages and their requirements. SOURCED but incomplete." },
-    { "file": "takeovers.json", "describes": "Takeovers and their unlock requirements. SOURCED but likely incomplete." },
-    { "file": "cap-breakers.json", "describes": "Cap breaker rules. Behaviour sourced, quantities not." },
-    { "file": "badge-boosts.json", "describes": "Maximum +1 / +2 badge level boost rules. UNSOURCED." },
-    { "file": "dependencies.json", "describes": "Declared attribute interaction rules. Modelling choices, not game rules." },
-    { "file": "archetypes.json", "describes": "Named build archetypes. Threshold values sourced, archetype names are community convention." }
+    {
+      "file": "attributes.json",
+      "describes": "Attribute definitions, six disciplines, min/max, cost curve binding."
+    },
+    {
+      "file": "cost-curves.json",
+      "describes": "Per-point upgrade cost curves referenced by attributes. UNSOURCED."
+    },
+    {
+      "file": "positions.json",
+      "describes": "Positions and their body-setting envelopes. UNSOURCED."
+    },
+    {
+      "file": "body.json",
+      "describes": "Height / weight / wingspan legal ranges. UNSOURCED."
+    },
+    {
+      "file": "caps.json",
+      "describes": "How body settings translate into per-attribute maximums. Directions sourced, magnitudes not."
+    },
+    {
+      "file": "budget.json",
+      "describes": "Total build point budget. UNSOURCED."
+    },
+    {
+      "file": "badges.json",
+      "describes": "Badges, tiers, requirements, height ranges and token costs. Requirements SOURCED from 2K Lab; token costs sourced for 42 of 53."
+    },
+    {
+      "file": "badge-tokens.json",
+      "describes": "Badge token economy: per-discipline pools and badge slots. Mechanic sourced, quantities not."
+    },
+    {
+      "file": "animations.json",
+      "describes": "Animation packages and their requirements. SOURCED but incomplete."
+    },
+    {
+      "file": "takeovers.json",
+      "describes": "Takeovers and their unlock requirements. SOURCED but likely incomplete."
+    },
+    {
+      "file": "cap-breakers.json",
+      "describes": "Cap breaker rules. Behaviour sourced, quantities not."
+    },
+    {
+      "file": "badge-boosts.json",
+      "describes": "Maximum +1 / +2 badge level boost rules. UNSOURCED."
+    },
+    {
+      "file": "dependencies.json",
+      "describes": "Declared attribute interaction rules. Modelling choices, not game rules."
+    },
+    {
+      "file": "archetypes.json",
+      "describes": "Named build archetypes. Threshold values sourced, archetype names are community convention."
+    }
   ]
 }

@@ -33,7 +33,9 @@ export function BadgeLoadoutPanel({ dataset, build }: { dataset: Dataset; build:
                 <div className="row-title">
                   {b.name}
                   <BadgeLevelChip level={b.level} name={b.levelName} />
-                  <span className="chip token">{b.tokenCost} tokens</span>
+                  <span className="chip token" title={b.tokenCostInferred ? 'Estimated price — this badge has no sourced token cost' : 'Sourced token cost'}>
+                    {b.tokenCost} tokens{b.tokenCostInferred ? '*' : ''}
+                  </span>
                   {b.boostedLevel && b.boostedLevel !== b.level && (
                     <span className="chip boosted" title="Reached with a badge boost slot">
                       boost → {b.boostedLevelName}
@@ -46,6 +48,15 @@ export function BadgeLoadoutPanel({ dataset, build }: { dataset: Dataset; build:
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {build.tokens.inferredCostBadges.length > 0 && (
+        <div className="row-note severity-warning" style={{ marginTop: 12 }}>
+          <b>*</b> Estimated price. NBA 2K Lab publishes requirements but not token costs, and the
+          Rebounding and Physicals cost charts have not been added, so{' '}
+          <b>{build.tokens.inferredCostBadges.join(', ')}</b> are priced from the pattern the 42
+          badges with known costs follow. Their requirements are real; their prices are not.
         </div>
       )}
 
@@ -128,8 +139,8 @@ export function TokenPanel({
       {tokens.unpricedBadges.length > 0 && (
         <div className="row-note severity-critical" style={{ marginTop: 12 }}>
           No token cost is known for <b>{tokens.unpricedBadges.join(', ')}</b>, so they cannot be
-          planned or equipped. The Rebounding and Physicals badge cost charts have not been added to
-          the dataset yet.
+          planned or equipped. Add the missing badge cost charts, or turn on
+          <code> fallbackTokenCost </code> in <code>badge-tokens.json</code> to price them by pattern.
         </div>
       )}
 

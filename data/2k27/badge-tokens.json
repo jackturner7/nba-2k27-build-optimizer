@@ -5,7 +5,7 @@
     "In 2K27 badges are no longer granted automatically when you hit an attribute threshold. Meeting",
     "the threshold makes a badge tier ELIGIBLE; you then have to SPEND BADGE TOKENS to equip it, into",
     "a limited number of badge slots. Tokens are earned per discipline by investing in that",
-    "discipline's attributes — raising Three-Point earns shooting tokens, and a single point can be",
+    "discipline's attributes \u2014 raising Three-Point earns shooting tokens, and a single point can be",
     "worth an extra token.",
     "",
     "This makes the optimizer a two-budget problem: build points buy attributes, and attributes earn",
@@ -20,25 +20,31 @@
     "numbers below are placeholders. Enter your real in-game numbers via the UI (they override this",
     "file per-request) or edit `manualTokens` here."
   ],
-
   "enabled": true,
   "verification": {
     "status": "estimated",
     "source": "NBA 2K27 badge cost charts (token costs per tier) + community builder coverage of the token mechanic.",
     "notes": "Mechanic confirmed; every quantity below is a placeholder."
   },
-
-  "disciplines": ["shooting", "finishing", "playmaking", "defense", "rebounding", "physicals"],
-
+  "disciplines": [
+    "shooting",
+    "finishing",
+    "playmaking",
+    "defense",
+    "rebounding",
+    "physicals"
+  ],
   "upgradeCostMode": {
     "value": "absolute",
-    "options": ["absolute", "incremental"],
+    "options": [
+      "absolute",
+      "incremental"
+    ],
     "verification": {
       "status": "unverified",
       "notes": "'absolute' = equipping Gold costs the full Gold price. 'incremental' = you pay Gold minus what you already paid for Silver. The charts show a per-tier price but not which of these it means. 'absolute' is the more conservative reading."
     }
   },
-
   "slots": {
     "total": 20,
     "byDiscipline": {
@@ -55,27 +61,25 @@
       "notes": "The TOTAL of 20 is sourced. The per-discipline SPLIT below is invented and sums to 20. Bonus Slots earned through progression are not modelled."
     }
   },
-
   "tokenGrants": {
     "mode": "linear-by-investment",
     "$comment": [
       "mode 'linear-by-investment': tokens = floor( sum over that discipline's attributes of",
       "  max(0, rating - freeBelow) / pointsPerToken ), capped at maxPerDiscipline.",
-      "mode 'table': use `table` below — an exact list of { attribute, rating } ratings that each",
+      "mode 'table': use `table` below \u2014 an exact list of { attribute, rating } ratings that each",
       "  grant one token. Use this once the real breakpoints are known; it is what the game actually",
       "  does ('sometimes just one point provides an additional badge token').",
       "mode 'manual': ignore attributes entirely and use `manualTokens`."
     ],
     "verification": {
       "status": "unverified",
-      "notes": "Formula and constants are invented. Only the direction (more investment -> more tokens) is sourced. Calibrated so that a committed build earns enough tokens for BADGE SLOTS to be the binding constraint rather than tokens — which is what '20 badge slots' being the headline number implies. If real numbers show tokens are the tighter limit, lower pointsPerToken."
+      "notes": "Formula and constants are invented. Only the direction (more investment -> more tokens) is sourced. Calibrated so that a committed build earns enough tokens for BADGE SLOTS to be the binding constraint rather than tokens \u2014 which is what '20 badge slots' being the headline number implies. If real numbers show tokens are the tighter limit, lower pointsPerToken."
     },
     "freeBelow": 50,
     "pointsPerToken": 5,
     "maxPerDiscipline": 30,
     "table": {}
   },
-
   "manualTokens": {
     "$comment": "Set any of these to a number to override the computed token pool for that discipline. null = compute it. The UI exposes these as inputs so you can type your real in-game values.",
     "shooting": null,
@@ -85,7 +89,6 @@
     "rebounding": null,
     "physicals": null
   },
-
   "rules": {
     "capBreakersGrantTokens": false,
     "capBreakersGrantTokensVerification": {
@@ -94,5 +97,33 @@
     },
     "unspentTokensCarryOver": null,
     "canRefundTokens": null
+  },
+  "fallbackTokenCost": {
+    "$comment": [
+      "What to charge for a badge tier whose real token cost is unknown.",
+      "",
+      "WHY THIS EXISTS: the Rebounding and Physicals badge cost charts were never supplied, so 11 of the",
+      "53 badges have no sourced token cost. Without a fallback those badges can never be equipped, which",
+      "silently cripples every big-man and athleticism build \u2014 a worse failure than an approximate price.",
+      "",
+      "WHY THIS SHAPE: all 42 badges whose costs ARE known fall into exactly three ladders and nothing",
+      "else: 1/3/4/5 (15 badges), 2/4/5/6 (10 badges) and 3/5/6/7 (17 badges). The middle ladder is used",
+      "here. That is an inference from a very consistent pattern, NOT a sourced value, and every badge",
+      "priced this way is flagged `tokenCostInferred` and called out in the UI.",
+      "",
+      "Set `enabled` to false to go back to refusing to price them, which is the strictly honest option."
+    ],
+    "enabled": true,
+    "verification": {
+      "status": "estimated",
+      "source": "Inferred from the cost ladders of the 42 badges with sourced token costs.",
+      "notes": "Replace with real costs from the Rebounding and Physicals badge cost charts and this fallback stops being used."
+    },
+    "byLevel": {
+      "bronze": 2,
+      "silver": 4,
+      "gold": 5,
+      "hof": 6
+    }
   }
 }

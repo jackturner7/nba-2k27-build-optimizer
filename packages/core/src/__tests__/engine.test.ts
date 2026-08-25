@@ -9,7 +9,8 @@ import { evaluateBuild } from '../engine/evaluate.js';
 import { optimize } from '../engine/optimize.js';
 import { requestFromArchetype } from '../engine/archetype.js';
 import { formatHeight, parseHeight, validateBody } from '../engine/body.js';
-import { clauseOptions, gapsFor, meetsRequirements } from '../engine/requirements.js';
+import { clauseOptions, gapsFor, meetsBody, meetsRequirements } from '../engine/requirements.js';
+import { badgeLevelFor } from '../engine/unlocks.js';
 import { computeTokens } from '../engine/tokens.js';
 import { parseBuildRequest } from '../nl/parse.js';
 import type { BuildBody } from '../types.js';
@@ -374,6 +375,46 @@ describe('2K27 requirement clauses', () => {
   });
 });
 
+describe('badge height gating', () => {
+  it('locks a height-gated badge out entirely, at any rating', () => {
+    // Seatbelt is 5'9"-6'9" and Wall Up is 6'5"-7'4": no rating unlocks the
+    // wrong one, so height is a hard build decision, not a soft cost.
+    const seatbelt = ds.badges.find((b) => b.id === 'seatbelt')!;
+    const wallUp = ds.badges.find((b) => b.id === 'wall_up')!;
+    expect(seatbelt.restrictions?.maxHeightInches).toBeDefined();
+    expect(wallUp.restrictions?.minHeightInches).toBeDefined();
+
+    const maxed: Record<string, number> = {};
+    for (const a of ds.attributes) maxed[a.id] = ds.ratingCeiling;
+
+    const tall: BuildBody = { position: 'C', heightInches: 86, weightPounds: 260, wingspanInches: 92 };
+    const small: BuildBody = { position: 'PG', heightInches: 72, weightPounds: 180, wingspanInches: 76 };
+
+    expect(badgeLevelFor(ds, seatbelt, maxed, tall)).toBeNull();
+    expect(badgeLevelFor(ds, seatbelt, maxed, small)).not.toBeNull();
+    expect(badgeLevelFor(ds, wallUp, maxed, small)).toBeNull();
+    expect(badgeLevelFor(ds, wallUp, maxed, tall)).not.toBeNull();
+  });
+
+  it('never equips a badge the build is too tall or too short for', () => {
+    for (const archetype of ['inside_center', 'two_way_guard']) {
+      const build = optimize(ds, requestFromArchetype(ds, archetype)).builds[0]!;
+      for (const equipped of build.equippedBadges) {
+        const def = ds.badges.find((b) => b.id === equipped.badgeId)!;
+        expect(meetsBody(build.body, def.restrictions)).toBe(true);
+      }
+    }
+  });
+
+  it('does not chase a threshold for a badge the body cannot hold', () => {
+    // A centre should not be pushed toward Seatbelt's Agility requirement.
+    const build = optimize(ds, requestFromArchetype(ds, 'inside_center')).builds[0]!;
+    const seatbelt = ds.badges.find((b) => b.id === 'seatbelt')!;
+    expect(meetsBody(build.body, seatbelt.restrictions)).toBe(false);
+    expect(build.badges.some((b) => b.badgeId === 'seatbelt')).toBe(false);
+  });
+});
+
 describe('badge tokens', () => {
   it('earns more tokens in a discipline the build invests in', () => {
     const base: Record<string, number> = {};
@@ -404,11 +445,31 @@ describe('badge tokens', () => {
     }
   });
 
-  it('reports badges it could not price rather than silently dropping them', () => {
+  it('flags badges priced from the fallback rather than passing them off as sourced', () => {
     const build = optimize(ds, requestFromArchetype(ds, 'inside_center')).builds[0]!;
-    // The rebounding and physicals charts were never supplied, so those badges
-    // have no token cost and must be surfaced, not hidden.
-    expect(build.tokens.unpricedBadges.length).toBeGreaterThan(0);
+    // The Rebounding and Physicals cost charts were never supplied. With the
+    // fallback on they are priced and equippable, but must be reported as
+    // inferred; with it off they must be reported as unpriced. Never silent.
+    const fallbackOn = ds.badgeTokens.fallbackTokenCost.enabled;
+    if (fallbackOn) {
+      expect(build.tokens.inferredCostBadges.length).toBeGreaterThan(0);
+      for (const b of build.equippedBadges) {
+        const def = ds.badges.find((x) => x.id === b.badgeId)!;
+        const sourced = def.tiers.find((t) => t.level === b.level)?.tokenCost !== null;
+        expect(b.tokenCostInferred ?? false).toBe(!sourced);
+      }
+    } else {
+      expect(build.tokens.unpricedBadges.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('can equip rebounding and physicals badges on a big', () => {
+    // Regression: before the Rebounding/Physicals data arrived these two
+    // disciplines could never be filled, quietly gutting every big-man build.
+    const build = optimize(ds, requestFromArchetype(ds, 'inside_center')).builds[0]!;
+    const disciplines = new Set(build.equippedBadges.map((b) => b.category));
+    expect(disciplines.has('rebounding')).toBe(true);
+    expect(disciplines.has('physicals')).toBe(true);
   });
 
   it('honours a manual token override', () => {

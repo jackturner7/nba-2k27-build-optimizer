@@ -284,6 +284,13 @@ export const badgeTokensSchema = z.object({
       .default({}),
   }),
   manualTokens: z.record(z.string(), z.number().nullable()).default({}),
+  fallbackTokenCost: z
+    .object({
+      enabled: z.boolean().default(false),
+      verification,
+      byLevel: z.record(z.string(), z.number().int().nonnegative()).default({}),
+    })
+    .default({ enabled: false, byLevel: {}, verification: { status: 'unverified' } }),
   rules: z.object({
     capBreakersGrantTokens: z.boolean().default(false),
     unspentTokensCarryOver: z.boolean().nullable().default(null),

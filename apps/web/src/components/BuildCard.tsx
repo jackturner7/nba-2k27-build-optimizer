@@ -7,6 +7,7 @@ import {
   BadgeBoostPanel,
   BadgePanel,
   CapBreakerPanel,
+  HeightLockedPanel,
   NextBadgePanel,
   TakeoverPanel,
   WastePanel,
@@ -138,6 +139,7 @@ export function BuildCard({
       <BadgeLoadoutPanel dataset={dataset} build={build} />
       <TokenPanel dataset={dataset} build={build} overrides={tokenOverrides ?? {}} onOverrideChange={onTokenOverrideChange} />
       <BadgePanel build={build} />
+      <HeightLockedPanel dataset={dataset} build={build} />
       <NextBadgePanel build={build} />
       <AnimationPanel dataset={dataset} build={build} />
       <TakeoverPanel build={build} />

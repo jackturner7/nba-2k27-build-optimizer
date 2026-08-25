@@ -1,17 +1,19 @@
 {
   "$comment": [
-    "PLACEHOLDER DATA — see meta.json.",
+    "PLACEHOLDER DATA \u2014 see meta.json.",
     "Body legality is expressed as a RULE MODEL plus an OVERRIDES table. The engine always consults",
     "`overrides` first (exact match on position + heightInches) and falls back to the rule model.",
     "When verified 2K27 numbers arrive you can either (a) tune the rule model params, or (b) paste a",
     "full exact table into `overrides` and never touch the rule model again. Both are supported."
   ],
-  "heightInchesMin": 66,
-  "heightInchesMax": 90,
-
+  "heightInchesMin": 69,
+  "heightInchesMax": 88,
   "weightModel": {
     "kind": "linear-by-height",
-    "verification": { "status": "unverified", "notes": "Invented. Replace with the shipped 2K27 weight sliders." },
+    "verification": {
+      "status": "unverified",
+      "notes": "Invented. Replace with the shipped 2K27 weight sliders."
+    },
     "referenceHeightInches": 72,
     "minWeightAtReference": 150,
     "maxWeightAtReference": 240,
@@ -20,27 +22,29 @@
     "absoluteMin": 130,
     "absoluteMax": 360
   },
-
   "wingspanModel": {
     "kind": "offset-by-height",
-    "verification": { "status": "unverified", "notes": "Invented. Replace with the shipped 2K27 wingspan sliders." },
+    "verification": {
+      "status": "unverified",
+      "notes": "Invented. Replace with the shipped 2K27 wingspan sliders."
+    },
     "minOffsetInches": -3,
     "maxOffsetInches": 9,
     "absoluteMinInches": 63,
     "absoluteMaxInches": 100
   },
-
   "interactions": {
     "$comment": "Rules that shrink one slider based on another. Empty by default: the engine treats an empty list as 'no known interaction', NOT as 'no interaction exists'.",
-    "verification": { "status": "unverified", "notes": "No interaction rules are known for 2K27. If 2K27 restricts wingspan at extreme weights, add rules here." },
+    "verification": {
+      "status": "unverified",
+      "notes": "No interaction rules are known for 2K27. If 2K27 restricts wingspan at extreme weights, add rules here."
+    },
     "rules": []
   },
-
   "overrides": {
     "$comment": "Exact per-position, per-height legal ranges. Keys are `<POSITION>:<heightInches>`. Anything listed here wins over the rule models above. Ship verified data by filling this in.",
     "entries": {}
   },
-
   "display": {
     "heightFormat": "feet-inches",
     "weightUnit": "lb",
