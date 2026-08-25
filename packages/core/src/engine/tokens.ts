@@ -79,7 +79,26 @@ interface BadgeOption {
   level: string;
   levelOrder: number;
   tokenCost: number;
+  /** True when tokenCost came from the fallback rather than sourced data. */
+  inferred: boolean;
   value: number;
+}
+
+/**
+ * The token price of a tier, or null when it genuinely cannot be priced.
+ *
+ * Some badges have no sourced cost (the Rebounding and Physicals cost charts
+ * were never supplied). Rather than making those badges permanently
+ * unequippable — which quietly breaks every big-man build — the dataset can
+ * supply a fallback price. Anything priced that way is flagged all the way
+ * through to the UI so it is never mistaken for real data.
+ */
+function priceOf(ds: Dataset, tier: BadgeDef['tiers'][number]): { cost: number; inferred: boolean } | null {
+  if (tier.tokenCost !== null) return { cost: tier.tokenCost, inferred: false };
+  const fallback = ds.badgeTokens.fallbackTokenCost;
+  if (!fallback?.enabled) return null;
+  const cost = fallback.byLevel[tier.level];
+  return cost === undefined ? null : { cost, inferred: true };
 }
 
 /**
@@ -106,7 +125,8 @@ function eligibleOptions(
     let sawUnpriced = false;
     for (const tier of badge.tiers) {
       if (!meetsRequirements(tier.requires, attrs)) break; // ladder: stop at the first unmet tier
-      if (tier.tokenCost === null) {
+      const price = priceOf(ds, tier);
+      if (!price) {
         sawUnpriced = true;
         continue;
       }
@@ -114,7 +134,8 @@ function eligibleOptions(
         badge,
         level: tier.level,
         levelOrder: levelOrder(ds, tier.level),
-        tokenCost: tier.tokenCost,
+        tokenCost: price.cost,
+        inferred: price.inferred,
         value: levelWeight(ds, tier.level) * badge.impact * (0.35 + 1.65 * focusOf(badge)),
       });
     }
@@ -156,6 +177,7 @@ export function planBadgeLoadout(
   const equipped: EquippedBadge[] = [];
   const byDiscipline: DisciplineTokenReport[] = [];
   const unpricedBadges: string[] = [];
+  const inferredCostBadges: string[] = [];
 
   for (const discipline of cfg.disciplines) {
     const budget = tokens[discipline] ?? 0;
@@ -178,8 +200,10 @@ export function planBadgeLoadout(
         levelName: levelName(ds, p.level),
         levelOrder: p.levelOrder,
         tokenCost: p.tokenCost,
+        ...(p.inferred ? { tokenCostInferred: true } : {}),
         verification: p.badge.verification,
       });
+      if (p.inferred) inferredCostBadges.push(p.badge.name);
     }
 
     // Report what was eligible but did not make the cut, and why.
@@ -246,6 +270,7 @@ export function planBadgeLoadout(
       totalSlots: byDiscipline.reduce((a, d) => a + d.slots, 0),
       totalSlotsUsed: byDiscipline.reduce((a, d) => a + d.slotsUsed, 0),
       unpricedBadges: [...new Set(unpricedBadges)],
+      inferredCostBadges: [...new Set(inferredCostBadges)],
     },
   };
 }
@@ -375,11 +400,12 @@ export function planBadgeLoadoutFast(
       let chosen: { level: string; levelOrder: number; cost: number; value: number } | null = null;
       for (const tier of badge.tiers) {
         if (!meetsRequirements(tier.requires, attrs)) break;
-        if (tier.tokenCost === null) continue;
+        const price = priceOf(ds, tier);
+        if (!price) continue;
         chosen = {
           level: tier.level,
           levelOrder: levelOrder(ds, tier.level),
-          cost: tier.tokenCost,
+          cost: price.cost,
           value: levelWeight(ds, tier.level) * badge.impact * (0.35 + 1.65 * focus),
         };
       }

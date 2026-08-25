@@ -6,16 +6,18 @@ builder's restrictions — not simply the highest one.
 
 > ## ⚠️ The dataset is PARTIALLY sourced — check the label on each number
 >
-> **Real 2K27 data:** every badge requirement and badge token cost for Shooting,
-> Playmaking, Defense and Finishing; the animation and takeover thresholds from
-> the community "best value attribute thresholds" sheet; the builder's attribute
-> list; and the *direction* of each body setting's effect on caps.
+> **Real 2K27 data:** all 53 badges — requirements, AND/OR logic and per-badge
+> **height ranges** — imported from [NBA 2K Lab](https://www.nba2klab.com/badge-requirements);
+> badge **token costs** for 42 of them from the 2K27 badge cost charts; animation
+> and takeover thresholds; the attribute list; the 5'9"–7'4" builder height
+> range; and the *direction* of each body setting's effect on caps.
 >
-> **Still invented:** attribute **caps** (magnitudes), **cost curves**, the
-> **build point budget**, the badge **token-earning formula**, cap breaker
-> counts, and badge boost slots.
+> **Still invented:** attribute **cap magnitudes**, **cost curves**, the **build
+> point budget**, the badge **token-earning formula**, the per-discipline **slot
+> split**, cap breaker counts, and badge boost slots.
 >
-> **Missing entirely:** the Rebounding and Physicals badge cost charts.
+> **Inferred:** token costs for the 11 Rebounding/Physicals badges, whose cost
+> charts were never supplied. Flagged as estimated everywhere they are used.
 >
 > Every record carries a `verification.status` and the UI shows it next to the
 > value. `npm run data:report` tells you where you stand. See
@@ -61,6 +63,9 @@ qualify for.
 - **A nine-part optimization score** — badge value, animation unlocks, attribute
   efficiency, defensive versatility, shooting, finishing, playmaking, physicals,
   and wasted points.
+- **Height-gate awareness** — 25 of the 53 2K27 badges are restricted to a height
+  band, so height locks badges out entirely rather than just moving caps. The app
+  lists exactly which badges a body can never hold.
 - **Badge loadout and token planner** — which badges are eligible, which ones
   the token and slot budgets actually let you equip, what each costs, and which
   eligible badges got left behind and why. Type your real in-game token counts
@@ -100,7 +105,13 @@ npm run data:validate   # structural + cross-file checks; exits 1 on error
 npm run data:report     # what is still placeholder, and which attributes nothing gates on
 npm test                # engine invariants
 npm run typecheck
+
+node scripts/import-2klab.mjs           # re-import badge data from NBA 2K Lab
+node scripts/import-2klab.mjs page.html # ...or from a saved copy of the page
 ```
+
+The importer preserves badge token costs (2K Lab does not publish those) and
+leaves anything it cannot source explicitly `null` rather than guessing.
 
 The API reloads a dataset without restarting:
 `POST /api/datasets/2k27/reload`, or the **Reload data** button in the UI banner.
@@ -147,20 +158,14 @@ file changes the app's behaviour with no code change.
   currently calibrated so badge *slots* are the binding constraint, which is what
   "20 badge slots" being the headline number implies. Type your real per-
   discipline token counts into the UI to plan against those instead.
-- **No Rebounding or Physicals badge charts.** Those badges have no token cost,
-  so they cannot be equipped, and the app lists them as unpriced rather than
-  assuming they are free.
-- **Four rows need re-checking against the source.** Post Fade Phenom's Bronze
-  Mid-Range requirement reads *higher* than its Silver; Pick Dodger's Bronze cell
-  names different attributes from the rest of its ladder; Wall Up's row is badly
-  degraded; Post Lockdown's Gold/HOF token costs break the otherwise perfect
-  cost ladder. All four are marked `estimated` with a note, and `data:validate`
-  warns about the first.
+- **Rebounding and Physicals token costs are estimated.** Their requirements are
+  real; their prices come from the pattern the 42 priced badges follow. Turn the
+  fallback off in `badge-tokens.json` to make them unequippable instead.
 - **Attributes nothing gates on stay at the floor.** The engine only buys points
   that cross a threshold, so an attribute with no badge, animation or takeover
-  requirement is worth nothing to it. Free Throw has zero requirements in any
-  supplied chart, so it sits at 25. That is the data being incomplete, not the
-  optimizer misbehaving — the app reports the gap rather than inventing a
+  requirement is worth nothing to it. Free Throw has zero requirements anywhere
+  in the sourced data, so it sits at 25. That is the data being incomplete, not
+  the optimizer misbehaving — the app reports the gap rather than inventing a
   threshold.
 - **`badge.impact` and the dependency rules are judgement, not game data.** They
   are labelled as modelling choices and are meant to be tuned by hand.

@@ -303,6 +303,12 @@ export interface BadgeTokenData {
     table: Record<string, { attribute: AttributeId; rating: number; tokens: number }[]>;
   };
   manualTokens: Record<string, number | null>;
+  /** Price used when a badge tier's real token cost is unknown. */
+  fallbackTokenCost: {
+    enabled: boolean;
+    byLevel: Record<BadgeLevelId, number>;
+    verification: Verification;
+  };
   rules: {
     capBreakersGrantTokens: boolean;
     unspentTokensCarryOver: boolean | null;
@@ -320,6 +326,8 @@ export interface EquippedBadge {
   levelName: string;
   levelOrder: number;
   tokenCost: number;
+  /** True when tokenCost came from the fallback rather than the dataset. */
+  tokenCostInferred?: boolean;
   /** Level after +1/+2 boosts are applied, if any. */
   boostedLevel?: BadgeLevelId;
   boostedLevelName?: string;
@@ -346,6 +354,8 @@ export interface TokenReport {
   totalSlotsUsed: number;
   /** Badges whose token cost is unknown in the dataset, so they cannot be planned. */
   unpricedBadges: string[];
+  /** Badges priced from the fallback rather than from sourced data. */
+  inferredCostBadges: string[];
 }
 
 export type DependencyKind = 'hard-min' | 'soft-link' | 'diminishing';

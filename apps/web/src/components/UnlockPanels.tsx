@@ -1,5 +1,46 @@
-import type { BuildEvaluation, Dataset } from '@2k27/core';
+import { formatHeight, meetsBody, type BuildEvaluation, type Dataset } from '@2k27/core';
 import { BadgeLevelChip, Empty, GapPills, Panel, VerificationChip } from './Bits';
+
+/** "6'5\" and up" / "up to 6'9\"" — the height band a badge is available in. */
+function heightGate(r?: { minHeightInches?: number; maxHeightInches?: number }): string | null {
+  if (!r) return null;
+  if (r.minHeightInches !== undefined && r.maxHeightInches !== undefined)
+    return `${formatHeight(r.minHeightInches)}–${formatHeight(r.maxHeightInches)}`;
+  if (r.minHeightInches !== undefined) return `${formatHeight(r.minHeightInches)} and up`;
+  if (r.maxHeightInches !== undefined) return `up to ${formatHeight(r.maxHeightInches)}`;
+  return null;
+}
+
+/**
+ * Badges this body can never hold at any rating. 25 of the 53 2K27 badges are
+ * height-gated, so this is a real consequence of the height slider rather than
+ * a rounding detail — and it is invisible unless the app says so.
+ */
+export function HeightLockedPanel({ dataset, build }: { dataset: Dataset; build: BuildEvaluation }) {
+  const locked = dataset.badges.filter((b) => b.restrictions && !meetsBody(build.body, b.restrictions));
+  if (locked.length === 0) return null;
+
+  return (
+    <Panel
+      title="Locked by height"
+      count={`${locked.length} of ${dataset.badges.length} badges`}
+      collapsible
+      defaultOpen={false}
+    >
+      <div className="row-note" style={{ marginBottom: 10 }}>
+        At {formatHeight(build.body.heightInches)} these badges are unavailable at any rating. Changing
+        height is the only way to get them.
+      </div>
+      <div className="tag-row">
+        {locked.map((b) => (
+          <span className="chip locked" key={b.id} title={`${b.category} · ${heightGate(b.restrictions)}`}>
+            {b.name} · {heightGate(b.restrictions)}
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
 
 export function BadgePanel({ build }: { build: BuildEvaluation }) {
   const equipped = new Set(build.equippedBadges.map((b) => b.badgeId));
