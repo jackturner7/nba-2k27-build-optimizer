@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDataset, type LoadResult } from './loader.js';
 import type { RawDatasetFiles } from './schema.js';
+import type { SecondSource } from './crosscheck.js';
 
 const FILE_MAP: Record<keyof RawDatasetFiles, string> = {
   meta: 'meta.json',
@@ -55,6 +56,24 @@ export function loadDatasetFromDisk(datasetId = '2k27', dataRoot?: string): Load
     }
   }
   return buildDataset(raw);
+}
+
+/**
+ * Loads the independent sources in data/<id>/sources/, used to cross-check the
+ * shipped dataset. Absent directory is fine — a dataset need not have any.
+ */
+export function loadSecondSources(datasetId = '2k27', dataRoot?: string): SecondSource[] {
+  const dir = join(dataRoot ?? findDataRoot(), datasetId, 'sources');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      try {
+        return JSON.parse(readFileSync(join(dir, f), 'utf8')) as SecondSource;
+      } catch (e) {
+        throw new Error(`Failed to parse second source ${f}: ${(e as Error).message}`);
+      }
+    });
 }
 
 /** Lists the dataset ids available on disk, so multiple game years can coexist. */

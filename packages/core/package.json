@@ -21,7 +21,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "data:validate": "tsx src/cli/validate.ts",
-    "data:report": "tsx src/cli/report.ts"
+    "data:report": "tsx src/cli/report.ts",
+    "data:crosscheck": "tsx src/cli/crosscheck.ts"
   },
   "dependencies": {
     "zod": "^4.1.5"

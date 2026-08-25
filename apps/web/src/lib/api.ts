@@ -5,7 +5,7 @@ import type {
   OptimizeRequest,
   OptimizeResult,
 } from '@2k27/core';
-import type { CoverageReport, ParseNote } from '@2k27/core';
+import type { CoverageReport, CrossCheckReport, ParseNote } from '@2k27/core';
 
 const BASE = (import.meta.env['VITE_API_BASE'] as string | undefined) ?? '/api';
 
@@ -27,6 +27,7 @@ export interface DatasetPayload {
   issues: DataIssue[];
   verification: VerificationReport;
   coverage: CoverageReport;
+  crossChecks: CrossCheckReport[];
 }
 
 export interface DescribeResponse {

@@ -7,7 +7,9 @@ builder's restrictions — not simply the highest one.
 > ## ⚠️ The dataset is PARTIALLY sourced — check the label on each number
 >
 > **Real 2K27 data:** all 53 badges — requirements, AND/OR logic and per-badge
-> **height ranges** — imported from [NBA 2K Lab](https://www.nba2klab.com/badge-requirements);
+> **height ranges** — imported from [NBA 2K Lab](https://www.nba2klab.com/badge-requirements)
+> and **corroborated against a second independent chart**, which agrees on 211 of
+> 212 tiers and height gates (`npm run data:crosscheck`);
 > badge **token costs** for 42 of them from the 2K27 badge cost charts; animation
 > and takeover thresholds; the attribute list; the 5'9"–7'4" builder height
 > range; and the *direction* of each body setting's effect on caps.
@@ -106,12 +108,18 @@ npm run data:report     # what is still placeholder, and which attributes nothin
 npm test                # engine invariants
 npm run typecheck
 
+npm run data:crosscheck # diff the dataset against every independent source
+
 node scripts/import-2klab.mjs           # re-import badge data from NBA 2K Lab
 node scripts/import-2klab.mjs page.html # ...or from a saved copy of the page
 ```
 
 The importer preserves badge token costs (2K Lab does not publish those) and
 leaves anything it cannot source explicitly `null` rather than guessing.
+
+`data:crosscheck` compares the shipped dataset against each file in
+`data/2k27/sources/` and **fails if a disagreement is not recorded with a note**.
+Sources can differ — but the app has to say so rather than quietly pick a winner.
 
 The API reloads a dataset without restarting:
 `POST /api/datasets/2k27/reload`, or the **Reload data** button in the UI banner.
