@@ -6,6 +6,12 @@ builder's restrictions — not simply the highest one.
 
 > ## ⚠️ The dataset is PARTIALLY sourced — check the label on each number
 >
+> **Official 2K mechanics** (from [2K's MyPLAYER Builder page](https://nba.2k.com/2k27/features/myplayer-builder/)):
+> 53 badges, 20 badge slots across six disciplines, badge tokens earned by
+> playing, token cost varying by size and position, Legend reachable only through
+> Synergy, 16 Synergy slots (12 × +1, 4 × +2), a Fused badge refunding its tokens,
+> 5 Takeover slots / 24 abilities, and the 99-OVR cap breaker preview.
+>
 > **Real 2K27 data:** all 53 badges — requirements, AND/OR logic and per-badge
 > **height ranges** — imported from [NBA 2K Lab](https://www.nba2klab.com/badge-requirements)
 > and **corroborated against a second independent chart**, which agrees on 211 of
@@ -40,11 +46,19 @@ still sitting above the last useful threshold as waste you can recover.
 
 **2K27 adds a second budget.** Badges are no longer granted automatically when
 you hit a threshold — hitting it makes the badge *eligible*, and you then spend
-**badge tokens** (earned per discipline by investing in that discipline) to
-equip it, into a limited number of badge slots. A build is routinely eligible
-for twice as many badges as it can afford. The engine models both budgets, and
-scores the badges you can actually equip rather than the ones you merely
+**badge tokens** to equip it into one of 20 badge slots. A build is routinely
+eligible for twice as many badges as it can afford. The engine models both
+budgets and scores the badges you can actually equip, not the ones you merely
 qualify for.
+
+Tokens are earned by **playing** — discipline meters, practice drills, Gatorade
+workouts — so how many you have is a fact about your account, not your build.
+Set your real counts in the UI and the optimizer plans against those.
+
+**Synergy** is the third lever: 16 slots (12 × +1, 4 × +2) that push a badge a
+tier or two beyond what your attributes earned, and it is the *only* route to
+Legend. A Fused badge also refunds the tokens that equipped it, so Synergy buys
+back slot budget as well as tiers.
 
 ## What it does
 
@@ -162,10 +176,14 @@ file changes the app's behaviour with no code change.
   right thresholds but may be affordable when they should not be. This is the
   most valuable thing left to replace — the NBA 2K HQ app's builder is the place
   to read exact caps off and paste them into `caps.json` → `overrides.entries`.
-- **The token-earning formula is a guess.** Only the direction is sourced. It is
-  currently calibrated so badge *slots* are the binding constraint, which is what
-  "20 badge slots" being the headline number implies. Type your real per-
-  discipline token counts into the UI to plan against those instead.
+- **The size of your token pool is a guess**, because it depends on how much you
+  have played. The default is calibrated so badge *slots* bind rather than
+  tokens. Type your real per-discipline counts into the UI to plan against those.
+- **Badge token costs are a single-body snapshot.** 2K states cost varies with
+  size and position; the charts do not say which body they were captured at.
+  `badge-tokens.json` → `costByBody` has the hook, defaulted to no adjustment.
+- **15 of the 19 unlockable Takeover Abilities are missing**, so the optimizer
+  under-values attributes whose only payoff is a takeover it cannot see.
 - **Rebounding and Physicals token costs are estimated.** Their requirements are
   real; their prices come from the pattern the 42 priced badges follow. Turn the
   fallback off in `badge-tokens.json` to make them unequippable instead.

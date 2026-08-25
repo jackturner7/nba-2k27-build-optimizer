@@ -4,6 +4,23 @@
 data; a lot of it is still invented. The two are labelled record by record and
 you should not treat them the same way.
 
+### Official (from 2K)
+
+[2K's MyPLAYER Builder page](https://nba.2k.com/2k27/features/myplayer-builder/)
+is the authority for the *mechanics*, and it settled several things this project
+had guessed wrong:
+
+| | |
+| --- | --- |
+| 53 badges, six disciplines | matches the dataset exactly |
+| 20 badge slots per build | all available immediately; tokens are the gate |
+| Tokens earned by **playing** | discipline meters, practice drills, Gatorade workouts — *not* attribute allocation |
+| Token cost varies by **size and position** | "taller players may see a different number of tokens required than shorter ones for the same Badge" |
+| **Legend** exists but not at build creation | reached only through Synergy |
+| **Synergy**: 16 slots, 12 × +1 and 4 × +2 | a Fused badge also refunds its tokens |
+| 5 Takeover slots, 24 abilities (19 unlockable), 15 Perks | |
+| Cap Breaker preview at 99 OVR in the Builder | |
+
 ### Sourced (trust, but re-check)
 
 - **All 53 badges** — requirements, AND/OR logic and per-badge **height ranges** —
@@ -252,6 +269,18 @@ Other fields:
 
 ### `badge-tokens.json`
 The 2K27 token economy, and the second budget the optimizer has to respect.
+
+**`tokenGrants.mode` defaults to `flat`, and that is deliberate.** An earlier
+version derived the token pool from attribute investment. 2K's page says plainly
+that tokens come from playing, so that model was wrong in kind, not just in its
+constants. How many tokens you have is a fact about *your account*; set
+`flatByDiscipline` — or the UI inputs — to what you actually own.
+`linear-by-investment` is retained only for planning in the abstract.
+
+**`costByBody`** exists because 2K states token cost varies with size and
+position. The costs in `badges.json` came from charts that do not say which body
+they were captured at, so they are a single-body snapshot. The adjustment is
+zero by default — meaning *no relationship is known*, not that none exists.
 
 Meeting a threshold makes a badge **eligible**. Equipping it costs **tokens**
 from that discipline's pool and takes one of that discipline's **slots**. A

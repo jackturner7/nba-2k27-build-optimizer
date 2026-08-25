@@ -184,6 +184,10 @@ export function planBadgeBoosts(
   const minOrder = ds.badgeLevels.find((l) => l.id === cfg.rules.minimumLevelToBoost)?.order ?? 1;
   const maxOrder = levelsAsc[levelsAsc.length - 1]?.order ?? 5;
   const legendOrder = maxOrder;
+  // Synergy slots are EARNED, so plan against what this account actually has
+  // rather than the 16 the system tops out at.
+  const plusTwoSlots = cfg.availableSlots?.plusTwo ?? cfg.plusTwo.slots;
+  const plusOneSlots = cfg.availableSlots?.plusOne ?? cfg.plusOne.slots;
 
   const candidates = unlocked.filter((b) => {
     if (cfg.rules.excludedBadges.includes(b.badgeId)) return false;
@@ -233,13 +237,17 @@ export function planBadgeBoosts(
         toLevel: best.to.id,
         toLevelName: best.to.name,
         scoreGain: round2(best.gain),
-        reason: `${best.badge.name} is the highest-impact badge you hold that is not already maxed, on an attribute this build cares about.`,
+        reason:
+          `${best.badge.name} is the highest-impact badge you hold that is not already maxed, on an attribute this build cares about.` +
+          (ds.badgeBoosts.rules.fuseRefundsTokens
+            ? ' Fusing it also refunds the badge tokens spent equipping it.'
+            : ''),
       });
     }
   };
 
-  allocate('plusTwo', cfg.plusTwo.slots, cfg.plusTwo.levelsGained);
-  allocate('plusOne', cfg.plusOne.slots, cfg.plusOne.levelsGained);
+  allocate('plusTwo', plusTwoSlots, cfg.plusTwo.levelsGained);
+  allocate('plusOne', plusOneSlots, cfg.plusOne.levelsGained);
 
   return out;
 }

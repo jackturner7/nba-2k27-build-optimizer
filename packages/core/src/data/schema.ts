@@ -226,11 +226,15 @@ export const badgesSchema = z.object({
       name: z.string(),
       order: z.number().int(),
       scoreWeight: z.number(),
+      /** 2K27's Legend tier exists but cannot be reached at build creation. */
+      obtainableAtBuildCreation: z.boolean().default(true),
+      note: z.string().optional(),
     })
   ),
   globalRules: z.object({
     maxLegendBadges: z.number().int().nullable(),
     maxBadgesPerCategory: z.number().int().nullable(),
+    legendRequiresSynergy: z.boolean().default(false),
     verification,
   }),
   badges: z.array(
@@ -270,8 +274,20 @@ export const badgeTokensSchema = z.object({
     byDiscipline: z.record(z.string(), z.number().int().nonnegative()),
     verification,
   }),
+  costByBody: z
+    .object({
+      enabled: z.boolean().default(false),
+      verification,
+      referenceHeightInches: z.number().nullable().default(null),
+      perInchHeight: z.number().default(0),
+      minCost: z.number().int().positive().default(1),
+      overrides: z.record(z.string(), z.number().int().nonnegative()).default({}),
+    })
+    .default({ enabled: false, referenceHeightInches: null, perInchHeight: 0, minCost: 1, overrides: {}, verification: { status: 'unverified' } }),
   tokenGrants: z.object({
-    mode: z.enum(['linear-by-investment', 'table', 'manual']),
+    mode: z.enum(['flat', 'linear-by-investment', 'table', 'manual']),
+    flatByDiscipline: z.record(z.string(), z.number().nonnegative()).default({}),
+    progressionPresets: z.record(z.string(), z.number()).default({}),
     verification,
     freeBelow: z.number().default(0),
     pointsPerToken: z.number().positive().default(1),
@@ -293,8 +309,12 @@ export const badgeTokensSchema = z.object({
     .default({ enabled: false, byLevel: {}, verification: { status: 'unverified' } }),
   rules: z.object({
     capBreakersGrantTokens: z.boolean().default(false),
+    tokensReassignable: z.boolean().optional(),
+    inGameTokensLockedToDiscipline: z.boolean().optional(),
+    bonusTokensAnyDiscipline: z.boolean().optional(),
     unspentTokensCarryOver: z.boolean().nullable().default(null),
     canRefundTokens: z.boolean().nullable().default(null),
+    verification: verification.optional(),
   }),
 });
 
@@ -315,7 +335,23 @@ export const animationsSchema = z.object({
 });
 
 export const takeoversSchema = z.object({
-  slots: z.object({ primary: z.number().int(), secondary: z.number().int(), verification }),
+  slots: z.object({ total: z.number().int().nonnegative(), verification }),
+  abilities: z
+    .object({
+      totalInGame: z.number().int().nonnegative(),
+      unlockable: z.number().int().nonnegative(),
+      documentedHere: z.number().int().nonnegative(),
+      verification,
+    })
+    .optional(),
+  perks: z
+    .object({
+      modelled: z.boolean(),
+      total: z.number().int().nonnegative(),
+      kinds: z.array(z.string()).default([]),
+      verification,
+    })
+    .optional(),
   takeovers: z.array(
     z.object({
       id: z.string(),
@@ -353,19 +389,38 @@ export const capBreakersSchema = z.object({
     .default([]),
 });
 
+const slotCount = z.object({
+  slots: z.number().int().nonnegative(),
+  levelsGained: z.number().int(),
+  note: z.string().optional(),
+});
+
+/** The Synergy system: 12 x +1 and 4 x +2 slots, and the only route to Legend. */
 export const badgeBoostsSchema = z.object({
   verification,
   enabled: z.boolean(),
-  plusOne: z.object({ slots: z.number().int().nonnegative(), levelsGained: z.number().int(), note: z.string().optional() }),
-  plusTwo: z.object({ slots: z.number().int().nonnegative(), levelsGained: z.number().int(), note: z.string().optional() }),
+  totalSlots: z.number().int().nonnegative().default(0),
+  plusOne: slotCount,
+  plusTwo: slotCount,
+  availableSlots: z
+    .object({
+      plusOne: z.number().int().nonnegative(),
+      plusTwo: z.number().int().nonnegative(),
+      verification: verification.optional(),
+    })
+    .optional(),
   rules: z.object({
     canStackOnSameBadge: z.boolean(),
     canBoostToLegend: z.boolean(),
+    legendOnlyViaSynergy: z.boolean().default(false),
+    fuseRefundsTokens: z.boolean().default(false),
     requiresBadgeAlreadyUnlocked: z.boolean(),
     minimumLevelToBoost: z.string(),
     eligibleCategories: z.array(z.string()).default([]),
     excludedBadges: z.array(z.string()).default([]),
+    verification: verification.optional(),
   }),
+  reaction: z.object({ modelled: z.boolean() }).optional(),
 });
 
 export const dependenciesSchema = z.object({

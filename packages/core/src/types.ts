@@ -202,6 +202,13 @@ export interface BadgeLevelDef {
   name: string;
   order: number;
   scoreWeight: number;
+  /**
+   * 2K27's Legend tier exists but cannot be reached at build creation — it is
+   * only obtainable by Synergy-boosting a Hall of Fame badge. Levels with this
+   * false have no attribute requirement row on any badge.
+   */
+  obtainableAtBuildCreation: boolean;
+  note?: string;
 }
 
 export interface BadgeTier {
@@ -269,18 +276,28 @@ export interface CapBreakerData {
   verification: Verification;
 }
 
+/** The Synergy system — 2K27's badge boost mechanic. */
 export interface BadgeBoostData {
   enabled: boolean;
+  totalSlots: number;
   plusOne: { slots: number; levelsGained: number; note?: string };
   plusTwo: { slots: number; levelsGained: number; note?: string };
+  /** How many slots this player has actually unlocked; Synergy is earned. */
+  availableSlots?: { plusOne: number; plusTwo: number; verification?: Verification };
   rules: {
     canStackOnSameBadge: boolean;
     canBoostToLegend: boolean;
+    /** Legend is reachable only by boosting, never by attribute requirement. */
+    legendOnlyViaSynergy: boolean;
+    /** A Fused badge refunds the tokens that would have equipped it. */
+    fuseRefundsTokens: boolean;
     requiresBadgeAlreadyUnlocked: boolean;
     minimumLevelToBoost: BadgeLevelId;
     eligibleCategories: string[];
     excludedBadges: BadgeId[];
+    verification?: Verification;
   };
+  reaction?: { modelled: boolean };
   verification: Verification;
 }
 
@@ -293,9 +310,20 @@ export interface BadgeTokenData {
   disciplines: string[];
   upgradeCostMode: { value: 'absolute' | 'incremental'; options: string[]; verification: Verification };
   slots: { total: number; byDiscipline: Record<string, number>; verification: Verification };
-  tokenGrants: {
-    mode: 'linear-by-investment' | 'table' | 'manual';
+  costByBody: {
+    enabled: boolean;
     verification: Verification;
+    referenceHeightInches: number | null;
+    perInchHeight: number;
+    minCost: number;
+    overrides: Record<string, number>;
+  };
+  tokenGrants: {
+    mode: 'flat' | 'linear-by-investment' | 'table' | 'manual';
+    verification: Verification;
+    /** Tokens earned by playing. Set to what your account actually has. */
+    flatByDiscipline: Record<string, number>;
+    progressionPresets: Record<string, number>;
     freeBelow: number;
     pointsPerToken: number;
     maxPerDiscipline: number;
@@ -311,8 +339,15 @@ export interface BadgeTokenData {
   };
   rules: {
     capBreakersGrantTokens: boolean;
-    unspentTokensCarryOver: boolean | null;
-    canRefundTokens: boolean | null;
+    /** Tokens can be reassigned at any time (official). */
+    tokensReassignable?: boolean;
+    /** Tokens earned in-game stay locked to their discipline (official). */
+    inGameTokensLockedToDiscipline?: boolean;
+    /** Bonus tokens from Specialization/Seasons/Crews are discipline-agnostic. */
+    bonusTokensAnyDiscipline?: boolean;
+    unspentTokensCarryOver?: boolean | null;
+    canRefundTokens?: boolean | null;
+    verification?: Verification;
   };
   verification: Verification;
 }
@@ -423,11 +458,18 @@ export interface Dataset {
   caps: CapsData;
   budget: BudgetData;
   badgeLevels: BadgeLevelDef[];
-  badgeGlobalRules: { maxLegendBadges: number | null; maxBadgesPerCategory: number | null; verification: Verification };
+  badgeGlobalRules: {
+    maxLegendBadges: number | null;
+    maxBadgesPerCategory: number | null;
+    legendRequiresSynergy: boolean;
+    verification: Verification;
+  };
   badges: BadgeDef[];
   animationCategories: AnimationCategory[];
   animations: AnimationDef[];
-  takeoverSlots: { primary: number; secondary: number; verification: Verification };
+  takeoverSlots: { total: number; verification: Verification };
+  /** 24 abilities exist in game; only those with known requirements are here. */
+  takeoverAbilities?: { totalInGame: number; unlockable: number; documentedHere: number; verification: Verification };
   takeovers: TakeoverDef[];
   capBreakers: CapBreakerData;
   badgeTokens: BadgeTokenData;

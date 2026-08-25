@@ -4,10 +4,18 @@ The goal is not "make every requested attribute as high as possible". It is
 "spend each build point where it buys something", where *something* means a
 badge level, an animation package, or a takeover tier.
 
-In 2K27 there are **two budgets**, not one. Build points buy attributes;
-attributes earn **badge tokens** per discipline, and tokens (plus a limited
-number of badge slots) buy the badges. A threshold you cannot afford to cash in
-is worth nothing, so the engine has to reason about both.
+In 2K27 there are **two budgets**, not one. Build points buy attributes; **badge
+tokens** and 20 **badge slots** buy the badges those attributes made eligible. A
+threshold you cannot afford to cash in is worth nothing, so the engine reasons
+about both.
+
+Tokens are earned by playing rather than by allocating attributes, so the pool
+size is an *input* the player supplies, not something derived from the build.
+
+A third lever sits on top: **Synergy**, 16 slots that boost a badge one or two
+tiers past what the attributes earned. It is the only route to Legend, and a
+Fused badge refunds the tokens that equipped it — so Synergy buys back slot
+budget as well as tiers.
 
 ## Why thresholds are the whole game
 
