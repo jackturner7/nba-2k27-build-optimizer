@@ -1,6 +1,7 @@
 import { formatHeight, type Dataset, type OptimizedBuild, type OptimizeRequest } from '@2k27/core';
 import { AttributeTable } from './AttributeTable';
 import { Panel } from './Bits';
+import { BadgeLoadoutPanel, TokenPanel } from './TokenPanel';
 import {
   AnimationPanel,
   BadgeBoostPanel,
@@ -27,10 +28,14 @@ export function BuildCard({
   dataset,
   build,
   request,
+  tokenOverrides,
+  onTokenOverrideChange,
 }: {
   dataset: Dataset;
   build: OptimizedBuild;
   request?: OptimizeRequest;
+  tokenOverrides?: Record<string, number | null>;
+  onTokenOverrideChange?: (next: Record<string, number | null>) => void;
 }) {
   const wasted = build.waste.reduce((a, w) => a + w.refundableBuildPoints, 0);
   const spendPct = Number.isFinite(build.budget) ? Math.round((build.spent / build.budget) * 100) : 100;
@@ -56,8 +61,18 @@ export function BuildCard({
             </div>
           </div>
           <div className="summary-cell">
-            <div className="k">Badges</div>
-            <div className="v good">{build.badges.length}</div>
+            <div className="k">Badges equipped</div>
+            <div className="v good">
+              {build.equippedBadges.length}
+              <span style={{ fontSize: 12, color: 'var(--text-faint)' }}> / {build.badges.length} eligible</span>
+            </div>
+          </div>
+          <div className="summary-cell">
+            <div className="k">Badge slots</div>
+            <div className="v">
+              {build.tokens.totalSlotsUsed}
+              <span style={{ fontSize: 12, color: 'var(--text-faint)' }}> / {build.tokens.totalSlots}</span>
+            </div>
           </div>
           <div className="summary-cell">
             <div className="k">Animations</div>
@@ -120,6 +135,8 @@ export function BuildCard({
         effectiveAttributes={build.effectiveAttributes}
       />
 
+      <BadgeLoadoutPanel dataset={dataset} build={build} />
+      <TokenPanel dataset={dataset} build={build} overrides={tokenOverrides ?? {}} onOverrideChange={onTokenOverrideChange} />
       <BadgePanel build={build} />
       <NextBadgePanel build={build} />
       <AnimationPanel dataset={dataset} build={build} />

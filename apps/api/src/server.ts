@@ -70,6 +70,7 @@ const optimizeRequestSchema = z.object({
   archetypeId: z.string().optional(),
   useCapBreakers: z.boolean().optional(),
   useBadgeBoosts: z.boolean().optional(),
+  tokenOverrides: z.record(z.string(), z.number().nullable()).optional(),
 });
 
 const evaluateRequestSchema = z.object({
@@ -80,6 +81,7 @@ const evaluateRequestSchema = z.object({
   softTargets: z.record(z.string(), z.number()).optional(),
   useCapBreakers: z.boolean().optional(),
   useBadgeBoosts: z.boolean().optional(),
+  tokenOverrides: z.record(z.string(), z.number().nullable()).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -194,6 +196,7 @@ app.post('/api/datasets/:id/evaluate', (req, res) => {
       softTargets: parsed.data.softTargets,
       useCapBreakers: parsed.data.useCapBreakers,
       useBadgeBoosts: parsed.data.useBadgeBoosts,
+      tokenOverrides: parsed.data.tokenOverrides,
     })
   );
 });
@@ -218,7 +221,11 @@ app.post('/api/datasets/:id/describe', (req, res) => {
     return;
   }
   const parsed = parseBuildRequest(dataset, text);
-  const request = { ...parsed.request, resultCount: Number(req.body?.resultCount ?? 3) };
+  const request = {
+    ...parsed.request,
+    resultCount: Number(req.body?.resultCount ?? 3),
+    ...(req.body?.tokenOverrides ? { tokenOverrides: req.body.tokenOverrides } : {}),
+  };
   res.json({
     parsed: { notes: parsed.notes, unparsed: parsed.unparsed, bodyInferred: parsed.bodyInferred },
     request,

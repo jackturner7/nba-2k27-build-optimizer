@@ -1,405 +1,597 @@
 {
   "$comment": [
-    "PLACEHOLDER DATA — see meta.json.",
-    "Badge names are drawn from the NBA 2K series vocabulary and are NOT confirmed to exist in 2K27.",
-    "Every threshold is invented. This file is the highest-leverage thing to replace with real data:",
-    "the optimizer's entire notion of 'this rating is worth stopping at' comes from these numbers.",
+    "NBA 2K27 badge requirements and badge token costs.",
     "",
-    "Each level's `requires` list is CONJUNCTIVE (all conditions must hold). A level is unlocked only",
-    "if every lower level is also unlocked, which the engine enforces regardless of what you type here.",
-    "`impact` (1-5) is a designer-set weight for how much the badge actually matters in-game; it feeds",
-    "the Badge Value component of the optimization score and is meant to be tuned by hand."
+    "SOURCE: badge cost charts for Shooting, Playmaking, Defense and Finishing supplied by the repo",
+    "owner on 2026-08-25, cross-checked against the community 'best value attribute thresholds' sheet.",
+    "In those charts the number in parentheses after a requirement is the EXAMPLE PLAYER'S current",
+    "rating (green = tier available, red = not), not part of the badge definition. Only the requirement",
+    "itself is recorded here.",
+    "",
+    "REQUIREMENT FORMAT: `requires` is a list of clauses, ALL of which must hold (an AND).",
+    "A clause is either a single { attribute, min } or { anyOf: [ ... ] } meaning any one of them",
+    "satisfies the clause. 2K27 uses 'or' requirements heavily (Deadeye, Aerial Wizard, Float Game...).",
+    "",
+    "TOKEN COSTS: 2K27 does not auto-grant badges. Each tier costs badge tokens, earned per discipline",
+    "by investing in that discipline's attributes. `tokenCost` is the cost shown on the chart for that",
+    "tier. Whether upgrading pays the difference or the full new tier price is UNVERIFIED — see",
+    "badge-tokens.json `upgradeCostMode`.",
+    "",
+    "KNOWN GAPS: no Rebounding or Physicals badge cost chart was supplied. Those badges are recorded",
+    "below only where the best-value sheet names a threshold, are marked `incompleteTiers: true`, and",
+    "their token costs are unknown (recorded as null).",
+    "",
+    "`impact` (1-5) remains a hand-set designer weight, NOT game data."
   ],
 
   "levels": [
     { "id": "bronze", "name": "Bronze", "order": 1, "scoreWeight": 1.0 },
     { "id": "silver", "name": "Silver", "order": 2, "scoreWeight": 1.8 },
     { "id": "gold", "name": "Gold", "order": 3, "scoreWeight": 3.0 },
-    { "id": "hof", "name": "Hall of Fame", "order": 4, "scoreWeight": 4.6 },
-    { "id": "legend", "name": "Legend", "order": 5, "scoreWeight": 6.5 }
+    { "id": "hof", "name": "Hall of Fame", "order": 4, "scoreWeight": 4.6 }
   ],
 
   "globalRules": {
     "maxLegendBadges": null,
     "maxBadgesPerCategory": null,
-    "verification": { "status": "unverified", "notes": "Unknown whether 2K27 limits how many badges can sit at Legend. null = no limit modeled." }
+    "verification": {
+      "status": "unverified",
+      "notes": "2K27 uses Bronze/Silver/Gold/Hall of Fame on the supplied charts — no Legend tier is shown. Per-category badge limits are enforced through badge SLOTS (see badge-tokens.json) rather than a rule here."
+    }
   },
 
   "badges": [
     {
-      "id": "deadeye", "name": "Deadeye", "category": "shooting", "impact": 5,
-      "description": "Reduces the penalty from a closing-out defender on jump shots.",
-      "verification": { "status": "unverified" },
+      "id": "arc_cadence", "name": "Arc Cadence", "category": "shooting", "impact": 5,
+      "description": "Improves a player's ability to knock down three-point shots while on the move, including pull-up, hop, or spin shots.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 65 }] },
-        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 75 }] },
-        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 89 }] },
-        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 95 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "three_point", "min": 70 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "three_point", "min": 86 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "three_point", "min": 91 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "three_point", "min": 98 }] }
+      ]
+    },
+    {
+      "id": "deadeye", "name": "Deadeye", "category": "shooting", "impact": 5,
+      "description": "Jump shots taken with a defender closing out receive less of a penalty from a shot contest.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 65 }, { "attribute": "three_point", "min": 65 }] }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 85 }, { "attribute": "three_point", "min": 85 }] }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 92 }, { "attribute": "three_point", "min": 92 }] }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 99 }, { "attribute": "three_point", "min": 99 }] }] }
       ]
     },
     {
       "id": "limitless_range", "name": "Limitless Range", "category": "shooting", "impact": 4,
-      "description": "Extends the range from which a shooter can comfortably shoot.",
-      "verification": { "status": "unverified" },
+      "description": "Extends the range from which a player can shoot three-pointers effectively from deep.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 72 }] },
-        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 80 }] },
-        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 87 }] },
-        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 92 }] },
-        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 97 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "three_point", "min": 83 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "three_point", "min": 89 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "three_point", "min": 93 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "three_point", "min": 99 }] }
       ]
     },
     {
-      "id": "shifty_shooter", "name": "Shifty Shooter", "category": "shooting", "impact": 4,
-      "description": "Improves shots taken after a dribble move.",
-      "verification": { "status": "unverified" },
+      "id": "mini_marksman", "name": "Mini Marksman", "category": "shooting", "impact": 3,
+      "description": "Elevates the likelihood of making shots over taller defenders.",
+      "restrictions": { "maxHeightInches": 76, "note": "Chart states 'Must be 6'4\" or shorter'. No attribute requirement of any kind." },
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 70 }, { "attribute": "ball_handle", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 78 }, { "attribute": "ball_handle", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 85 }, { "attribute": "ball_handle", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 90 }, { "attribute": "ball_handle", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 95 }, { "attribute": "ball_handle", "min": 90 }] }
+        { "level": "bronze", "tokenCost": 1, "requires": [] },
+        { "level": "silver", "tokenCost": 3, "requires": [] },
+        { "level": "gold", "tokenCost": 4, "requires": [] },
+        { "level": "hof", "tokenCost": 5, "requires": [] }
       ]
     },
     {
-      "id": "set_shot_specialist", "name": "Set Shot Specialist", "category": "shooting", "impact": 3,
-      "description": "Improves standing jump shots taken without a dribble.",
-      "verification": { "status": "unverified" },
+      "id": "post_fade_phenom", "name": "Post Fade Phenom", "category": "shooting", "impact": 3,
+      "description": "Improves a player's ability to make post fades and hop shots.",
+      "verification": {
+        "status": "estimated",
+        "source": "NBA 2K27 shooting badge cost chart",
+        "notes": "DATA ANOMALY: the chart reads 83 Mid-Range at Bronze but 71 Mid-Range at Silver, i.e. the requirement DROPS going up a tier. 83 is likely a misprint for 63. Both values are recorded as printed; re-check this row against the NBA 2K HQ app before trusting it."
+      },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 62 }, { "attribute": "mid_range", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 73 }, { "attribute": "mid_range", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 82 }, { "attribute": "mid_range", "min": 74 }] },
-        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 88 }, { "attribute": "mid_range", "min": 82 }] },
-        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 94 }, { "attribute": "mid_range", "min": 90 }] }
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "mid_range", "min": 83 }, { "attribute": "post_control", "min": 55 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "mid_range", "min": 71 }, { "attribute": "post_control", "min": 74 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "mid_range", "min": 84 }, { "attribute": "post_control", "min": 84 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "mid_range", "min": 91 }, { "attribute": "post_control", "min": 93 }] }
       ]
     },
     {
-      "id": "mid_range_maestro", "name": "Mid-Range Maestro", "category": "shooting", "impact": 3,
-      "description": "Improves the ability to knock down mid-range jumpers.",
-      "verification": { "status": "unverified" },
+      "id": "quick_trigger", "name": "Quick Trigger", "category": "shooting", "impact": 4,
+      "description": "Improves a player's ability to make 'No Dip' jumpshots.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "mid_range", "min": 66 }] },
-        { "level": "silver", "requires": [{ "attribute": "mid_range", "min": 76 }] },
-        { "level": "gold", "requires": [{ "attribute": "mid_range", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "mid_range", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "mid_range", "min": 95 }] }
-      ]
-    },
-
-    {
-      "id": "posterizer", "name": "Posterizer", "category": "finishing", "impact": 5,
-      "description": "Improves the chance of dunking on a contesting defender.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "driving_dunk", "min": 70 }] },
-        { "level": "silver", "requires": [{ "attribute": "driving_dunk", "min": 80 }] },
-        { "level": "gold", "requires": [{ "attribute": "driving_dunk", "min": 87 }] },
-        { "level": "hof", "requires": [{ "attribute": "driving_dunk", "min": 92 }] },
-        { "level": "legend", "requires": [{ "attribute": "driving_dunk", "min": 96 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 80 }, { "attribute": "three_point", "min": 80 }] }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 88 }, { "attribute": "three_point", "min": 88 }] }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 95 }, { "attribute": "three_point", "min": 95 }] }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "anyOf": [{ "attribute": "mid_range", "min": 99 }, { "attribute": "three_point", "min": 99 }] }] }
       ]
     },
     {
-      "id": "aerial_wizard", "name": "Aerial Wizard", "category": "finishing", "impact": 4,
-      "description": "Improves the ability to finish alley-oops and putbacks.",
-      "verification": { "status": "unverified" },
+      "id": "set_and_fire", "name": "Set and Fire", "category": "shooting", "impact": 4,
+      "description": "Applies a shooting boost to three-point attempts when the user's feet are completely set.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "driving_dunk", "min": 65 }, { "attribute": "vertical", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "driving_dunk", "min": 75 }, { "attribute": "vertical", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "driving_dunk", "min": 83 }, { "attribute": "vertical", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "driving_dunk", "min": 90 }, { "attribute": "vertical", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "driving_dunk", "min": 95 }, { "attribute": "vertical", "min": 92 }] }
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "three_point", "min": 60 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "three_point", "min": 78 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "three_point", "min": 89 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "three_point", "min": 97 }] }
       ]
     },
     {
-      "id": "rise_up", "name": "Rise Up", "category": "finishing", "impact": 4,
-      "description": "Improves standing dunks in traffic.",
-      "verification": { "status": "unverified" },
-      "restrictions": { "minHeightInches": 78, "note": "Height gate is invented; verify whether 2K27 gates this badge at all." },
+      "id": "smooth_operator", "name": "Smooth Operator", "category": "shooting", "impact": 4,
+      "description": "Improves a player's ability to knock down mid-range shots while on the move, including pull-up, hop, or spin shots.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "standing_dunk", "min": 68 }] },
-        { "level": "silver", "requires": [{ "attribute": "standing_dunk", "min": 78 }] },
-        { "level": "gold", "requires": [{ "attribute": "standing_dunk", "min": 86 }] },
-        { "level": "hof", "requires": [{ "attribute": "standing_dunk", "min": 92 }] },
-        { "level": "legend", "requires": [{ "attribute": "standing_dunk", "min": 96 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "mid_range", "min": 70 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "mid_range", "min": 87 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "mid_range", "min": 93 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "mid_range", "min": 99 }] }
       ]
     },
     {
-      "id": "float_game", "name": "Float Game", "category": "finishing", "impact": 3,
-      "description": "Improves floaters and runners.",
-      "verification": { "status": "unverified" },
+      "id": "static_middy", "name": "Static Middy", "category": "shooting", "impact": 3,
+      "description": "Applies a shooting boost to stand-still mid-range shots.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 shooting badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "driving_layup", "min": 65 }] },
-        { "level": "silver", "requires": [{ "attribute": "driving_layup", "min": 75 }] },
-        { "level": "gold", "requires": [{ "attribute": "driving_layup", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "driving_layup", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "driving_layup", "min": 95 }] }
-      ]
-    },
-    {
-      "id": "physical_finisher", "name": "Physical Finisher", "category": "finishing", "impact": 4,
-      "description": "Improves finishing through contact.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "driving_layup", "min": 62 }, { "attribute": "strength", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "driving_layup", "min": 72 }, { "attribute": "strength", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "driving_layup", "min": 81 }, { "attribute": "strength", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "driving_layup", "min": 88 }, { "attribute": "strength", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "driving_layup", "min": 93 }, { "attribute": "strength", "min": 92 }] }
-      ]
-    },
-    {
-      "id": "paint_prodigy", "name": "Paint Prodigy", "category": "finishing", "impact": 4,
-      "description": "Improves close-range shots and hooks inside the paint.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "close_shot", "min": 66 }] },
-        { "level": "silver", "requires": [{ "attribute": "close_shot", "min": 76 }] },
-        { "level": "gold", "requires": [{ "attribute": "close_shot", "min": 85 }] },
-        { "level": "hof", "requires": [{ "attribute": "close_shot", "min": 91 }] },
-        { "level": "legend", "requires": [{ "attribute": "close_shot", "min": 96 }] }
-      ]
-    },
-    {
-      "id": "post_powerhouse", "name": "Post Powerhouse", "category": "finishing", "impact": 3,
-      "description": "Improves the ability to back down defenders in the post.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "post_control", "min": 65 }, { "attribute": "strength", "min": 65 }] },
-        { "level": "silver", "requires": [{ "attribute": "post_control", "min": 75 }, { "attribute": "strength", "min": 75 }] },
-        { "level": "gold", "requires": [{ "attribute": "post_control", "min": 84 }, { "attribute": "strength", "min": 83 }] },
-        { "level": "hof", "requires": [{ "attribute": "post_control", "min": 90 }, { "attribute": "strength", "min": 89 }] },
-        { "level": "legend", "requires": [{ "attribute": "post_control", "min": 95 }, { "attribute": "strength", "min": 94 }] }
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "mid_range", "min": 55 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "mid_range", "min": 75 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "mid_range", "min": 85 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "mid_range", "min": 95 }] }
       ]
     },
 
     {
-      "id": "ankle_breaker", "name": "Ankle Breaker", "category": "playmaking", "impact": 5,
-      "description": "Improves the chance of freezing or dropping a defender on a dribble move.",
-      "verification": { "status": "unverified" },
+      "id": "ankle_assassin", "name": "Ankle Assassin", "category": "playmaking", "impact": 5,
+      "description": "Increases the ability to break down the defender or cross them up.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 70 }] },
-        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 78 }] },
-        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 85 }] },
-        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 91 }] },
-        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 96 }] }
-      ]
-    },
-    {
-      "id": "unpluckable", "name": "Unpluckable", "category": "playmaking", "impact": 4,
-      "description": "Reduces the chance of being stripped while dribbling or gathering.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 62 }, { "attribute": "strength", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 72 }, { "attribute": "strength", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 80 }, { "attribute": "strength", "min": 74 }] },
-        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 87 }, { "attribute": "strength", "min": 82 }] },
-        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 93 }, { "attribute": "strength", "min": 90 }] }
-      ]
-    },
-    {
-      "id": "handles_for_days", "name": "Handles For Days", "category": "playmaking", "impact": 3,
-      "description": "Reduces the energy lost when performing consecutive dribble moves.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 65 }, { "attribute": "stamina", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 75 }, { "attribute": "stamina", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 83 }, { "attribute": "stamina", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 89 }, { "attribute": "stamina", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 94 }, { "attribute": "stamina", "min": 92 }] }
-      ]
-    },
-    {
-      "id": "lightning_launch", "name": "Lightning Launch", "category": "playmaking", "impact": 4,
-      "description": "Improves the explosiveness of the first step out of a launch.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "speed_with_ball", "min": 68 }] },
-        { "level": "silver", "requires": [{ "attribute": "speed_with_ball", "min": 77 }] },
-        { "level": "gold", "requires": [{ "attribute": "speed_with_ball", "min": 85 }] },
-        { "level": "hof", "requires": [{ "attribute": "speed_with_ball", "min": 91 }] },
-        { "level": "legend", "requires": [{ "attribute": "speed_with_ball", "min": 96 }] }
-      ]
-    },
-    {
-      "id": "dimer", "name": "Dimer", "category": "playmaking", "impact": 4,
-      "description": "Boosts the shot percentage of an open teammate off a pass.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 66 }] },
-        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 76 }] },
-        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 95 }] }
-      ]
-    },
-    {
-      "id": "break_starter", "name": "Break Starter", "category": "playmaking", "impact": 2,
-      "description": "Improves the accuracy of long outlet passes after a rebound.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 60 }, { "attribute": "defensive_rebound", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 70 }, { "attribute": "defensive_rebound", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 79 }, { "attribute": "defensive_rebound", "min": 75 }] },
-        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 86 }, { "attribute": "defensive_rebound", "min": 84 }] },
-        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 92 }, { "attribute": "defensive_rebound", "min": 91 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "ball_handle", "min": 75 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "ball_handle", "min": 86 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "ball_handle", "min": 93 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "ball_handle", "min": 96 }] }
       ]
     },
     {
       "id": "bail_out", "name": "Bail Out", "category": "playmaking", "impact": 3,
-      "description": "Improves passes made out of a jump or while off balance.",
-      "verification": { "status": "unverified" },
+      "description": "Passing out of a jump shot or layup yields fewer errant passes than normal. Additionally, helps passing out of double teams.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 63 }, { "attribute": "ball_handle", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 73 }, { "attribute": "ball_handle", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 82 }, { "attribute": "ball_handle", "min": 74 }] },
-        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 88 }, { "attribute": "ball_handle", "min": 82 }] },
-        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 94 }, { "attribute": "ball_handle", "min": 90 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "pass_accuracy", "min": 85 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "pass_accuracy", "min": 93 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "pass_accuracy", "min": 96 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "pass_accuracy", "min": 99 }] }
+      ]
+    },
+    {
+      "id": "break_starter", "name": "Break Starter", "category": "playmaking", "impact": 2,
+      "description": "After grabbing a defensive board, deep outlet passes made up the court are more accurate. Passes must be made quickly following the defensive rebound.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "pass_accuracy", "min": 65 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "pass_accuracy", "min": 77 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "pass_accuracy", "min": 89 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "pass_accuracy", "min": 97 }] }
+      ]
+    },
+    {
+      "id": "dimer", "name": "Dimer", "category": "playmaking", "impact": 4,
+      "description": "Boosts the shot percentage for open teammates after catching a pass.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "pass_accuracy", "min": 50 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "pass_accuracy", "min": 70 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "pass_accuracy", "min": 86 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "pass_accuracy", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "handles_for_days", "name": "Handles For Days", "category": "playmaking", "impact": 4,
+      "description": "A player takes less of an energy hit when performing consecutive dribble moves, allowing them to chain together combos quicker and for longer periods of time.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "ball_handle", "min": 71 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "ball_handle", "min": 81 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "ball_handle", "min": 90 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "ball_handle", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "lightning_launch", "name": "Lightning Launch", "category": "playmaking", "impact": 4,
+      "description": "Speeds up launches when attacking from the perimeter.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "speed_with_ball", "min": 68 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "speed_with_ball", "min": 75 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "speed_with_ball", "min": 86 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "speed_with_ball", "min": 91 }] }
+      ]
+    },
+    {
+      "id": "pace", "name": "Pace", "category": "playmaking", "impact": 4,
+      "description": "Raises the speed of the ball handler when sprinting.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "speed_with_ball", "min": 70 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "speed_with_ball", "min": 80 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "speed_with_ball", "min": 88 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "speed_with_ball", "min": 93 }] }
+      ]
+    },
+    {
+      "id": "strong_handle", "name": "Strong Handle", "category": "playmaking", "impact": 3,
+      "description": "Reduces the likelihood of being bothered by defenders when dribbling.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "ball_handle", "min": 60 }, { "attribute": "strength", "min": 75 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "ball_handle", "min": 67 }, { "attribute": "strength", "min": 82 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "ball_handle", "min": 73 }, { "attribute": "strength", "min": 89 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "ball_handle", "min": 78 }, { "attribute": "strength", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "unpluckable", "name": "Unpluckable", "category": "playmaking", "impact": 4,
+      "description": "Defenders have a tougher time poking the ball free with their steal attempts.",
+      "verification": {
+        "status": "community-verified",
+        "source": "NBA 2K27 playmaking badge cost chart",
+        "notes": "Hall of Fame lists only a Ball Handle requirement — the Post Control branch is not offered at that tier."
+      },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "post_control", "min": 65 }, { "attribute": "ball_handle", "min": 65 }] }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "post_control", "min": 86 }, { "attribute": "ball_handle", "min": 80 }] }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "anyOf": [{ "attribute": "post_control", "min": 96 }, { "attribute": "ball_handle", "min": 92 }] }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "ball_handle", "min": 97 }] }
+      ]
+    },
+    {
+      "id": "versatile_visionary", "name": "Versatile Visionary", "category": "playmaking", "impact": 3,
+      "description": "Improves a player's ability to thread and fit tight passes, including alley-oops, quickly and on time.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 playmaking badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "pass_accuracy", "min": 65 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "pass_accuracy", "min": 80 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "pass_accuracy", "min": 90 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "pass_accuracy", "min": 99 }] }
       ]
     },
 
     {
-      "id": "challenger", "name": "Challenger", "category": "defense", "impact": 5,
-      "description": "Improves the effectiveness of well-timed perimeter shot contests.",
-      "verification": { "status": "unverified" },
+      "id": "ankle_braces", "name": "Ankle Braces", "category": "defense", "impact": 3,
+      "description": "Lowers the likelihood of getting ankle-broken by opposing dribble moves.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 65 }] },
-        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 75 }] },
-        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 95 }] }
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "perimeter_defense", "min": 60 }, { "attribute": "agility", "min": 65 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "perimeter_defense", "min": 86 }, { "attribute": "agility", "min": 82 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "perimeter_defense", "min": 93 }, { "attribute": "agility", "min": 89 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "perimeter_defense", "min": 95 }, { "attribute": "agility", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "challenger", "name": "Challenger", "category": "defense", "impact": 5,
+      "description": "Improves effectiveness of well-timed contests against perimeter shooters.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "perimeter_defense", "min": 71 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "perimeter_defense", "min": 82 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "perimeter_defense", "min": 92 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "perimeter_defense", "min": 98 }] }
       ]
     },
     {
       "id": "glove", "name": "Glove", "category": "defense", "impact": 5,
-      "description": "Improves the ability to strip a ball handler.",
-      "verification": { "status": "unverified" },
+      "description": "Increases the ability to successfully steal from ball-handlers, or strip layup attempts.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "steal", "min": 68 }] },
-        { "level": "silver", "requires": [{ "attribute": "steal", "min": 77 }] },
-        { "level": "gold", "requires": [{ "attribute": "steal", "min": 85 }] },
-        { "level": "hof", "requires": [{ "attribute": "steal", "min": 91 }] },
-        { "level": "legend", "requires": [{ "attribute": "steal", "min": 96 }] }
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "steal", "min": 70 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "steal", "min": 83 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "steal", "min": 93 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "steal", "min": 99 }] }
+      ]
+    },
+    {
+      "id": "high_flying_denier", "name": "High-Flying Denier", "category": "defense", "impact": 3,
+      "description": "Boosts the speed and leaping ability of a defensive player in anticipation of a chase down block attempt.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "block", "min": 68 }, { "attribute": "vertical", "min": 60 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "block", "min": 78 }, { "attribute": "vertical", "min": 74 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "block", "min": 88 }, { "attribute": "vertical", "min": 80 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "block", "min": 92 }, { "attribute": "vertical", "min": 83 }] }
+      ]
+    },
+    {
+      "id": "immovable_enforcer", "name": "Immovable Enforcer", "category": "defense", "impact": 3,
+      "description": "Improves a defensive player's strength when defending ball handlers and finishers who are coming straight at them.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "perimeter_defense", "min": 62 }, { "attribute": "strength", "min": 71 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "perimeter_defense", "min": 72 }, { "attribute": "strength", "min": 82 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "perimeter_defense", "min": 84 }, { "attribute": "strength", "min": 85 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "perimeter_defense", "min": 91 }, { "attribute": "strength", "min": 92 }] }
       ]
     },
     {
       "id": "interceptor", "name": "Interceptor", "category": "defense", "impact": 3,
-      "description": "Improves the frequency of successfully tipped and intercepted passes.",
-      "verification": { "status": "unverified" },
+      "description": "The frequency of successfully tipped or intercepted passes greatly increases.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "steal", "min": 60 }, { "attribute": "perimeter_defense", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "steal", "min": 70 }, { "attribute": "perimeter_defense", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "steal", "min": 79 }, { "attribute": "perimeter_defense", "min": 75 }] },
-        { "level": "hof", "requires": [{ "attribute": "steal", "min": 86 }, { "attribute": "perimeter_defense", "min": 83 }] },
-        { "level": "legend", "requires": [{ "attribute": "steal", "min": 93 }, { "attribute": "perimeter_defense", "min": 90 }] }
-      ]
-    },
-    {
-      "id": "pick_dodger", "name": "Pick Dodger", "category": "defense", "impact": 4,
-      "description": "Improves the ability to navigate through and around screens.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 62 }, { "attribute": "acceleration", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 72 }, { "attribute": "acceleration", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 81 }, { "attribute": "acceleration", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 88 }, { "attribute": "acceleration", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 94 }, { "attribute": "acceleration", "min": 92 }] }
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "steal", "min": 60 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "steal", "min": 77 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "steal", "min": 90 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "steal", "min": 97 }] }
       ]
     },
     {
       "id": "off_ball_pest", "name": "Off-Ball Pest", "category": "defense", "impact": 3,
-      "description": "Improves the ability to bump and disrupt an off-ball opponent.",
-      "verification": { "status": "unverified" },
+      "description": "Makes players more difficult to get past when playing off-ball, as they can grab and hold their matchup.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 60 }, { "attribute": "strength", "min": 55 }] },
-        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 70 }, { "attribute": "strength", "min": 65 }] },
-        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 79 }, { "attribute": "strength", "min": 74 }] },
-        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 86 }, { "attribute": "strength", "min": 82 }] },
-        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 92 }, { "attribute": "strength", "min": 90 }] }
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "anyOf": [{ "attribute": "interior_defense", "min": 60 }, { "attribute": "perimeter_defense", "min": 55 }] }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "interior_defense", "min": 76 }, { "attribute": "perimeter_defense", "min": 68 }] }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "anyOf": [{ "attribute": "interior_defense", "min": 85 }, { "attribute": "perimeter_defense", "min": 80 }] }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "interior_defense", "min": 93 }, { "attribute": "perimeter_defense", "min": 89 }] }] }
       ]
     },
     {
       "id": "paint_patroller", "name": "Paint Patroller", "category": "defense", "impact": 4,
-      "description": "Improves interior shot contests and paint help defense.",
-      "verification": { "status": "unverified" },
+      "description": "Increases a player's ability to block or contest shots at the rim.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "interior_defense", "min": 65 }] },
-        { "level": "silver", "requires": [{ "attribute": "interior_defense", "min": 75 }] },
-        { "level": "gold", "requires": [{ "attribute": "interior_defense", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "interior_defense", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "interior_defense", "min": 95 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "interior_defense", "min": 60 }, { "attribute": "block", "min": 70 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "interior_defense", "min": 71 }, { "attribute": "block", "min": 84 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "interior_defense", "min": 77 }, { "attribute": "block", "min": 93 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "interior_defense", "min": 84 }, { "attribute": "block", "min": 99 }] }
+      ]
+    },
+    {
+      "id": "pick_dodger", "name": "Pick Dodger", "category": "defense", "impact": 4,
+      "description": "Improves a player's ability to navigate through and around screens while on defense.",
+      "verification": {
+        "status": "estimated",
+        "source": "NBA 2K27 defense badge cost chart",
+        "notes": "The Bronze cell renders as 'Interior Defense ... and Strength' in the supplied chart, but Silver/Gold/HOF are all Perimeter Defense + Agility and the example ratings shown in the Bronze cell match this build's Perimeter Defense and Agility. Bronze is recorded as Perimeter Defense + Agility to match the ladder. VERIFY THIS ROW."
+      },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "perimeter_defense", "min": 73 }, { "attribute": "agility", "min": 75 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "perimeter_defense", "min": 85 }, { "attribute": "agility", "min": 77 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "perimeter_defense", "min": 91 }, { "attribute": "agility", "min": 80 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "perimeter_defense", "min": 99 }, { "attribute": "agility", "min": 91 }] }
       ]
     },
     {
       "id": "post_lockdown", "name": "Post Lockdown", "category": "defense", "impact": 3,
-      "description": "Improves the ability to hold position against post-up ball handlers.",
-      "verification": { "status": "unverified" },
+      "description": "Strengthens a player's ability to effectively defend moves in the post, making it easier to clamp opponents.",
+      "verification": {
+        "status": "estimated",
+        "source": "NBA 2K27 defense badge cost chart",
+        "notes": "Gold and Hall of Fame token costs render as 6 and 7 in the supplied chart, which breaks the otherwise perfectly consistent 1/3/4/5 cost ladder every other Bronze-costs-1 badge follows. Recorded as 4 and 5 to match that ladder. VERIFY THESE TOKEN COSTS."
+      },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "interior_defense", "min": 62 }, { "attribute": "strength", "min": 62 }] },
-        { "level": "silver", "requires": [{ "attribute": "interior_defense", "min": 72 }, { "attribute": "strength", "min": 72 }] },
-        { "level": "gold", "requires": [{ "attribute": "interior_defense", "min": 81 }, { "attribute": "strength", "min": 80 }] },
-        { "level": "hof", "requires": [{ "attribute": "interior_defense", "min": 88 }, { "attribute": "strength", "min": 87 }] },
-        { "level": "legend", "requires": [{ "attribute": "interior_defense", "min": 94 }, { "attribute": "strength", "min": 93 }] }
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "interior_defense", "min": 65 }, { "attribute": "strength", "min": 65 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "interior_defense", "min": 85 }, { "attribute": "strength", "min": 80 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "interior_defense", "min": 95 }, { "attribute": "strength", "min": 90 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "interior_defense", "min": 99 }, { "attribute": "strength", "min": 92 }] }
       ]
     },
     {
-      "id": "pogo_stick", "name": "Pogo Stick", "category": "defense", "impact": 4,
-      "description": "Improves the ability to recover and jump again quickly after a block attempt.",
-      "verification": { "status": "unverified" },
+      "id": "seatbelt", "name": "Seatbelt", "category": "defense", "impact": 5,
+      "description": "Boosts body-up defense effectiveness, making it easier to clamp opponents and disrupt their drive path.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 defense badge cost chart" },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "block", "min": 68 }, { "attribute": "vertical", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "block", "min": 77 }, { "attribute": "vertical", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "block", "min": 85 }, { "attribute": "vertical", "min": 78 }] },
-        { "level": "hof", "requires": [{ "attribute": "block", "min": 91 }, { "attribute": "vertical", "min": 85 }] },
-        { "level": "legend", "requires": [{ "attribute": "block", "min": 96 }, { "attribute": "vertical", "min": 92 }] }
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "perimeter_defense", "min": 75 }, { "attribute": "agility", "min": 70 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "perimeter_defense", "min": 85 }, { "attribute": "agility", "min": 77 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "perimeter_defense", "min": 91 }, { "attribute": "agility", "min": 80 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "perimeter_defense", "min": 99 }, { "attribute": "agility", "min": 86 }] }
+      ]
+    },
+    {
+      "id": "wall_up", "name": "Wall Up", "category": "defense", "impact": 4,
+      "description": "Boosts body-up defense effectiveness during hands-up defense when in the paint.",
+      "verification": {
+        "status": "estimated",
+        "source": "NBA 2K27 defense badge cost chart",
+        "notes": "This row is heavily degraded in the supplied chart — the Strength requirements in particular are hard to read (Bronze reads '75 S Strength'). Values recorded as best-read. VERIFY THIS ENTIRE ROW."
+      },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "interior_defense", "min": 80 }, { "attribute": "strength", "min": 75 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "interior_defense", "min": 85 }, { "attribute": "strength", "min": 90 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "interior_defense", "min": 95 }, { "attribute": "strength", "min": 90 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "interior_defense", "min": 99 }, { "attribute": "strength", "min": 98 }] }
+      ]
+    },
+
+    {
+      "id": "aerial_wizard", "name": "Aerial Wizard", "category": "finishing", "impact": 4,
+      "description": "Increases the ability to finish an alley-oop from a teammate, or a putback finish off an offensive rebound.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "anyOf": [{ "attribute": "driving_dunk", "min": 60 }, { "attribute": "standing_dunk", "min": 60 }] }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "driving_dunk", "min": 70 }, { "attribute": "standing_dunk", "min": 70 }] }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "anyOf": [{ "attribute": "driving_dunk", "min": 80 }, { "attribute": "standing_dunk", "min": 80 }] }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "driving_dunk", "min": 94 }, { "attribute": "standing_dunk", "min": 93 }] }] }
+      ]
+    },
+    {
+      "id": "float_game", "name": "Float Game", "category": "finishing", "impact": 3,
+      "description": "Improves a player's ability to make floaters.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 65 }, { "attribute": "driving_layup", "min": 65 }] }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 80 }, { "attribute": "driving_layup", "min": 85 }] }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 90 }, { "attribute": "driving_layup", "min": 93 }] }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 96 }, { "attribute": "driving_layup", "min": 95 }] }] }
+      ]
+    },
+    {
+      "id": "ghost_stepper", "name": "Ghost Stepper", "category": "finishing", "impact": 4,
+      "description": "Increases the effectiveness on step-through layups or other close-range shots that come after a fake.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 55 }, { "attribute": "post_control", "min": 55 }] }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 77 }, { "attribute": "post_control", "min": 77 }] }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 86 }, { "attribute": "post_control", "min": 86 }] }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "anyOf": [{ "attribute": "close_shot", "min": 94 }, { "attribute": "post_control", "min": 94 }] }] }
+      ]
+    },
+    {
+      "id": "hook_specialist", "name": "Hook Specialist", "category": "finishing", "impact": 3,
+      "description": "Improves a player's ability to make post hooks.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "close_shot", "min": 60 }, { "attribute": "post_control", "min": 55 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "close_shot", "min": 75 }, { "attribute": "post_control", "min": 65 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "close_shot", "min": 87 }, { "attribute": "post_control", "min": 80 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "close_shot", "min": 94 }, { "attribute": "post_control", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "layup_mixmaster", "name": "Layup Mixmaster", "category": "finishing", "impact": 4,
+      "description": "Improves a player's ability to finish fancy layups or acrobatic layups successfully.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "driving_layup", "min": 70 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "driving_layup", "min": 83 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "driving_layup", "min": 90 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "driving_layup", "min": 99 }] }
+      ]
+    },
+    {
+      "id": "paint_prodigy", "name": "Paint Prodigy", "category": "finishing", "impact": 4,
+      "description": "Improves a player's ability to quickly and efficiently score while going to work in the paint.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "close_shot", "min": 60 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "close_shot", "min": 85 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "close_shot", "min": 90 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "close_shot", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "physical_finisher", "name": "Physical Finisher", "category": "finishing", "impact": 4,
+      "description": "Improves a player's ability to battle through contact and convert contact layups.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 2, "requires": [{ "attribute": "driving_layup", "min": 60 }, { "attribute": "strength", "min": 60 }] },
+        { "level": "silver", "tokenCost": 4, "requires": [{ "attribute": "driving_layup", "min": 80 }, { "attribute": "strength", "min": 70 }] },
+        { "level": "gold", "tokenCost": 5, "requires": [{ "attribute": "driving_layup", "min": 90 }, { "attribute": "strength", "min": 80 }] },
+        { "level": "hof", "tokenCost": 6, "requires": [{ "attribute": "driving_layup", "min": 96 }, { "attribute": "strength", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "post_powerhouse", "name": "Post Powerhouse", "category": "finishing", "impact": 3,
+      "description": "Strengthens a player's ability at backing down defenders and moving them with dropsteps.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "post_control", "min": 60 }, { "attribute": "strength", "min": 65 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "post_control", "min": 75 }, { "attribute": "strength", "min": 79 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "post_control", "min": 85 }, { "attribute": "strength", "min": 86 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "post_control", "min": 95 }, { "attribute": "strength", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "post_spin_catalyst", "name": "Post Spin Catalyst", "category": "finishing", "impact": 3,
+      "description": "Attempting to do post spins or drives results in more effective moves, and less of a chance to be stripped.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "post_control", "min": 65 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "post_control", "min": 83 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "post_control", "min": 91 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "post_control", "min": 99 }] }
+      ]
+    },
+    {
+      "id": "posterizer", "name": "Posterizer", "category": "finishing", "impact": 5,
+      "description": "Increases the chances of throwing down a dunk on your defender.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 3, "requires": [{ "attribute": "driving_dunk", "min": 73 }, { "attribute": "vertical", "min": 65 }] },
+        { "level": "silver", "tokenCost": 5, "requires": [{ "attribute": "driving_dunk", "min": 87 }, { "attribute": "vertical", "min": 75 }] },
+        { "level": "gold", "tokenCost": 6, "requires": [{ "attribute": "driving_dunk", "min": 93 }, { "attribute": "vertical", "min": 80 }] },
+        { "level": "hof", "tokenCost": 7, "requires": [{ "attribute": "driving_dunk", "min": 99 }, { "attribute": "vertical", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "rise_up", "name": "Rise Up", "category": "finishing", "impact": 4,
+      "description": "Increases the likelihood of dunking or posterizing your opponent when standing in the painted area.",
+      "verification": { "status": "community-verified", "source": "NBA 2K27 finishing badge cost chart" },
+      "tiers": [
+        { "level": "bronze", "tokenCost": 1, "requires": [{ "attribute": "standing_dunk", "min": 60 }, { "attribute": "vertical", "min": 55 }] },
+        { "level": "silver", "tokenCost": 3, "requires": [{ "attribute": "standing_dunk", "min": 81 }, { "attribute": "vertical", "min": 62 }] },
+        { "level": "gold", "tokenCost": 4, "requires": [{ "attribute": "standing_dunk", "min": 90 }, { "attribute": "vertical", "min": 66 }] },
+        { "level": "hof", "tokenCost": 5, "requires": [{ "attribute": "standing_dunk", "min": 99 }, { "attribute": "vertical", "min": 70 }] }
+      ]
+    },
+
+    {
+      "id": "boxout_boss", "name": "Boxout Boss", "category": "rebounding", "impact": 4,
+      "description": "Improves the ability to win boxout battles and hold position for a rebound.",
+      "incompleteTiers": true,
+      "verification": {
+        "status": "estimated",
+        "source": "Community 'best value attribute thresholds' sheet: 'Defensive Rebound 75 + Strength 76 -> Boxout Boss'.",
+        "notes": "NO REBOUNDING BADGE COST CHART WAS SUPPLIED. Only one tier is known and its level is not stated — recorded as Bronze. Token costs unknown. Replace from the NBA 2K HQ app."
+      },
+      "tiers": [
+        { "level": "bronze", "tokenCost": null, "requires": [{ "attribute": "defensive_rebound", "min": 75 }, { "attribute": "strength", "min": 76 }] }
+      ]
+    },
+    {
+      "id": "possession_closer", "name": "Possession Closer", "category": "rebounding", "impact": 4,
+      "description": "Improves the ability to secure a rebound cleanly and end the possession.",
+      "incompleteTiers": true,
+      "verification": {
+        "status": "estimated",
+        "source": "Community 'best value attribute thresholds' sheet: 'Defensive Rebound 87 -> Silver Possession Closer'.",
+        "notes": "NO REBOUNDING BADGE COST CHART WAS SUPPLIED. Only the Silver threshold is known; Bronze/Gold/HOF and all token costs are unknown. Replace from the NBA 2K HQ app."
+      },
+      "tiers": [
+        { "level": "silver", "tokenCost": null, "requires": [{ "attribute": "defensive_rebound", "min": 87 }] }
       ]
     },
     {
       "id": "rebound_chaser", "name": "Rebound Chaser", "category": "rebounding", "impact": 4,
       "description": "Improves the ability to chase down rebounds outside of a player's area.",
-      "verification": { "status": "unverified" },
+      "incompleteTiers": true,
+      "verification": {
+        "status": "estimated",
+        "source": "Community 'best value attribute thresholds' sheet: 'Offensive Rebound 82 -> Silver Rebounding Badges + Rebounding Takeover'.",
+        "notes": "NO REBOUNDING BADGE COST CHART WAS SUPPLIED. The sheet refers to 'Silver rebounding badges' generically at Offensive Rebound 82; this badge name and its single tier are a best guess at what that means. Replace from the NBA 2K HQ app."
+      },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "defensive_rebound", "min": 66 }] },
-        { "level": "silver", "requires": [{ "attribute": "defensive_rebound", "min": 76 }] },
-        { "level": "gold", "requires": [{ "attribute": "defensive_rebound", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "defensive_rebound", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "defensive_rebound", "min": 95 }] }
+        { "level": "silver", "tokenCost": null, "requires": [{ "attribute": "offensive_rebound", "min": 82 }] }
+      ]
+    },
+
+    {
+      "id": "bruiser", "name": "Bruiser", "category": "physicals", "impact": 3,
+      "description": "Improves a player's ability to win physical contact battles.",
+      "incompleteTiers": true,
+      "verification": {
+        "status": "estimated",
+        "source": "Community 'best value attribute thresholds' sheet: 'Strength 84 -> Silver Bruiser + Silver Brick Wall'.",
+        "notes": "NO PHYSICALS BADGE COST CHART WAS SUPPLIED. Only the Silver threshold is known; token costs unknown. Replace from the NBA 2K HQ app."
+      },
+      "tiers": [
+        { "level": "silver", "tokenCost": null, "requires": [{ "attribute": "strength", "min": 84 }] }
       ]
     },
     {
-      "id": "boxout_beast", "name": "Boxout Beast", "category": "rebounding", "impact": 3,
-      "description": "Improves the ability to win boxout battles and secure offensive boards.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "offensive_rebound", "min": 62 }, { "attribute": "strength", "min": 62 }] },
-        { "level": "silver", "requires": [{ "attribute": "offensive_rebound", "min": 72 }, { "attribute": "strength", "min": 72 }] },
-        { "level": "gold", "requires": [{ "attribute": "offensive_rebound", "min": 81 }, { "attribute": "strength", "min": 80 }] },
-        { "level": "hof", "requires": [{ "attribute": "offensive_rebound", "min": 88 }, { "attribute": "strength", "min": 87 }] },
-        { "level": "legend", "requires": [{ "attribute": "offensive_rebound", "min": 94 }, { "attribute": "strength", "min": 93 }] }
-      ]
-    },
-    {
-      "id": "brick_wall", "name": "Brick Wall", "category": "allaround", "impact": 2,
+      "id": "brick_wall", "name": "Brick Wall", "category": "physicals", "impact": 2,
       "description": "Improves the effectiveness of screens and reduces energy drain from contact.",
-      "verification": { "status": "unverified" },
+      "incompleteTiers": true,
+      "verification": {
+        "status": "estimated",
+        "source": "Community 'best value attribute thresholds' sheet: 'Strength 84 -> Silver Bruiser + Silver Brick Wall'.",
+        "notes": "NO PHYSICALS BADGE COST CHART WAS SUPPLIED. Only the Silver threshold is known; token costs unknown. Replace from the NBA 2K HQ app."
+      },
       "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "strength", "min": 66 }] },
-        { "level": "silver", "requires": [{ "attribute": "strength", "min": 76 }] },
-        { "level": "gold", "requires": [{ "attribute": "strength", "min": 84 }] },
-        { "level": "hof", "requires": [{ "attribute": "strength", "min": 90 }] },
-        { "level": "legend", "requires": [{ "attribute": "strength", "min": 95 }] }
-      ]
-    },
-    {
-      "id": "immovable_enforcer", "name": "Immovable Enforcer", "category": "allaround", "impact": 3,
-      "description": "Improves the ability to absorb contact without losing position.",
-      "verification": { "status": "unverified" },
-      "tiers": [
-        { "level": "bronze", "requires": [{ "attribute": "strength", "min": 70 }, { "attribute": "interior_defense", "min": 60 }] },
-        { "level": "silver", "requires": [{ "attribute": "strength", "min": 79 }, { "attribute": "interior_defense", "min": 70 }] },
-        { "level": "gold", "requires": [{ "attribute": "strength", "min": 86 }, { "attribute": "interior_defense", "min": 79 }] },
-        { "level": "hof", "requires": [{ "attribute": "strength", "min": 92 }, { "attribute": "interior_defense", "min": 86 }] },
-        { "level": "legend", "requires": [{ "attribute": "strength", "min": 97 }, { "attribute": "interior_defense", "min": 93 }] }
+        { "level": "silver", "tokenCost": null, "requires": [{ "attribute": "strength", "min": 84 }] }
       ]
     }
   ]

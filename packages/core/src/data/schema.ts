@@ -19,10 +19,20 @@ const verification = z
   })
   .default({ status: 'unverified' });
 
-const attributeRequirement = z.object({
+const singleRequirement = z.object({
   attribute: z.string(),
   min: z.number().int(),
 });
+
+/**
+ * A requirement clause: either a single attribute minimum, or an "any of" set
+ * where satisfying one branch is enough. 2K27 uses the latter constantly
+ * ("65 Mid-Range Shot or 65 Three-Point Shot").
+ */
+const attributeRequirement = z.union([
+  singleRequirement,
+  z.object({ anyOf: z.array(singleRequirement).min(1) }),
+]);
 
 const bodyRequirement = z.object({
   minHeightInches: z.number().optional(),
@@ -234,14 +244,51 @@ export const badgesSchema = z.object({
         .extend({ positions: z.array(z.string()).optional(), note: z.string().optional() })
         .optional(),
       verification,
+      incompleteTiers: z.boolean().optional(),
       tiers: z.array(
         z.object({
           level: z.string(),
+          tokenCost: z.number().int().nonnegative().nullable().default(null),
           requires: z.array(attributeRequirement),
         })
       ),
     })
   ),
+});
+
+export const badgeTokensSchema = z.object({
+  enabled: z.boolean(),
+  verification,
+  disciplines: z.array(z.string()),
+  upgradeCostMode: z.object({
+    value: z.enum(['absolute', 'incremental']),
+    options: z.array(z.string()).default([]),
+    verification,
+  }),
+  slots: z.object({
+    total: z.number().int().nonnegative(),
+    byDiscipline: z.record(z.string(), z.number().int().nonnegative()),
+    verification,
+  }),
+  tokenGrants: z.object({
+    mode: z.enum(['linear-by-investment', 'table', 'manual']),
+    verification,
+    freeBelow: z.number().default(0),
+    pointsPerToken: z.number().positive().default(1),
+    maxPerDiscipline: z.number().int().nonnegative().default(99),
+    table: z
+      .record(
+        z.string(),
+        z.array(z.object({ attribute: z.string(), rating: z.number().int(), tokens: z.number().int() }))
+      )
+      .default({}),
+  }),
+  manualTokens: z.record(z.string(), z.number().nullable()).default({}),
+  rules: z.object({
+    capBreakersGrantTokens: z.boolean().default(false),
+    unspentTokensCarryOver: z.boolean().nullable().default(null),
+    canRefundTokens: z.boolean().nullable().default(null),
+  }),
 });
 
 export const animationsSchema = z.object({
@@ -358,6 +405,7 @@ export const archetypesSchema = z.object({
 
 export interface RawDatasetFiles {
   meta: unknown;
+  badgeTokens: unknown;
   attributes: unknown;
   costCurves: unknown;
   positions: unknown;

@@ -1,9 +1,11 @@
 import type { Dataset } from '../types.js';
+import { clauseOptions } from '../engine/requirements.js';
 import {
   animationsSchema,
   archetypesSchema,
   attributesSchema,
   badgeBoostsSchema,
+  badgeTokensSchema,
   badgesSchema,
   bodySchema,
   budgetSchema,
@@ -16,6 +18,20 @@ import {
   takeoversSchema,
   type RawDatasetFiles,
 } from './schema.js';
+
+/** Recursively removes `$comment` / `$schema` documentation keys. */
+function stripAnnotations<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(stripAnnotations) as unknown as T;
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k.startsWith('$')) continue;
+      out[k] = stripAnnotations(v);
+    }
+    return out as T;
+  }
+  return value;
+}
 
 export interface DataIssue {
   severity: 'error' | 'warning';
@@ -34,8 +50,13 @@ export interface LoadResult {
  * Pure: takes plain objects, touches no filesystem. The browser gets the same
  * dataset over HTTP and runs the identical checks.
  */
-export function buildDataset(raw: RawDatasetFiles): LoadResult {
+export function buildDataset(input: RawDatasetFiles): LoadResult {
   const issues: DataIssue[] = [];
+
+  // Documentation keys are legal anywhere in the dataset files — the whole point
+  // is that a human edits these by hand — so strip them before validation
+  // instead of forcing every schema to allow them.
+  const raw = stripAnnotations(input) as RawDatasetFiles;
 
   const meta = metaSchema.parse(raw.meta);
   const attributes = attributesSchema.parse(raw.attributes);
@@ -48,6 +69,7 @@ export function buildDataset(raw: RawDatasetFiles): LoadResult {
   const animations = animationsSchema.parse(raw.animations);
   const takeovers = takeoversSchema.parse(raw.takeovers);
   const capBreakers = capBreakersSchema.parse(raw.capBreakers);
+  const badgeTokens = badgeTokensSchema.parse(raw.badgeTokens);
   const badgeBoosts = badgeBoostsSchema.parse(raw.badgeBoosts);
   const dependencies = dependenciesSchema.parse(raw.dependencies);
   const archetypes = archetypesSchema.parse(raw.archetypes);
@@ -76,6 +98,7 @@ export function buildDataset(raw: RawDatasetFiles): LoadResult {
     takeoverSlots: takeovers.slots,
     takeovers: takeovers.takeovers,
     capBreakers: capBreakers as Dataset['capBreakers'],
+    badgeTokens: badgeTokens as Dataset['badgeTokens'],
     badgeBoosts,
     dependencies: dependencies.dependencies as Dataset['dependencies'],
     archetypes: archetypes.archetypes as Dataset['archetypes'],
@@ -153,22 +176,34 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
       seenLevels.add(tier.level);
       if (order <= prevOrder) err('badges.json', `Badge "${badge.id}" lists levels out of order at "${tier.level}".`);
       prevOrder = order;
-      for (const req of tier.requires) {
+      for (const req of tier.requires.flatMap(clauseOptions)) {
         if (!attrIds.has(req.attribute)) err('badges.json', `Badge "${badge.id}" requires unknown attribute "${req.attribute}".`);
         if (req.min < ds.ratingFloor || req.min > ds.ratingCeiling) {
           err('badges.json', `Badge "${badge.id}" level "${tier.level}" requires ${req.attribute} ${req.min}, outside ${ds.ratingFloor}-${ds.ratingCeiling}.`);
         }
       }
+      if (tier.tokenCost === null && !badge.incompleteTiers) {
+        warn('badges.json', `Badge "${badge.id}" tier "${tier.level}" has no token cost, so it can never be equipped. Set incompleteTiers if that is expected.`);
+      }
     }
-    // Higher tiers must not be cheaper than lower ones, or the ladder is nonsense.
+    // A higher tier asking for LESS than a lower one is a data-quality signal,
+    // not a structural break — the engine walks ladders bottom-up regardless, so
+    // this is reported as a warning rather than failing the whole dataset.
     for (let i = 1; i < badge.tiers.length; i++) {
       const lower = badge.tiers[i - 1]!;
       const higher = badge.tiers[i]!;
-      for (const req of higher.requires) {
-        const lowerReq = lower.requires.find((r) => r.attribute === req.attribute);
-        if (lowerReq && lowerReq.min > req.min) {
-          err('badges.json', `Badge "${badge.id}": ${req.attribute} requirement drops from ${lowerReq.min} (${lower.level}) to ${req.min} (${higher.level}).`);
+      const lowerMins = new Map<string, number>();
+      for (const r of lower.requires.flatMap(clauseOptions)) {
+        lowerMins.set(r.attribute, Math.max(lowerMins.get(r.attribute) ?? 0, r.min));
+      }
+      for (const req of higher.requires.flatMap(clauseOptions)) {
+        const lowerMin = lowerMins.get(req.attribute);
+        if (lowerMin !== undefined && lowerMin > req.min) {
+          warn('badges.json', `Badge "${badge.id}": ${req.attribute} requirement DROPS from ${lowerMin} (${lower.level}) to ${req.min} (${higher.level}). Check this row against the source.`);
         }
+      }
+      if (lower.tokenCost !== null && higher.tokenCost !== null && higher.tokenCost < lower.tokenCost) {
+        warn('badges.json', `Badge "${badge.id}": token cost DROPS from ${lower.tokenCost} (${lower.level}) to ${higher.tokenCost} (${higher.level}).`);
       }
     }
     if (badge.restrictions?.positions) {
@@ -181,14 +216,14 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
   const animCategoryIds = new Set(ds.animationCategories.map((c) => c.id));
   for (const anim of ds.animations) {
     if (!animCategoryIds.has(anim.category)) err('animations.json', `Animation "${anim.id}" references unknown category "${anim.category}".`);
-    for (const req of anim.requires) {
+    for (const req of anim.requires.flatMap(clauseOptions)) {
       if (!attrIds.has(req.attribute)) err('animations.json', `Animation "${anim.id}" requires unknown attribute "${req.attribute}".`);
     }
   }
 
   for (const t of ds.takeovers) {
     for (const tier of t.tiers) {
-      for (const req of tier.requires) {
+      for (const req of tier.requires.flatMap(clauseOptions)) {
         if (!attrIds.has(req.attribute)) err('takeovers.json', `Takeover "${t.id}" tier "${tier.id}" requires unknown attribute "${req.attribute}".`);
       }
     }
@@ -221,6 +256,26 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
   }
   for (const id of ds.capBreakers.includedAttributes) {
     if (!attrIds.has(id)) err('cap-breakers.json', `Included attribute "${id}" does not exist.`);
+  }
+
+  // Badge token economy
+  const categoryIdSet = new Set(ds.categories.map((c) => c.id));
+  for (const d of ds.badgeTokens.disciplines) {
+    if (!categoryIdSet.has(d)) {
+      err('badge-tokens.json', `Discipline "${d}" is not an attribute category. Badge disciplines and attribute categories must line up for token earning to work.`);
+    }
+    if (ds.badgeTokens.slots.byDiscipline[d] === undefined) {
+      warn('badge-tokens.json', `No badge slot count for discipline "${d}"; it will be treated as zero slots.`);
+    }
+  }
+  for (const badge of ds.badges) {
+    if (!ds.badgeTokens.disciplines.includes(badge.category)) {
+      warn('badge-tokens.json', `Badge "${badge.id}" is in category "${badge.category}", which is not a token discipline, so it can never be equipped.`);
+    }
+  }
+  const slotSum = Object.values(ds.badgeTokens.slots.byDiscipline).reduce((a, b) => a + b, 0);
+  if (slotSum !== ds.badgeTokens.slots.total) {
+    warn('badge-tokens.json', `Badge slots per discipline sum to ${slotSum} but total is ${ds.badgeTokens.slots.total}.`);
   }
 
   const badgeIds = new Set(ds.badges.map((b) => b.id));

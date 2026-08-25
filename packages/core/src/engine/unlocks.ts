@@ -104,7 +104,7 @@ export function nextBadgeThresholds(
     const currentOrder = current?.order ?? 0;
     const nextTier = badge.tiers.find((t) => levelOrder(ds, t.level) > currentOrder);
     if (!nextTier) continue;
-    const gaps = gapsFor(ds, nextTier.requires, attrs);
+    const gaps = gapsFor(ds, nextTier.requires, attrs, cost, caps);
     if (gaps.length === 0) continue;
     const pointCost = costToClose(cost, gaps, caps);
     if (!Number.isFinite(pointCost)) continue; // unreachable at this body
@@ -164,7 +164,7 @@ export function nextAnimationThresholds(
   for (const anim of ds.animations) {
     if (meetsRequirements(anim.requires, attrs) && meetsBody(body, anim.bodyRequires)) continue;
     const blocked = !meetsBody(body, anim.bodyRequires);
-    const gaps = gapsFor(ds, anim.requires, attrs);
+    const gaps = gapsFor(ds, anim.requires, attrs, cost, caps);
     const pointCost = costToClose(cost, gaps, caps);
     if (!blocked && !Number.isFinite(pointCost)) continue;
     out.push({
@@ -231,7 +231,7 @@ export function evaluateTakeovers(
     const nextTier = t.tiers[unlocked.length];
     let next: TakeoverStatus['nextTier'];
     if (nextTier) {
-      const gaps = gapsFor(ds, nextTier.requires, attrs);
+      const gaps = gapsFor(ds, nextTier.requires, attrs, cost, caps);
       const pointCost = costToClose(cost, gaps, caps);
       if (Number.isFinite(pointCost)) {
         next = { id: nextTier.id, name: nextTier.name, gaps, pointCost };

@@ -2,28 +2,36 @@
   "$schema": "../schema/meta.schema.json",
   "datasetId": "2k27",
   "gameTitle": "NBA 2K27",
-  "datasetVersion": "0.1.0-placeholder",
-  "schemaVersion": 1,
+  "datasetVersion": "0.2.0-partial",
+  "schemaVersion": 2,
   "lastUpdated": "2026-08-25",
 
   "provenance": {
-    "status": "placeholder",
-    "headline": "NO VERIFIED NBA 2K27 DATA IS PRESENT IN THIS DATASET.",
+    "status": "partial",
+    "headline": "PARTIALLY SOURCED NBA 2K27 DATA. Badges and thresholds are real; caps, costs and the build budget are not.",
     "explanation": [
-      "Every numeric value in this dataset directory is a STRUCTURAL PLACEHOLDER. It exists so the",
-      "optimization engine, API and UI have something well-formed to run against. It is NOT sourced",
-      "from NBA 2K27, from 2K Sports, from Visual Concepts, or from any verified community dataset.",
-      "Placeholder values are shaped like values from the NBA 2K series so that the data model is",
-      "realistic, but the specific numbers should be assumed WRONG until a human replaces them.",
-      "Attribute names, badge names, animation names and archetype names are likewise unverified for",
-      "2K27 and may not exist in the shipped game."
+      "SOURCED (trust, but re-check): every badge requirement and badge token cost for the Shooting,",
+      "Playmaking, Defense and Finishing disciplines, taken from NBA 2K27 badge cost charts; the",
+      "animation and takeover thresholds named on a community 'best value attribute thresholds' sheet;",
+      "the builder's attribute list; and the direction of each body setting's effect on caps.",
+      "",
+      "NOT SOURCED (assume wrong): attribute CAPS (only the direction of each body effect is known,",
+      "not the magnitude), the per-point COST CURVES, the total BUILD POINT BUDGET, cap breaker",
+      "quantities, badge boost slot counts, and the badge token EARNING formula.",
+      "",
+      "MISSING ENTIRELY: the Rebounding and Physicals badge cost charts. The handful of rebounding and",
+      "physicals badges present were reconstructed from single lines on the best-value sheet, carry",
+      "only one tier each, and are flagged with incompleteTiers.",
+      "",
+      "Attribute names are 2K27's. Badge names are 2K27's. Archetype names are community convention,",
+      "not official 2K27 build names."
     ],
-    "howToReplace": "See docs/DATA.md. Replace values in place and set each record's verification.status to 'verified' with a source. Nothing in the UI or engine hard-codes these numbers.",
+    "howToReplace": "See docs/DATA.md. Replace values in place and set each record's verification.status with a source. Nothing in the UI or engine hard-codes these numbers.",
     "verificationLevels": {
       "verified": "Confirmed against the shipped NBA 2K27 builder or an official 2K source. Safe to trust.",
-      "community-verified": "Reproduced independently by multiple credible community testers. Trust with care.",
-      "estimated": "Derived or interpolated from partially known data. Directionally useful, numerically approximate.",
-      "unverified": "Placeholder. Shaped correctly, numerically meaningless. THIS IS THE DEFAULT.",
+      "community-verified": "Taken from the supplied NBA 2K27 badge charts / community threshold sheets. Trust with care; re-check against the NBA 2K HQ app.",
+      "estimated": "Derived or interpolated from partially known data, or read off a degraded source image. Directionally useful, numerically approximate.",
+      "unverified": "Placeholder. Shaped correctly, numerically meaningless.",
       "deprecated": "Known to be wrong / no longer applies. Retained for history, ignored by the engine."
     }
   },
@@ -31,28 +39,48 @@
   "defaultVerification": {
     "status": "unverified",
     "source": null,
-    "notes": "Placeholder generated with the initial application scaffold.",
+    "notes": "No source recorded for this record.",
     "lastReviewed": "2026-08-25"
   },
 
   "uiWarnings": {
-    "globalBanner": "Running on PLACEHOLDER NBA 2K27 data. Every rating, cost, cap, badge threshold and animation requirement below is unverified and almost certainly wrong. Replace the files in /data/2k27 with verified data before trusting any build.",
+    "globalBanner": "Badge requirements and token costs are from real NBA 2K27 charts. Attribute CAPS, COST CURVES and the BUILD POINT BUDGET are still placeholders — builds will pick the right thresholds but may be affordable when they should not be. Rebounding and Physicals badge charts are missing entirely.",
     "showPerRecordBadges": true
   },
 
+  "changelog": [
+    {
+      "version": "0.2.0-partial",
+      "date": "2026-08-25",
+      "changes": [
+        "Replaced all badge data with sourced NBA 2K27 requirements and badge token costs (Shooting, Playmaking, Defense, Finishing).",
+        "Removed Stamina: not a 2K27 builder attribute, raised in-game at the Gatorade gym.",
+        "Removed Acceleration, added Agility, which is what 2K27 defensive badges actually require.",
+        "Split Rebounding out of Defense into its own discipline (2K27 has six badge disciplines).",
+        "Dropped the Legend badge tier: 2K27 charts show Bronze/Silver/Gold/Hall of Fame only.",
+        "Added badge-tokens.json for the new token + slot economy.",
+        "Added support for 'any of' badge requirements, which 2K27 uses heavily.",
+        "Corrected the sign of the weight and wingspan effect on Perimeter Defense and Driving Dunk caps.",
+        "Rewrote animations and takeovers to only what the best-value threshold sheet names."
+      ]
+    },
+    { "version": "0.1.0-placeholder", "date": "2026-08-25", "changes": ["Initial scaffold with fully invented placeholder data."] }
+  ],
+
   "files": [
-    { "file": "attributes.json", "describes": "Attribute definitions, categories, min/max, cost curve binding." },
-    { "file": "cost-curves.json", "describes": "Per-point upgrade cost curves referenced by attributes." },
-    { "file": "positions.json", "describes": "Positions and their body-setting envelopes." },
-    { "file": "body.json", "describes": "Height / weight / wingspan legal ranges and their interaction rules." },
-    { "file": "caps.json", "describes": "How body settings translate into per-attribute maximums." },
-    { "file": "budget.json", "describes": "Total build point budget and how body settings modify it." },
-    { "file": "badges.json", "describes": "Badges, levels, and the attribute thresholds that unlock each level." },
-    { "file": "animations.json", "describes": "Animation packages and their attribute / body requirements." },
-    { "file": "takeovers.json", "describes": "Takeovers and their unlock requirements." },
-    { "file": "cap-breakers.json", "describes": "Post-launch cap breaker rules and eligibility." },
-    { "file": "badge-boosts.json", "describes": "Maximum +1 / +2 badge level boost rules." },
-    { "file": "dependencies.json", "describes": "Declared attribute interaction / dependency rules." },
-    { "file": "archetypes.json", "describes": "Named build archetypes and their preset priorities." }
+    { "file": "attributes.json", "describes": "Attribute definitions, six disciplines, min/max, cost curve binding." },
+    { "file": "cost-curves.json", "describes": "Per-point upgrade cost curves referenced by attributes. UNSOURCED." },
+    { "file": "positions.json", "describes": "Positions and their body-setting envelopes. UNSOURCED." },
+    { "file": "body.json", "describes": "Height / weight / wingspan legal ranges. UNSOURCED." },
+    { "file": "caps.json", "describes": "How body settings translate into per-attribute maximums. Directions sourced, magnitudes not." },
+    { "file": "budget.json", "describes": "Total build point budget. UNSOURCED." },
+    { "file": "badges.json", "describes": "Badges, tiers, attribute requirements and badge token costs. SOURCED for four of six disciplines." },
+    { "file": "badge-tokens.json", "describes": "Badge token economy: per-discipline pools and badge slots. Mechanic sourced, quantities not." },
+    { "file": "animations.json", "describes": "Animation packages and their requirements. SOURCED but incomplete." },
+    { "file": "takeovers.json", "describes": "Takeovers and their unlock requirements. SOURCED but likely incomplete." },
+    { "file": "cap-breakers.json", "describes": "Cap breaker rules. Behaviour sourced, quantities not." },
+    { "file": "badge-boosts.json", "describes": "Maximum +1 / +2 badge level boost rules. UNSOURCED." },
+    { "file": "dependencies.json", "describes": "Declared attribute interaction rules. Modelling choices, not game rules." },
+    { "file": "archetypes.json", "describes": "Named build archetypes. Threshold values sourced, archetype names are community convention." }
   ]
 }

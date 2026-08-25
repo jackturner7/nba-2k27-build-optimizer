@@ -1,4 +1,5 @@
 import type { Dataset } from '../types.js';
+import { clauseOptions } from '../engine/requirements.js';
 
 export interface AttributeCoverage {
   attribute: string;
@@ -57,15 +58,15 @@ export function datasetCoverage(ds: Dataset): CoverageReport {
 
   for (const badge of ds.badges) {
     for (const tier of badge.tiers) {
-      for (const req of tier.requires) note(req.attribute, req.min, 'badgeTiers');
+      for (const req of tier.requires.flatMap(clauseOptions)) note(req.attribute, req.min, 'badgeTiers');
     }
   }
   for (const anim of ds.animations) {
-    for (const req of anim.requires) note(req.attribute, req.min, 'animations');
+    for (const req of anim.requires.flatMap(clauseOptions)) note(req.attribute, req.min, 'animations');
   }
   for (const t of ds.takeovers) {
     for (const tier of t.tiers) {
-      for (const req of tier.requires) note(req.attribute, req.min, 'takeoverTiers');
+      for (const req of tier.requires.flatMap(clauseOptions)) note(req.attribute, req.min, 'takeoverTiers');
     }
   }
 

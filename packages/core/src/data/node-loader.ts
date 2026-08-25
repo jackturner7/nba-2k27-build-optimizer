@@ -16,6 +16,7 @@ const FILE_MAP: Record<keyof RawDatasetFiles, string> = {
   animations: 'animations.json',
   takeovers: 'takeovers.json',
   capBreakers: 'cap-breakers.json',
+  badgeTokens: 'badge-tokens.json',
   badgeBoosts: 'badge-boosts.json',
   dependencies: 'dependencies.json',
   archetypes: 'archetypes.json',

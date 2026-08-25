@@ -10,6 +10,7 @@ import type { BreakpointMap } from './breakpoints.js';
 import { lastUsefulBreakpoint } from './breakpoints.js';
 import { isCapBreakerEligible } from './caps.js';
 import type { CostModel } from './cost.js';
+import { clauseOptions } from './requirements.js';
 import { priorityWeights } from './score.js';
 import { evaluateAnimations, evaluateBadges, evaluateTakeovers, levelName, levelWeight } from './unlocks.js';
 
@@ -29,7 +30,7 @@ export function unlockValue(
 
   for (const b of evaluateBadges(ds, attrs, body)) {
     const def = ds.badges.find((x) => x.id === b.badgeId);
-    const ids = [...new Set(def?.tiers.flatMap((t) => t.requires.map((r) => r.attribute)) ?? [])];
+    const ids = [...new Set(def?.tiers.flatMap((t) => t.requires.flatMap(clauseOptions).map((r) => r.attribute)) ?? [])];
     const focus = ids.length ? ids.reduce((a, id) => a + (pw[id] ?? 0), 0) / ids.length : 0;
     total += levelWeight(ds, b.level) * b.impact * (0.35 + 1.65 * focus);
   }
@@ -37,7 +38,7 @@ export function unlockValue(
   const bestByCategory = new Map<string, number>();
   for (const a of evaluateAnimations(ds, attrs, body)) {
     const def = ds.animations.find((x) => x.id === a.animationId);
-    const ids = [...new Set(def?.requires.map((r) => r.attribute) ?? [])];
+    const ids = [...new Set(def?.requires.flatMap(clauseOptions).map((r) => r.attribute) ?? [])];
     const focus = ids.length ? ids.reduce((acc, id) => acc + (pw[id] ?? 0), 0) / ids.length : 0;
     const value = a.impact * (0.35 + 1.65 * focus) * 1.4;
     const prev = bestByCategory.get(a.category) ?? 0;
@@ -193,7 +194,7 @@ export function planBadgeBoosts(
 
   const focusOf = (badgeId: string) => {
     const def = ds.badges.find((x) => x.id === badgeId);
-    const ids = [...new Set(def?.tiers.flatMap((t) => t.requires.map((r) => r.attribute)) ?? [])];
+    const ids = [...new Set(def?.tiers.flatMap((t) => t.requires.flatMap(clauseOptions).map((r) => r.attribute)) ?? [])];
     return ids.length ? ids.reduce((a, id) => a + (pw[id] ?? 0), 0) / ids.length : 0;
   };
 

@@ -9,6 +9,8 @@ import { evaluateBuild } from '../engine/evaluate.js';
 import { optimize } from '../engine/optimize.js';
 import { requestFromArchetype } from '../engine/archetype.js';
 import { formatHeight, parseHeight, validateBody } from '../engine/body.js';
+import { clauseOptions, gapsFor, meetsRequirements } from '../engine/requirements.js';
+import { computeTokens } from '../engine/tokens.js';
 import { parseBuildRequest } from '../nl/parse.js';
 import type { BuildBody } from '../types.js';
 
@@ -22,18 +24,39 @@ describe('dataset', () => {
     expect(errors.map((e) => `${e.file}: ${e.message}`)).toEqual([]);
   });
 
-  it('is honest about being unverified', () => {
+  it('is honest about what is and is not sourced', () => {
     const report = verificationReport(ds);
     expect(report.totalRecords).toBeGreaterThan(0);
-    // The placeholder dataset must not claim verification it does not have.
+    // Nothing may claim 'verified' — that status is reserved for values read
+    // straight off the shipped builder, which nobody here has done.
     expect(report.byStatus['verified'] ?? 0).toBe(0);
-    expect(ds.meta.provenance.status).toBe('placeholder');
+    expect(ds.meta.provenance.status).toBe('partial');
+    // The files that are still guesses must still say so.
+    expect(ds.budget.verification.status).toBe('unverified');
+    expect(ds.costCurves.every((c) => c.verification.status === 'unverified')).toBe(true);
+  });
+
+  it('has the 2K27 attribute set, not the 2K26 one', () => {
+    const ids = new Set(ds.attributes.map((a) => a.id));
+    // Stamina is not in the 2K27 builder — it is raised at the in-game gym.
+    expect(ids.has('stamina')).toBe(false);
+    // 2K27 badges require Agility; Acceleration does not appear anywhere.
+    expect(ids.has('acceleration')).toBe(false);
+    expect(ids.has('agility')).toBe(true);
+    // Six badge disciplines, with Rebounding split out of Defense.
+    expect(ds.categories.map((c) => c.id).sort()).toEqual(
+      ['defense', 'finishing', 'physicals', 'playmaking', 'rebounding', 'shooting']
+    );
+  });
+
+  it('uses the four 2K27 badge tiers', () => {
+    expect(ds.badgeLevels.map((l) => l.id)).toEqual(['bronze', 'silver', 'gold', 'hof']);
   });
 
   it('every badge tier is reachable in principle', () => {
     for (const badge of ds.badges) {
       for (const tier of badge.tiers) {
-        for (const req of tier.requires) {
+        for (const req of tier.requires.flatMap(clauseOptions)) {
           expect(req.min).toBeLessThanOrEqual(ds.ratingCeiling);
           expect(req.min).toBeGreaterThanOrEqual(ds.ratingFloor);
         }
@@ -91,6 +114,16 @@ describe('body rules', () => {
     expect(short['three_point']!).toBeGreaterThan(tall['three_point']!);
     expect(tall['block']!).toBeGreaterThan(short['block']!);
     expect(tall['interior_defense']!).toBeGreaterThan(short['interior_defense']!);
+  });
+
+  it('punishes minimum weight and wingspan on perimeter defense and driving dunk', () => {
+    // 2K27 coverage is explicit that a wing at minimum weight and minimum
+    // wingspan takes a real hit to these two specifically.
+    const body = { position: 'SF', heightInches: 79 } as const;
+    const skinny = computeCaps(ds, { ...body, weightPounds: 186, wingspanInches: 76 });
+    const filled = computeCaps(ds, { ...body, weightPounds: 250, wingspanInches: 88 });
+    expect(filled['perimeter_defense']!).toBeGreaterThan(skinny['perimeter_defense']!);
+    expect(filled['driving_dunk']!).toBeGreaterThan(skinny['driving_dunk']!);
   });
 });
 
@@ -296,5 +329,94 @@ describe('natural language mode', () => {
     expect(parsed.request.body.position).toBe('C');
     expect(parsed.request.body.heightInches).toBe(84);
     expect(parsed.request.priorities['block'] ?? parsed.request.priorities['interior_defense']).toBeGreaterThan(80);
+  });
+});
+
+describe('2K27 requirement clauses', () => {
+  it('treats an "any of" requirement as satisfied by either branch', () => {
+    // Deadeye Bronze is "65 Mid-Range OR 65 Three-Point".
+    const deadeye = ds.badges.find((b) => b.id === 'deadeye')!;
+    const bronze = deadeye.tiers[0]!;
+    expect(bronze.requires.length).toBe(1);
+    expect(clauseOptions(bronze.requires[0]!).length).toBe(2);
+
+    const base: Record<string, number> = {};
+    for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
+
+    expect(meetsRequirements(bronze.requires, { ...base, three_point: 65 })).toBe(true);
+    expect(meetsRequirements(bronze.requires, { ...base, mid_range: 65 })).toBe(true);
+    expect(meetsRequirements(bronze.requires, { ...base, three_point: 64, mid_range: 64 })).toBe(false);
+  });
+
+  it('prices an "any of" gap at the cheaper branch, not both', () => {
+    const deadeye = ds.badges.find((b) => b.id === 'deadeye')!;
+    const bronze = deadeye.tiers[0]!;
+    const base: Record<string, number> = {};
+    for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
+    const attrs = { ...base, three_point: 60, mid_range: 30 };
+    const caps = computeCaps(ds, WING);
+
+    const gaps = gapsFor(ds, bronze.requires, attrs, costModelFor(ds), caps);
+    // One gap, not two: you only have to buy one side of an "or".
+    expect(gaps.length).toBe(1);
+    expect(gaps[0]!.attribute).toBe('three_point');
+    expect(gaps[0]!.fromChoice).toBe(true);
+  });
+
+  it('requires ALL clauses when they are separate', () => {
+    // Posterizer Bronze is "73 Driving Dunk AND 65 Vertical".
+    const posterizer = ds.badges.find((b) => b.id === 'posterizer')!;
+    const bronze = posterizer.tiers[0]!;
+    const base: Record<string, number> = {};
+    for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
+    expect(meetsRequirements(bronze.requires, { ...base, driving_dunk: 73 })).toBe(false);
+    expect(meetsRequirements(bronze.requires, { ...base, driving_dunk: 73, vertical: 65 })).toBe(true);
+  });
+});
+
+describe('badge tokens', () => {
+  it('earns more tokens in a discipline the build invests in', () => {
+    const base: Record<string, number> = {};
+    for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
+    const poor = computeTokens(ds, base);
+    const rich = computeTokens(ds, { ...base, three_point: 95, mid_range: 90, free_throw: 80 });
+    expect(rich['shooting']!).toBeGreaterThan(poor['shooting']!);
+    // Investing in shooting must not conjure defense tokens.
+    expect(rich['defense']).toBe(poor['defense']);
+  });
+
+  it('never equips more badges than there are slots or tokens', () => {
+    const build = optimize(ds, requestFromArchetype(ds, 'three_and_d_wing')).builds[0]!;
+    for (const d of build.tokens.byDiscipline) {
+      expect(d.slotsUsed).toBeLessThanOrEqual(d.slots);
+      expect(d.spent).toBeLessThanOrEqual(d.earned);
+      expect(d.remaining).toBe(d.earned - d.spent);
+    }
+    expect(build.equippedBadges.length).toBe(build.tokens.totalSlotsUsed);
+  });
+
+  it('only equips badges the attributes actually make eligible', () => {
+    const build = optimize(ds, requestFromArchetype(ds, 'inside_center')).builds[0]!;
+    const eligible = new Map(build.badges.map((b) => [b.badgeId, b.levelOrder]));
+    for (const e of build.equippedBadges) {
+      expect(eligible.has(e.badgeId)).toBe(true);
+      expect(e.levelOrder).toBeLessThanOrEqual(eligible.get(e.badgeId)!);
+    }
+  });
+
+  it('reports badges it could not price rather than silently dropping them', () => {
+    const build = optimize(ds, requestFromArchetype(ds, 'inside_center')).builds[0]!;
+    // The rebounding and physicals charts were never supplied, so those badges
+    // have no token cost and must be surfaced, not hidden.
+    expect(build.tokens.unpricedBadges.length).toBeGreaterThan(0);
+  });
+
+  it('honours a manual token override', () => {
+    const request = { ...requestFromArchetype(ds, 'three_and_d_wing'), tokenOverrides: { shooting: 0 } };
+    const build = optimize(ds, request).builds[0]!;
+    const shooting = build.tokens.byDiscipline.find((d) => d.discipline === 'shooting')!;
+    expect(shooting.earned).toBe(0);
+    expect(shooting.spent).toBe(0);
+    expect(build.equippedBadges.some((b) => b.category === 'shooting')).toBe(false);
   });
 });
