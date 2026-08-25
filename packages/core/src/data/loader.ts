@@ -103,6 +103,7 @@ export function buildDataset(input: RawDatasetFiles): LoadResult {
     badgeBoosts,
     dependencies: dependencies.dependencies as Dataset['dependencies'],
     archetypes: archetypes.archetypes as Dataset['archetypes'],
+    officialBuildNames: archetypes.officialBuildNames,
   };
 
   issues.push(...checkReferentialIntegrity(dataset));
@@ -257,6 +258,57 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
   }
   for (const id of ds.capBreakers.includedAttributes) {
     if (!attrIds.has(id)) err('cap-breakers.json', `Included attribute "${id}" does not exist.`);
+  }
+
+  // Cap overrides and cap breaker tables are both transcribed by eye off the
+  // NBA 2K HQ builder, so they get checked against each other. `newCap` is the
+  // redundancy that makes a mis-read row loud instead of silent.
+  for (const [key, entry] of Object.entries(ds.caps.overrides)) {
+    if (key.split('|').length !== 4) {
+      err('caps.json', `Cap override key "${key}" must be POSITION|height|weight|wingspan.`);
+    }
+    for (const id of Object.keys(entry.caps)) {
+      if (!attrIds.has(id)) err('caps.json', `Cap override "${key}" sets unknown attribute "${id}".`);
+    }
+    const missing = [...attrIds].filter((id) => entry.caps[id] === undefined);
+    if (missing.length) {
+      warn('caps.json', `Cap override "${key}" omits ${missing.length} attribute(s) (${missing.join(', ')}); they fall back to the modelled cap.`);
+    }
+  }
+
+  for (const [key, table] of Object.entries(ds.capBreakers.gainTables.entries)) {
+    if (key.split('|').length !== 4) {
+      err('cap-breakers.json', `Gain table key "${key}" must be POSITION|height|weight|wingspan.`);
+    }
+    const capsHere = ds.caps.overrides[key]?.caps;
+    if (!capsHere) {
+      warn('cap-breakers.json', `Gain table "${key}" has no matching cap override in caps.json, so its newCap values cannot be checked.`);
+    }
+    for (const [id, row] of Object.entries(table.attributes)) {
+      if (!attrIds.has(id)) {
+        err('cap-breakers.json', `Gain table "${key}" has a row for unknown attribute "${id}".`);
+        continue;
+      }
+      if (row.slots.length !== ds.capBreakers.slotsPerAttribute) {
+        err('cap-breakers.json', `Gain table "${key}" row "${id}" has ${row.slots.length} slots; expected ${ds.capBreakers.slotsPerAttribute}.`);
+      }
+      // A gain after a locked slot cannot be claimed, so it is almost certainly
+      // a transcription slip rather than a real hole in the middle of a row.
+      const firstLock = row.slots.indexOf(null);
+      if (firstLock >= 0 && row.slots.slice(firstLock).some((s) => s !== null)) {
+        err('cap-breakers.json', `Gain table "${key}" row "${id}" has an unlocked slot after a locked one; slots fill in order, so that gain is unreachable.`);
+      }
+      const original = capsHere?.[id];
+      if (original !== undefined) {
+        const total = row.slots.reduce<number>((a, s) => a + (s ?? 0), 0);
+        if (original + total !== row.newCap) {
+          err(
+            'cap-breakers.json',
+            `Gain table "${key}" row "${id}" does not add up: original cap ${original} + slots (${total}) = ${original + total}, but newCap says ${row.newCap}. One of the two was mis-transcribed.`
+          );
+        }
+      }
+    }
   }
 
   // Badge token economy

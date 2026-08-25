@@ -189,11 +189,29 @@ Two honest refusals:
 
 Both are post-build overlays, planned after the build is fixed.
 
-**Cap breakers** buy exactly one point each, so the only question worth asking
-is which single point crosses a threshold. The planner only considers attributes
-already sitting at their cap (anywhere else, ordinary build points are cheaper),
-and greedily takes the placement with the largest unlock gain. Breakers with no
-threshold to chase are reported as unplaced rather than dumped somewhere.
+**Cap breakers** are a lookup, not a formula. Every attribute has five breaker
+slots, each worth a *different* amount that the builder publishes per body —
+Steal's first slot is +7 on the one frame that has been transcribed, Close
+Shot's is +1 — with gains diminishing down the row (Block runs +6/+5/+4/+3/+2)
+and whole attributes locked out entirely (nothing raises Mid-Range, Ball Handle
+or Speed on that frame).
+
+So the planner reads the table and allocates against it. Three details matter:
+
+- It only considers attributes **already at their cap**. A breaker raises the
+  ceiling, so below the ceiling it does nothing a build point would not do more
+  cheaply.
+- It allocates **runs of slots, not single slots**. Pass Accuracy's slots are +2
+  each and no single one of them crosses anything, but three together cross four
+  thresholds. A one-slot lookahead sees zero gain, stops, and leaves every
+  breaker unplaced — which is exactly what the previous version did. Candidates
+  are ranked by unlock value *per slot spent*, ties going to the shorter run.
+- A body with **no transcribed table gets no plan at all**. Gains run from +1 to
+  +7 across attributes on a single frame; there is nothing there to extrapolate.
+
+How many breakers a player may actually claim is not published. The app assumes
+the conservative reading — a shared pool of five — and says so in the UI, rather
+than the reading that would hand the transcribed frame +112 attribute points.
 
 **Badge boosts** allocate the +2 slot first — a +2 on the wrong badge is the
 most expensive mistake available — then the +1 slots, ranked by level-weight

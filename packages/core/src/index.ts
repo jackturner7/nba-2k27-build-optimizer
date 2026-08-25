@@ -19,7 +19,18 @@ export {
 } from './engine/body.js';
 export type { BodyValidation, Range } from './engine/body.js';
 
-export { baseAttributes, capsWithBreakers, computeBudget, computeCaps, isCapBreakerEligible } from './engine/caps.js';
+export {
+  baseAttributes,
+  capBreakerGain,
+  capBreakerTableFor,
+  capOverrideFor,
+  capsWithBreakers,
+  computeBudget,
+  computeCaps,
+  isCapBreakerEligible,
+  lookupByBody,
+  usableSlots,
+} from './engine/caps.js';
 export { CostModel, costModelFor } from './engine/cost.js';
 export { collectBreakpoints, lastUsefulBreakpoint } from './engine/breakpoints.js';
 export type { Breakpoint, BreakpointMap, BreakpointSource } from './engine/breakpoints.js';

@@ -28,7 +28,10 @@ export function ArchetypePanel({
       </div>
       <div className="field-hint" style={{ marginTop: 10, display: 'flex', gap: 6, alignItems: 'center' }}>
         <VerificationChip verification={dataset.archetypes[0]?.verification} />
-        Community archetype names. NBA 2K27's official build names are not known.
+        Community archetype names — 2K27 names a build for you rather than offering a list.{' '}
+        {Object.keys(dataset.officialBuildNames?.entries ?? {}).length} in-game name
+        {Object.keys(dataset.officialBuildNames?.entries ?? {}).length === 1 ? ' has' : 's have'} been
+        confirmed so far, shown under Body when you land on that frame.
       </div>
     </Panel>
   );
