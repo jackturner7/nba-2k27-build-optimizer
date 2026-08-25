@@ -1,0 +1,406 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Badge names are drawn from the NBA 2K series vocabulary and are NOT confirmed to exist in 2K27.",
+    "Every threshold is invented. This file is the highest-leverage thing to replace with real data:",
+    "the optimizer's entire notion of 'this rating is worth stopping at' comes from these numbers.",
+    "",
+    "Each level's `requires` list is CONJUNCTIVE (all conditions must hold). A level is unlocked only",
+    "if every lower level is also unlocked, which the engine enforces regardless of what you type here.",
+    "`impact` (1-5) is a designer-set weight for how much the badge actually matters in-game; it feeds",
+    "the Badge Value component of the optimization score and is meant to be tuned by hand."
+  ],
+
+  "levels": [
+    { "id": "bronze", "name": "Bronze", "order": 1, "scoreWeight": 1.0 },
+    { "id": "silver", "name": "Silver", "order": 2, "scoreWeight": 1.8 },
+    { "id": "gold", "name": "Gold", "order": 3, "scoreWeight": 3.0 },
+    { "id": "hof", "name": "Hall of Fame", "order": 4, "scoreWeight": 4.6 },
+    { "id": "legend", "name": "Legend", "order": 5, "scoreWeight": 6.5 }
+  ],
+
+  "globalRules": {
+    "maxLegendBadges": null,
+    "maxBadgesPerCategory": null,
+    "verification": { "status": "unverified", "notes": "Unknown whether 2K27 limits how many badges can sit at Legend. null = no limit modeled." }
+  },
+
+  "badges": [
+    {
+      "id": "deadeye", "name": "Deadeye", "category": "shooting", "impact": 5,
+      "description": "Reduces the penalty from a closing-out defender on jump shots.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 65 }] },
+        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 75 }] },
+        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 89 }] },
+        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "limitless_range", "name": "Limitless Range", "category": "shooting", "impact": 4,
+      "description": "Extends the range from which a shooter can comfortably shoot.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 72 }] },
+        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 80 }] },
+        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 87 }] },
+        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 92 }] },
+        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 97 }] }
+      ]
+    },
+    {
+      "id": "shifty_shooter", "name": "Shifty Shooter", "category": "shooting", "impact": 4,
+      "description": "Improves shots taken after a dribble move.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 70 }, { "attribute": "ball_handle", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 78 }, { "attribute": "ball_handle", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 85 }, { "attribute": "ball_handle", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 90 }, { "attribute": "ball_handle", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 95 }, { "attribute": "ball_handle", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "set_shot_specialist", "name": "Set Shot Specialist", "category": "shooting", "impact": 3,
+      "description": "Improves standing jump shots taken without a dribble.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "three_point", "min": 62 }, { "attribute": "mid_range", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "three_point", "min": 73 }, { "attribute": "mid_range", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "three_point", "min": 82 }, { "attribute": "mid_range", "min": 74 }] },
+        { "level": "hof", "requires": [{ "attribute": "three_point", "min": 88 }, { "attribute": "mid_range", "min": 82 }] },
+        { "level": "legend", "requires": [{ "attribute": "three_point", "min": 94 }, { "attribute": "mid_range", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "mid_range_maestro", "name": "Mid-Range Maestro", "category": "shooting", "impact": 3,
+      "description": "Improves the ability to knock down mid-range jumpers.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "mid_range", "min": 66 }] },
+        { "level": "silver", "requires": [{ "attribute": "mid_range", "min": 76 }] },
+        { "level": "gold", "requires": [{ "attribute": "mid_range", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "mid_range", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "mid_range", "min": 95 }] }
+      ]
+    },
+
+    {
+      "id": "posterizer", "name": "Posterizer", "category": "finishing", "impact": 5,
+      "description": "Improves the chance of dunking on a contesting defender.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "driving_dunk", "min": 70 }] },
+        { "level": "silver", "requires": [{ "attribute": "driving_dunk", "min": 80 }] },
+        { "level": "gold", "requires": [{ "attribute": "driving_dunk", "min": 87 }] },
+        { "level": "hof", "requires": [{ "attribute": "driving_dunk", "min": 92 }] },
+        { "level": "legend", "requires": [{ "attribute": "driving_dunk", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "aerial_wizard", "name": "Aerial Wizard", "category": "finishing", "impact": 4,
+      "description": "Improves the ability to finish alley-oops and putbacks.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "driving_dunk", "min": 65 }, { "attribute": "vertical", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "driving_dunk", "min": 75 }, { "attribute": "vertical", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "driving_dunk", "min": 83 }, { "attribute": "vertical", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "driving_dunk", "min": 90 }, { "attribute": "vertical", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "driving_dunk", "min": 95 }, { "attribute": "vertical", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "rise_up", "name": "Rise Up", "category": "finishing", "impact": 4,
+      "description": "Improves standing dunks in traffic.",
+      "verification": { "status": "unverified" },
+      "restrictions": { "minHeightInches": 78, "note": "Height gate is invented; verify whether 2K27 gates this badge at all." },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "standing_dunk", "min": 68 }] },
+        { "level": "silver", "requires": [{ "attribute": "standing_dunk", "min": 78 }] },
+        { "level": "gold", "requires": [{ "attribute": "standing_dunk", "min": 86 }] },
+        { "level": "hof", "requires": [{ "attribute": "standing_dunk", "min": 92 }] },
+        { "level": "legend", "requires": [{ "attribute": "standing_dunk", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "float_game", "name": "Float Game", "category": "finishing", "impact": 3,
+      "description": "Improves floaters and runners.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "driving_layup", "min": 65 }] },
+        { "level": "silver", "requires": [{ "attribute": "driving_layup", "min": 75 }] },
+        { "level": "gold", "requires": [{ "attribute": "driving_layup", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "driving_layup", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "driving_layup", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "physical_finisher", "name": "Physical Finisher", "category": "finishing", "impact": 4,
+      "description": "Improves finishing through contact.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "driving_layup", "min": 62 }, { "attribute": "strength", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "driving_layup", "min": 72 }, { "attribute": "strength", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "driving_layup", "min": 81 }, { "attribute": "strength", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "driving_layup", "min": 88 }, { "attribute": "strength", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "driving_layup", "min": 93 }, { "attribute": "strength", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "paint_prodigy", "name": "Paint Prodigy", "category": "finishing", "impact": 4,
+      "description": "Improves close-range shots and hooks inside the paint.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "close_shot", "min": 66 }] },
+        { "level": "silver", "requires": [{ "attribute": "close_shot", "min": 76 }] },
+        { "level": "gold", "requires": [{ "attribute": "close_shot", "min": 85 }] },
+        { "level": "hof", "requires": [{ "attribute": "close_shot", "min": 91 }] },
+        { "level": "legend", "requires": [{ "attribute": "close_shot", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "post_powerhouse", "name": "Post Powerhouse", "category": "finishing", "impact": 3,
+      "description": "Improves the ability to back down defenders in the post.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "post_control", "min": 65 }, { "attribute": "strength", "min": 65 }] },
+        { "level": "silver", "requires": [{ "attribute": "post_control", "min": 75 }, { "attribute": "strength", "min": 75 }] },
+        { "level": "gold", "requires": [{ "attribute": "post_control", "min": 84 }, { "attribute": "strength", "min": 83 }] },
+        { "level": "hof", "requires": [{ "attribute": "post_control", "min": 90 }, { "attribute": "strength", "min": 89 }] },
+        { "level": "legend", "requires": [{ "attribute": "post_control", "min": 95 }, { "attribute": "strength", "min": 94 }] }
+      ]
+    },
+
+    {
+      "id": "ankle_breaker", "name": "Ankle Breaker", "category": "playmaking", "impact": 5,
+      "description": "Improves the chance of freezing or dropping a defender on a dribble move.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 70 }] },
+        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 78 }] },
+        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 85 }] },
+        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 91 }] },
+        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "unpluckable", "name": "Unpluckable", "category": "playmaking", "impact": 4,
+      "description": "Reduces the chance of being stripped while dribbling or gathering.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 62 }, { "attribute": "strength", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 72 }, { "attribute": "strength", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 80 }, { "attribute": "strength", "min": 74 }] },
+        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 87 }, { "attribute": "strength", "min": 82 }] },
+        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 93 }, { "attribute": "strength", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "handles_for_days", "name": "Handles For Days", "category": "playmaking", "impact": 3,
+      "description": "Reduces the energy lost when performing consecutive dribble moves.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "ball_handle", "min": 65 }, { "attribute": "stamina", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "ball_handle", "min": 75 }, { "attribute": "stamina", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "ball_handle", "min": 83 }, { "attribute": "stamina", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "ball_handle", "min": 89 }, { "attribute": "stamina", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "ball_handle", "min": 94 }, { "attribute": "stamina", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "lightning_launch", "name": "Lightning Launch", "category": "playmaking", "impact": 4,
+      "description": "Improves the explosiveness of the first step out of a launch.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "speed_with_ball", "min": 68 }] },
+        { "level": "silver", "requires": [{ "attribute": "speed_with_ball", "min": 77 }] },
+        { "level": "gold", "requires": [{ "attribute": "speed_with_ball", "min": 85 }] },
+        { "level": "hof", "requires": [{ "attribute": "speed_with_ball", "min": 91 }] },
+        { "level": "legend", "requires": [{ "attribute": "speed_with_ball", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "dimer", "name": "Dimer", "category": "playmaking", "impact": 4,
+      "description": "Boosts the shot percentage of an open teammate off a pass.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 66 }] },
+        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 76 }] },
+        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "break_starter", "name": "Break Starter", "category": "playmaking", "impact": 2,
+      "description": "Improves the accuracy of long outlet passes after a rebound.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 60 }, { "attribute": "defensive_rebound", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 70 }, { "attribute": "defensive_rebound", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 79 }, { "attribute": "defensive_rebound", "min": 75 }] },
+        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 86 }, { "attribute": "defensive_rebound", "min": 84 }] },
+        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 92 }, { "attribute": "defensive_rebound", "min": 91 }] }
+      ]
+    },
+    {
+      "id": "bail_out", "name": "Bail Out", "category": "playmaking", "impact": 3,
+      "description": "Improves passes made out of a jump or while off balance.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "pass_accuracy", "min": 63 }, { "attribute": "ball_handle", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "pass_accuracy", "min": 73 }, { "attribute": "ball_handle", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "pass_accuracy", "min": 82 }, { "attribute": "ball_handle", "min": 74 }] },
+        { "level": "hof", "requires": [{ "attribute": "pass_accuracy", "min": 88 }, { "attribute": "ball_handle", "min": 82 }] },
+        { "level": "legend", "requires": [{ "attribute": "pass_accuracy", "min": 94 }, { "attribute": "ball_handle", "min": 90 }] }
+      ]
+    },
+
+    {
+      "id": "challenger", "name": "Challenger", "category": "defense", "impact": 5,
+      "description": "Improves the effectiveness of well-timed perimeter shot contests.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 65 }] },
+        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 75 }] },
+        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "glove", "name": "Glove", "category": "defense", "impact": 5,
+      "description": "Improves the ability to strip a ball handler.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "steal", "min": 68 }] },
+        { "level": "silver", "requires": [{ "attribute": "steal", "min": 77 }] },
+        { "level": "gold", "requires": [{ "attribute": "steal", "min": 85 }] },
+        { "level": "hof", "requires": [{ "attribute": "steal", "min": 91 }] },
+        { "level": "legend", "requires": [{ "attribute": "steal", "min": 96 }] }
+      ]
+    },
+    {
+      "id": "interceptor", "name": "Interceptor", "category": "defense", "impact": 3,
+      "description": "Improves the frequency of successfully tipped and intercepted passes.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "steal", "min": 60 }, { "attribute": "perimeter_defense", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "steal", "min": 70 }, { "attribute": "perimeter_defense", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "steal", "min": 79 }, { "attribute": "perimeter_defense", "min": 75 }] },
+        { "level": "hof", "requires": [{ "attribute": "steal", "min": 86 }, { "attribute": "perimeter_defense", "min": 83 }] },
+        { "level": "legend", "requires": [{ "attribute": "steal", "min": 93 }, { "attribute": "perimeter_defense", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "pick_dodger", "name": "Pick Dodger", "category": "defense", "impact": 4,
+      "description": "Improves the ability to navigate through and around screens.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 62 }, { "attribute": "acceleration", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 72 }, { "attribute": "acceleration", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 81 }, { "attribute": "acceleration", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 88 }, { "attribute": "acceleration", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 94 }, { "attribute": "acceleration", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "off_ball_pest", "name": "Off-Ball Pest", "category": "defense", "impact": 3,
+      "description": "Improves the ability to bump and disrupt an off-ball opponent.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "perimeter_defense", "min": 60 }, { "attribute": "strength", "min": 55 }] },
+        { "level": "silver", "requires": [{ "attribute": "perimeter_defense", "min": 70 }, { "attribute": "strength", "min": 65 }] },
+        { "level": "gold", "requires": [{ "attribute": "perimeter_defense", "min": 79 }, { "attribute": "strength", "min": 74 }] },
+        { "level": "hof", "requires": [{ "attribute": "perimeter_defense", "min": 86 }, { "attribute": "strength", "min": 82 }] },
+        { "level": "legend", "requires": [{ "attribute": "perimeter_defense", "min": 92 }, { "attribute": "strength", "min": 90 }] }
+      ]
+    },
+    {
+      "id": "paint_patroller", "name": "Paint Patroller", "category": "defense", "impact": 4,
+      "description": "Improves interior shot contests and paint help defense.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "interior_defense", "min": 65 }] },
+        { "level": "silver", "requires": [{ "attribute": "interior_defense", "min": 75 }] },
+        { "level": "gold", "requires": [{ "attribute": "interior_defense", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "interior_defense", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "interior_defense", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "post_lockdown", "name": "Post Lockdown", "category": "defense", "impact": 3,
+      "description": "Improves the ability to hold position against post-up ball handlers.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "interior_defense", "min": 62 }, { "attribute": "strength", "min": 62 }] },
+        { "level": "silver", "requires": [{ "attribute": "interior_defense", "min": 72 }, { "attribute": "strength", "min": 72 }] },
+        { "level": "gold", "requires": [{ "attribute": "interior_defense", "min": 81 }, { "attribute": "strength", "min": 80 }] },
+        { "level": "hof", "requires": [{ "attribute": "interior_defense", "min": 88 }, { "attribute": "strength", "min": 87 }] },
+        { "level": "legend", "requires": [{ "attribute": "interior_defense", "min": 94 }, { "attribute": "strength", "min": 93 }] }
+      ]
+    },
+    {
+      "id": "pogo_stick", "name": "Pogo Stick", "category": "defense", "impact": 4,
+      "description": "Improves the ability to recover and jump again quickly after a block attempt.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "block", "min": 68 }, { "attribute": "vertical", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "block", "min": 77 }, { "attribute": "vertical", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "block", "min": 85 }, { "attribute": "vertical", "min": 78 }] },
+        { "level": "hof", "requires": [{ "attribute": "block", "min": 91 }, { "attribute": "vertical", "min": 85 }] },
+        { "level": "legend", "requires": [{ "attribute": "block", "min": 96 }, { "attribute": "vertical", "min": 92 }] }
+      ]
+    },
+    {
+      "id": "rebound_chaser", "name": "Rebound Chaser", "category": "rebounding", "impact": 4,
+      "description": "Improves the ability to chase down rebounds outside of a player's area.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "defensive_rebound", "min": 66 }] },
+        { "level": "silver", "requires": [{ "attribute": "defensive_rebound", "min": 76 }] },
+        { "level": "gold", "requires": [{ "attribute": "defensive_rebound", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "defensive_rebound", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "defensive_rebound", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "boxout_beast", "name": "Boxout Beast", "category": "rebounding", "impact": 3,
+      "description": "Improves the ability to win boxout battles and secure offensive boards.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "offensive_rebound", "min": 62 }, { "attribute": "strength", "min": 62 }] },
+        { "level": "silver", "requires": [{ "attribute": "offensive_rebound", "min": 72 }, { "attribute": "strength", "min": 72 }] },
+        { "level": "gold", "requires": [{ "attribute": "offensive_rebound", "min": 81 }, { "attribute": "strength", "min": 80 }] },
+        { "level": "hof", "requires": [{ "attribute": "offensive_rebound", "min": 88 }, { "attribute": "strength", "min": 87 }] },
+        { "level": "legend", "requires": [{ "attribute": "offensive_rebound", "min": 94 }, { "attribute": "strength", "min": 93 }] }
+      ]
+    },
+    {
+      "id": "brick_wall", "name": "Brick Wall", "category": "allaround", "impact": 2,
+      "description": "Improves the effectiveness of screens and reduces energy drain from contact.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "strength", "min": 66 }] },
+        { "level": "silver", "requires": [{ "attribute": "strength", "min": 76 }] },
+        { "level": "gold", "requires": [{ "attribute": "strength", "min": 84 }] },
+        { "level": "hof", "requires": [{ "attribute": "strength", "min": 90 }] },
+        { "level": "legend", "requires": [{ "attribute": "strength", "min": 95 }] }
+      ]
+    },
+    {
+      "id": "immovable_enforcer", "name": "Immovable Enforcer", "category": "allaround", "impact": 3,
+      "description": "Improves the ability to absorb contact without losing position.",
+      "verification": { "status": "unverified" },
+      "tiers": [
+        { "level": "bronze", "requires": [{ "attribute": "strength", "min": 70 }, { "attribute": "interior_defense", "min": 60 }] },
+        { "level": "silver", "requires": [{ "attribute": "strength", "min": 79 }, { "attribute": "interior_defense", "min": 70 }] },
+        { "level": "gold", "requires": [{ "attribute": "strength", "min": 86 }, { "attribute": "interior_defense", "min": 79 }] },
+        { "level": "hof", "requires": [{ "attribute": "strength", "min": 92 }, { "attribute": "interior_defense", "min": 86 }] },
+        { "level": "legend", "requires": [{ "attribute": "strength", "min": 97 }, { "attribute": "interior_defense", "min": 93 }] }
+      ]
+    }
+  ]
+}

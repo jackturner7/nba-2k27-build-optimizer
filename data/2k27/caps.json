@@ -1,0 +1,63 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Attribute caps are the single most important dataset in this app and the one most likely to be",
+    "wrong right now. EVERY number below is invented.",
+    "",
+    "Model: cap(attr) = round( baseCap",
+    "                          + perInchHeight    * (height   - refHeight)",
+    "                          + perPoundWeight   * (weight   - refWeight)",
+    "                          + perInchWingspan  * (wingspan - refWingspan)",
+    "                          + positionAdjust[position] )",
+    "        clamped to [hardMin, hardMax] and to the global rating floor/ceiling.",
+    "",
+    "The `overrides` table takes precedence and lets you ship an exact lookup table instead of a model.",
+    "Override keys: `<POSITION>|<heightInches>|<weight>|<wingspanInches>` — partial keys are supported",
+    "using `*` for 'any', and the most specific matching key wins."
+  ],
+
+  "capModel": {
+    "kind": "linear-adjustment",
+    "verification": { "status": "unverified", "notes": "Coefficients are invented and only encode the DIRECTION of each body effect, not its magnitude." },
+    "referenceBody": {
+      "position": "SF",
+      "heightInches": 78,
+      "weightPounds": 215,
+      "wingspanInches": 80
+    }
+  },
+
+  "attributeCaps": [
+    { "attribute": "close_shot",        "baseCap": 90, "perInchHeight":  1.0, "perPoundWeight":  0.02, "perInchWingspan":  0.3, "hardMin": 40, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "driving_layup",     "baseCap": 92, "perInchHeight": -0.8, "perPoundWeight": -0.03, "perInchWingspan":  0.1, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "driving_dunk",      "baseCap": 88, "perInchHeight": -0.3, "perPoundWeight": -0.05, "perInchWingspan":  0.4, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "standing_dunk",     "baseCap": 80, "perInchHeight":  1.8, "perPoundWeight":  0.04, "perInchWingspan":  0.6, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "post_control",      "baseCap": 82, "perInchHeight":  1.5, "perPoundWeight":  0.05, "perInchWingspan":  0.4, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+
+    { "attribute": "mid_range",         "baseCap": 92, "perInchHeight": -0.9, "perPoundWeight": -0.02, "perInchWingspan": -0.2, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "three_point",       "baseCap": 92, "perInchHeight": -1.2, "perPoundWeight": -0.03, "perInchWingspan": -0.3, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "free_throw",        "baseCap": 95, "perInchHeight": -0.4, "perPoundWeight": -0.01, "perInchWingspan":  0.0, "hardMin": 40, "hardMax": 99, "verification": { "status": "unverified" } },
+
+    { "attribute": "pass_accuracy",     "baseCap": 90, "perInchHeight": -0.9, "perPoundWeight": -0.02, "perInchWingspan":  0.0, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "ball_handle",       "baseCap": 90, "perInchHeight": -1.4, "perPoundWeight": -0.04, "perInchWingspan": -0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "speed_with_ball",   "baseCap": 90, "perInchHeight": -1.3, "perPoundWeight": -0.04, "perInchWingspan": -0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+
+    { "attribute": "interior_defense",  "baseCap": 82, "perInchHeight":  1.4, "perPoundWeight":  0.05, "perInchWingspan":  0.5, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "perimeter_defense", "baseCap": 90, "perInchHeight": -1.0, "perPoundWeight": -0.04, "perInchWingspan":  0.4, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "steal",             "baseCap": 88, "perInchHeight": -1.1, "perPoundWeight": -0.03, "perInchWingspan":  0.3, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "block",             "baseCap": 78, "perInchHeight":  1.9, "perPoundWeight":  0.03, "perInchWingspan":  0.8, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "offensive_rebound", "baseCap": 80, "perInchHeight":  1.5, "perPoundWeight":  0.04, "perInchWingspan":  0.6, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "defensive_rebound", "baseCap": 82, "perInchHeight":  1.5, "perPoundWeight":  0.04, "perInchWingspan":  0.6, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+
+    { "attribute": "speed",             "baseCap": 90, "perInchHeight": -0.9, "perPoundWeight": -0.06, "perInchWingspan":  0.0, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "acceleration",      "baseCap": 90, "perInchHeight": -1.0, "perPoundWeight": -0.07, "perInchWingspan":  0.0, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "strength",          "baseCap": 80, "perInchHeight":  1.2, "perPoundWeight":  0.10, "perInchWingspan":  0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "vertical",          "baseCap": 88, "perInchHeight": -0.4, "perPoundWeight": -0.06, "perInchWingspan":  0.2, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
+    { "attribute": "stamina",           "baseCap": 92, "perInchHeight": -0.5, "perPoundWeight": -0.03, "perInchWingspan":  0.0, "hardMin": 40, "hardMax": 99, "verification": { "status": "unverified" } }
+  ],
+
+  "overrides": {
+    "$comment": "Exact caps keyed by `<POSITION>|<height>|<weight>|<wingspan>`; `*` matches anything. Value is a partial map of attribute id -> cap. Most specific match wins.",
+    "entries": {}
+  }
+}

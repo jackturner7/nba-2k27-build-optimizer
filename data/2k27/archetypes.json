@@ -1,0 +1,191 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "These are COMMUNITY archetype names used across the NBA 2K series, not confirmed NBA 2K27",
+    "in-game build names. 2K27's official archetype naming is unknown. Suggested bodies and priority",
+    "weights are opinionated starting points, not verified optimal builds.",
+    "",
+    "`priorities` maps a priorityGroup id (see attributes.json) to a weight from 0-100.",
+    "`constraints.minimums` are HARD floors the optimizer must satisfy or report as infeasible.",
+    "`constraints.softTargets` are 'try to reach' values that add score but are not required."
+  ],
+
+  "archetypes": [
+    {
+      "id": "three_and_d_wing",
+      "name": "3-and-D Wing",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Catch-and-shoot from deep, guard one through three, minimal on-ball creation.",
+      "position": "SF",
+      "suggestedBody": { "heightInches": 79, "weightPounds": 210, "wingspanInches": 85 },
+      "priorities": {
+        "three_point_shooting": 100,
+        "perimeter_defense": 95,
+        "steal": 60,
+        "athleticism": 55,
+        "rebounding": 35,
+        "driving_dunk": 40,
+        "ball_handle": 25,
+        "playmaking": 20
+      },
+      "constraints": {
+        "minimums": { "three_point": 80, "perimeter_defense": 80 },
+        "softTargets": { "steal": 75, "speed": 75 }
+      }
+    },
+    {
+      "id": "two_way_shot_creator",
+      "name": "Two-Way Shot Creator",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Creates his own shot off the dribble and still guards the ball.",
+      "position": "SG",
+      "suggestedBody": { "heightInches": 77, "weightPounds": 200, "wingspanInches": 83 },
+      "priorities": {
+        "three_point_shooting": 95,
+        "ball_handle": 85,
+        "perimeter_defense": 80,
+        "mid_range": 55,
+        "speed_with_ball": 65,
+        "steal": 50,
+        "athleticism": 55,
+        "driving_dunk": 45
+      },
+      "constraints": {
+        "minimums": { "three_point": 82, "ball_handle": 78 },
+        "softTargets": { "perimeter_defense": 80, "speed_with_ball": 80 }
+      }
+    },
+    {
+      "id": "point_forward",
+      "name": "Point Forward",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Oversized primary handler who initiates offense and finishes over smaller defenders.",
+      "position": "SF",
+      "suggestedBody": { "heightInches": 80, "weightPounds": 225, "wingspanInches": 84 },
+      "priorities": {
+        "playmaking": 95,
+        "ball_handle": 85,
+        "driving_dunk": 70,
+        "three_point_shooting": 65,
+        "rebounding": 50,
+        "perimeter_defense": 55,
+        "athleticism": 50,
+        "finishing": 55
+      },
+      "constraints": {
+        "minimums": { "pass_accuracy": 80, "ball_handle": 75 },
+        "softTargets": { "three_point": 78, "driving_dunk": 80 }
+      }
+    },
+    {
+      "id": "lockdown_defender",
+      "name": "Lockdown Defender",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Point-of-attack stopper. Everything else is a rounding error.",
+      "position": "SG",
+      "suggestedBody": { "heightInches": 78, "weightPounds": 205, "wingspanInches": 86 },
+      "priorities": {
+        "perimeter_defense": 100,
+        "steal": 90,
+        "athleticism": 80,
+        "interior_defense": 45,
+        "rebounding": 40,
+        "block": 35,
+        "three_point_shooting": 45,
+        "driving_dunk": 45
+      },
+      "constraints": {
+        "minimums": { "perimeter_defense": 90, "steal": 85 },
+        "softTargets": { "speed": 85, "acceleration": 85, "strength": 70 }
+      }
+    },
+    {
+      "id": "stretch_big",
+      "name": "Stretch Big",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Pick-and-pop big who drags rim protectors out of the paint.",
+      "position": "PF",
+      "suggestedBody": { "heightInches": 82, "weightPounds": 235, "wingspanInches": 87 },
+      "priorities": {
+        "three_point_shooting": 100,
+        "rebounding": 65,
+        "interior_defense": 55,
+        "block": 55,
+        "mid_range": 55,
+        "finishing": 45,
+        "athleticism": 35,
+        "perimeter_defense": 40
+      },
+      "constraints": {
+        "minimums": { "three_point": 82 },
+        "softTargets": { "defensive_rebound": 80, "block": 75, "strength": 70 }
+      }
+    },
+    {
+      "id": "inside_center",
+      "name": "Inside Center",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Paint-bound anchor: rebounds, blocks, finishes everything at the rim.",
+      "position": "C",
+      "suggestedBody": { "heightInches": 85, "weightPounds": 265, "wingspanInches": 91 },
+      "priorities": {
+        "rebounding": 100,
+        "block": 90,
+        "interior_defense": 90,
+        "finishing": 80,
+        "post_scoring": 55,
+        "athleticism": 35,
+        "playmaking": 20,
+        "three_point_shooting": 0
+      },
+      "constraints": {
+        "minimums": { "defensive_rebound": 88, "block": 85, "interior_defense": 85 },
+        "softTargets": { "standing_dunk": 88, "strength": 88, "close_shot": 80 }
+      }
+    },
+    {
+      "id": "two_way_guard",
+      "name": "Two-Way Guard",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Balanced lead guard who scores, creates and defends the point of attack.",
+      "position": "PG",
+      "suggestedBody": { "heightInches": 75, "weightPounds": 185, "wingspanInches": 80 },
+      "priorities": {
+        "three_point_shooting": 85,
+        "playmaking": 80,
+        "ball_handle": 80,
+        "perimeter_defense": 85,
+        "steal": 70,
+        "speed_with_ball": 75,
+        "athleticism": 70,
+        "driving_dunk": 45
+      },
+      "constraints": {
+        "minimums": { "three_point": 80, "perimeter_defense": 80, "ball_handle": 75 },
+        "softTargets": { "pass_accuracy": 80, "steal": 80, "speed": 85 }
+      }
+    },
+    {
+      "id": "slashing_wing",
+      "name": "Slashing Wing",
+      "verification": { "status": "unverified", "notes": "Community archetype name; 2K27 official name unknown." },
+      "summary": "Downhill rim attacker who lives above the rim in transition.",
+      "position": "SF",
+      "suggestedBody": { "heightInches": 79, "weightPounds": 215, "wingspanInches": 84 },
+      "priorities": {
+        "driving_dunk": 100,
+        "athleticism": 90,
+        "finishing": 75,
+        "ball_handle": 60,
+        "perimeter_defense": 60,
+        "three_point_shooting": 45,
+        "rebounding": 45,
+        "playmaking": 35
+      },
+      "constraints": {
+        "minimums": { "driving_dunk": 88, "vertical": 80 },
+        "softTargets": { "speed": 85, "acceleration": 85, "driving_layup": 78 }
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Declared relationships between attributes. NBA 2K does not expose formal attribute dependencies",
+    "in the builder, but real builds have strong practical couplings (a high Speed With Ball is wasted",
+    "without Ball Handle; Driving Dunk does little without Vertical). The engine supports three kinds:",
+    "",
+    "  hard-min   : target must be at least `min`, or at least ratio*source, or the build is INVALID.",
+    "  soft-link  : the score treats `target` as effectively min(target, source*ratio + offset).",
+    "               This is how the optimizer learns not to buy Speed With Ball it cannot use.",
+    "  diminishing: value from `target` above `threshold` is scaled by `factor` unless `source` >= `min`.",
+    "",
+    "NOTHING here is a confirmed 2K27 rule. Every entry is a modeling choice, marked as such."
+  ],
+
+  "dependencies": [
+    {
+      "id": "swb_needs_handle",
+      "kind": "soft-link",
+      "source": "ball_handle",
+      "target": "speed_with_ball",
+      "ratio": 1.0,
+      "offset": 8,
+      "enabled": true,
+      "note": "Speed With Ball beyond roughly Ball Handle + 8 delivers little in practice.",
+      "verification": { "status": "unverified", "notes": "Community heuristic, not an in-game rule." }
+    },
+    {
+      "id": "dunk_needs_vertical",
+      "kind": "diminishing",
+      "source": "vertical",
+      "target": "driving_dunk",
+      "threshold": 85,
+      "sourceMin": 70,
+      "factor": 0.6,
+      "enabled": true,
+      "note": "High Driving Dunk without Vertical misses the animation packages that make it matter.",
+      "verification": { "status": "unverified", "notes": "Modeling choice." }
+    },
+    {
+      "id": "block_needs_vertical",
+      "kind": "diminishing",
+      "source": "vertical",
+      "target": "block",
+      "threshold": 85,
+      "sourceMin": 65,
+      "factor": 0.7,
+      "enabled": true,
+      "note": "Block ratings past the mid-80s need the vertical to actually contest.",
+      "verification": { "status": "unverified", "notes": "Modeling choice." }
+    },
+    {
+      "id": "perimeter_needs_agility",
+      "kind": "diminishing",
+      "source": "acceleration",
+      "target": "perimeter_defense",
+      "threshold": 88,
+      "sourceMin": 72,
+      "factor": 0.75,
+      "enabled": true,
+      "note": "Elite Perimeter Defense on a slow-footed body cannot stay in front.",
+      "verification": { "status": "unverified", "notes": "Modeling choice." }
+    },
+    {
+      "id": "shooting_offball_speed",
+      "kind": "soft-link",
+      "source": "speed",
+      "target": "acceleration",
+      "ratio": 1.0,
+      "offset": 15,
+      "enabled": false,
+      "note": "Disabled by default. Enable if you want the optimizer to keep Speed and Acceleration paired.",
+      "verification": { "status": "unverified", "notes": "Modeling choice, off by default." }
+    }
+  ]
+}

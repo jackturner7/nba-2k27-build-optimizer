@@ -1,0 +1,90 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Animation names and every requirement below are invented. Animation gates are the second most",
+    "important dataset after badges: they create the hard rating breakpoints that make a build feel",
+    "good to play (contact dunk packages, elite dribble styles, quick releases).",
+    "",
+    "`requires` is CONJUNCTIVE. `bodyRequires` gates on height / weight / wingspan and is optional.",
+    "`impact` (1-5) feeds the Animation Unlock component of the optimization score."
+  ],
+
+  "categories": [
+    { "id": "dribble_style", "name": "Dribble Style", "description": "Base ball-handling movement set." },
+    { "id": "size_up", "name": "Size-Up Escape Package", "description": "Escape moves out of a size-up." },
+    { "id": "moving_crossover", "name": "Moving Crossover", "description": "Crossovers performed on the move." },
+    { "id": "layup_package", "name": "Layup Package", "description": "Driving layup animation set." },
+    { "id": "dunk_package", "name": "Dunk Package", "description": "Driving and standing dunk animation sets, including contact dunks." },
+    { "id": "jumpshot", "name": "Jump Shot Release", "description": "Shooting release, affecting speed and timing window." },
+    { "id": "post_moves", "name": "Post Move Package", "description": "Post scoring animation set." }
+  ],
+
+  "animations": [
+    { "id": "dribble_basic", "name": "Standard Dribble Style", "category": "dribble_style", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 25 }] },
+    { "id": "dribble_quick", "name": "Quick Dribble Style", "category": "dribble_style", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 70 }] },
+    { "id": "dribble_elite", "name": "Elite Dribble Style", "category": "dribble_style", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 80 }, { "attribute": "speed_with_ball", "min": 75 }] },
+    { "id": "dribble_pro_signature", "name": "Pro Signature Dribble Style", "category": "dribble_style", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 88 }, { "attribute": "speed_with_ball", "min": 85 }] },
+
+    { "id": "sizeup_basic", "name": "Basic Size-Up Escape", "category": "size_up", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 25 }] },
+    { "id": "sizeup_advanced", "name": "Advanced Size-Up Escape", "category": "size_up", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 75 }] },
+    { "id": "sizeup_elite", "name": "Elite Size-Up Escape", "category": "size_up", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 85 }, { "attribute": "speed_with_ball", "min": 80 }] },
+    { "id": "sizeup_legend", "name": "Signature Size-Up Escape", "category": "size_up", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 92 }, { "attribute": "speed_with_ball", "min": 88 }] },
+
+    { "id": "cross_standard", "name": "Standard Moving Crossover", "category": "moving_crossover", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 25 }] },
+    { "id": "cross_quick", "name": "Quick Moving Crossover", "category": "moving_crossover", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 72 }, { "attribute": "speed_with_ball", "min": 70 }] },
+    { "id": "cross_elite", "name": "Elite Moving Crossover", "category": "moving_crossover", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "ball_handle", "min": 84 }, { "attribute": "speed_with_ball", "min": 82 }] },
+
+    { "id": "layup_standard", "name": "Standard Layup Package", "category": "layup_package", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_layup", "min": 25 }] },
+    { "id": "layup_pro", "name": "Pro Layup Package", "category": "layup_package", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_layup", "min": 72 }] },
+    { "id": "layup_elite", "name": "Elite Layup Package", "category": "layup_package", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_layup", "min": 84 }, { "attribute": "vertical", "min": 65 }] },
+
+    { "id": "dunk_two_hand", "name": "Two-Hand Dunks", "category": "dunk_package", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_dunk", "min": 45 }] },
+    { "id": "dunk_athletic", "name": "Athletic Dunk Package", "category": "dunk_package", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_dunk", "min": 70 }, { "attribute": "vertical", "min": 65 }] },
+    { "id": "dunk_contact_small", "name": "Small Contact Dunks", "category": "dunk_package", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_dunk", "min": 84 }, { "attribute": "vertical", "min": 75 }],
+      "bodyRequires": { "maxHeightInches": 78 },
+      "notes": "Height gate invented. Verify the real 2K27 contact dunk requirements before trusting this." },
+    { "id": "dunk_contact_pro", "name": "Pro Contact Dunks", "category": "dunk_package", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_dunk", "min": 88 }, { "attribute": "vertical", "min": 80 }],
+      "notes": "Threshold invented." },
+    { "id": "dunk_contact_elite", "name": "Elite Contact Dunks", "category": "dunk_package", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "driving_dunk", "min": 92 }, { "attribute": "vertical", "min": 85 }, { "attribute": "strength", "min": 60 }],
+      "notes": "Threshold invented." },
+    { "id": "dunk_bigman_contact", "name": "Big Man Contact Dunks", "category": "dunk_package", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "standing_dunk", "min": 86 }, { "attribute": "strength", "min": 75 }],
+      "bodyRequires": { "minHeightInches": 80 } },
+
+    { "id": "jumper_base_standard", "name": "Standard Release", "category": "jumpshot", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "three_point", "min": 25 }] },
+    { "id": "jumper_base_quick", "name": "Quick Release Base", "category": "jumpshot", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "three_point", "min": 78 }] },
+    { "id": "jumper_base_elite", "name": "Elite Quick Release Base", "category": "jumpshot", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "three_point", "min": 86 }],
+      "notes": "Widely assumed to exist in some form; threshold invented." },
+    { "id": "jumper_base_signature", "name": "Signature Pro Release", "category": "jumpshot", "impact": 5, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "three_point", "min": 93 }, { "attribute": "mid_range", "min": 70 }] },
+
+    { "id": "post_basic", "name": "Basic Post Package", "category": "post_moves", "impact": 1, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "post_control", "min": 25 }] },
+    { "id": "post_pro", "name": "Pro Post Package", "category": "post_moves", "impact": 3, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "post_control", "min": 75 }] },
+    { "id": "post_elite", "name": "Elite Post Package", "category": "post_moves", "impact": 4, "verification": { "status": "unverified" },
+      "requires": [{ "attribute": "post_control", "min": 85 }, { "attribute": "strength", "min": 70 }] }
+  ]
+}

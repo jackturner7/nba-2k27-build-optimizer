@@ -1,0 +1,71 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Takeover names follow the NBA 2K series and are unverified for 2K27. Requirements are invented.",
+    "`tiers` lets a takeover have a basic and an upgraded unlock, matching how recent 2K titles have",
+    "handled primary/secondary takeover slots. If 2K27 uses a different structure, extend the schema."
+  ],
+
+  "slots": {
+    "primary": 1,
+    "secondary": 1,
+    "verification": { "status": "unverified", "notes": "Number of takeover slots in 2K27 is unknown." }
+  },
+
+  "takeovers": [
+    { "id": "shot_creator", "name": "Shot Creator", "impact": 5, "verification": { "status": "unverified" },
+      "description": "Boosts off-the-dribble shot making.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "three_point", "min": 75 }, { "attribute": "ball_handle", "min": 70 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "three_point", "min": 86 }, { "attribute": "ball_handle", "min": 82 }] }
+      ] },
+    { "id": "spot_up_shooter", "name": "Spot-Up Shooter", "impact": 4, "verification": { "status": "unverified" },
+      "description": "Boosts catch-and-shoot jump shots.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "three_point", "min": 78 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "three_point", "min": 88 }, { "attribute": "mid_range", "min": 75 }] }
+      ] },
+    { "id": "slasher", "name": "Slasher", "impact": 5, "verification": { "status": "unverified" },
+      "description": "Boosts driving finishes at the rim.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "driving_dunk", "min": 75 }, { "attribute": "driving_layup", "min": 65 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "driving_dunk", "min": 88 }, { "attribute": "speed", "min": 80 }] }
+      ] },
+    { "id": "playmaker", "name": "Playmaker", "impact": 4, "verification": { "status": "unverified" },
+      "description": "Boosts passing and dribbling effectiveness.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "pass_accuracy", "min": 75 }, { "attribute": "ball_handle", "min": 75 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "pass_accuracy", "min": 86 }, { "attribute": "ball_handle", "min": 86 }] }
+      ] },
+    { "id": "lockdown_defender", "name": "Lockdown Defender", "impact": 5, "verification": { "status": "unverified" },
+      "description": "Boosts perimeter defense and on-ball pressure.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "perimeter_defense", "min": 80 }, { "attribute": "steal", "min": 70 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "perimeter_defense", "min": 90 }, { "attribute": "steal", "min": 85 }] }
+      ] },
+    { "id": "rim_protector", "name": "Rim Protector", "impact": 4, "verification": { "status": "unverified" },
+      "description": "Boosts interior defense and blocking.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "block", "min": 78 }, { "attribute": "interior_defense", "min": 75 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "block", "min": 88 }, { "attribute": "interior_defense", "min": 86 }] }
+      ] },
+    { "id": "glass_cleaner", "name": "Glass Cleaner", "impact": 4, "verification": { "status": "unverified" },
+      "description": "Boosts rebounding.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "defensive_rebound", "min": 80 }, { "attribute": "offensive_rebound", "min": 65 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "defensive_rebound", "min": 90 }, { "attribute": "offensive_rebound", "min": 80 }] }
+      ] },
+    { "id": "post_scorer", "name": "Post Scorer", "impact": 3, "verification": { "status": "unverified" },
+      "description": "Boosts post scoring.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "post_control", "min": 78 }, { "attribute": "close_shot", "min": 70 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "post_control", "min": 88 }, { "attribute": "close_shot", "min": 85 }] }
+      ] },
+    { "id": "paint_beast", "name": "Paint Beast", "impact": 4, "verification": { "status": "unverified" },
+      "description": "Boosts standing finishes and paint physicality.",
+      "tiers": [
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "standing_dunk", "min": 80 }, { "attribute": "strength", "min": 75 }] },
+        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "standing_dunk", "min": 90 }, { "attribute": "strength", "min": 88 }] }
+      ] }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "A cost curve says how many build points ONE point of an attribute costs, as a function of the",
+    "rating you are moving INTO. Cost to go from A to B = sum over r in (A..B] of costFor(r).",
+    "Ranges are inclusive on both ends and must tile [ratingFloor+1 .. ratingCeiling] with no gaps.",
+    "Real NBA 2K cost curves are steeply convex — the last few points before 99 cost many times what",
+    "the first points cost. That convexity is why threshold-aware optimization matters, so the shape",
+    "here is convex even though the magnitudes are invented."
+  ],
+  "curves": [
+    {
+      "id": "cheap",
+      "name": "Cheap (low-demand attributes)",
+      "verification": { "status": "unverified", "notes": "Invented convex curve. Replace with measured 2K27 costs." },
+      "ranges": [
+        { "from": 26, "to": 60, "costPerPoint": 1 },
+        { "from": 61, "to": 70, "costPerPoint": 2 },
+        { "from": 71, "to": 80, "costPerPoint": 3 },
+        { "from": 81, "to": 85, "costPerPoint": 5 },
+        { "from": 86, "to": 90, "costPerPoint": 7 },
+        { "from": 91, "to": 95, "costPerPoint": 10 },
+        { "from": 96, "to": 99, "costPerPoint": 14 }
+      ]
+    },
+    {
+      "id": "standard",
+      "name": "Standard",
+      "verification": { "status": "unverified", "notes": "Invented convex curve. Replace with measured 2K27 costs." },
+      "ranges": [
+        { "from": 26, "to": 60, "costPerPoint": 2 },
+        { "from": 61, "to": 70, "costPerPoint": 3 },
+        { "from": 71, "to": 80, "costPerPoint": 5 },
+        { "from": 81, "to": 85, "costPerPoint": 8 },
+        { "from": 86, "to": 90, "costPerPoint": 12 },
+        { "from": 91, "to": 95, "costPerPoint": 17 },
+        { "from": 96, "to": 99, "costPerPoint": 24 }
+      ]
+    },
+    {
+      "id": "premium",
+      "name": "Premium (high-demand attributes)",
+      "verification": { "status": "unverified", "notes": "Invented convex curve. Replace with measured 2K27 costs." },
+      "ranges": [
+        { "from": 26, "to": 60, "costPerPoint": 3 },
+        { "from": 61, "to": 70, "costPerPoint": 4 },
+        { "from": 71, "to": 80, "costPerPoint": 7 },
+        { "from": 81, "to": 85, "costPerPoint": 11 },
+        { "from": 86, "to": 90, "costPerPoint": 16 },
+        { "from": 91, "to": 95, "costPerPoint": 23 },
+        { "from": 96, "to": 99, "costPerPoint": 32 }
+      ]
+    }
+  ]
+}
