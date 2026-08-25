@@ -10,6 +10,7 @@ import type {
   TakeoverStatus,
 } from '../types.js';
 import type { BreakpointMap } from './breakpoints.js';
+import { clauseOptions } from './requirements.js';
 import { lastUsefulBreakpoint } from './breakpoints.js';
 import type { CostModel } from './cost.js';
 import { levelWeight } from './unlocks.js';
@@ -137,9 +138,14 @@ export function defIndex(ds: Dataset): DefIndex {
   if (!idx) {
     idx = {
       badgeAttrs: new Map(
-        ds.badges.map((b) => [b.id, [...new Set(b.tiers.flatMap((t) => t.requires.map((r) => r.attribute)))]])
+        ds.badges.map((b) => [
+          b.id,
+          [...new Set(b.tiers.flatMap((t) => t.requires.flatMap(clauseOptions).map((r) => r.attribute)))],
+        ])
       ),
-      animAttrs: new Map(ds.animations.map((a) => [a.id, [...new Set(a.requires.map((r) => r.attribute))]])),
+      animAttrs: new Map(
+        ds.animations.map((a) => [a.id, [...new Set(a.requires.flatMap(clauseOptions).map((r) => r.attribute))]])
+      ),
     };
     defIndexCache.set(ds, idx);
   }
@@ -181,7 +187,7 @@ const CATEGORY_SPECS = {
   shooting: { three_point: 0.55, mid_range: 0.3, free_throw: 0.15 },
   finishing: { driving_dunk: 0.3, driving_layup: 0.25, close_shot: 0.2, standing_dunk: 0.15, post_control: 0.1 },
   playmaking: { pass_accuracy: 0.4, ball_handle: 0.35, speed_with_ball: 0.25 },
-  physicals: { speed: 0.3, acceleration: 0.3, vertical: 0.2, strength: 0.15, stamina: 0.05 },
+  physicals: { speed: 0.3, agility: 0.3, vertical: 0.2, strength: 0.2 },
 } as const;
 
 const DEFENSIVE_IDS = ['perimeter_defense', 'interior_defense', 'steal', 'block', 'defensive_rebound'];
@@ -190,7 +196,14 @@ export interface ScoreInputs {
   ds: Dataset;
   body: BuildBody;
   attributes: AttributeVector;
+  /** Eligible badges (attributes met). Used only for reporting. */
   badges: UnlockedBadge[];
+  /**
+   * The badges actually equipped within the token/slot budget. In 2K27 an
+   * eligible badge you cannot afford to equip does nothing, so this — not
+   * eligibility — is what the Badge Value component scores.
+   */
+  equippedBadges: { badgeId: string; level: string; impact: number }[];
   animations: UnlockedAnimation[];
   takeovers: TakeoverStatus[];
   breakpoints: BreakpointMap;
@@ -202,7 +215,7 @@ export interface ScoreInputs {
 }
 
 export function scoreBuild(input: ScoreInputs): ScoreBreakdown {
-  const { ds, attributes, badges, animations, takeovers, breakpoints, cost, spent, weights } = input;
+  const { ds, attributes, badges, equippedBadges, animations, takeovers, breakpoints, cost, spent, weights } = input;
   const pw = priorityWeights(ds, input.priorities);
   const eff = effectiveAttributes(ds, attributes);
 
@@ -210,13 +223,14 @@ export function scoreBuild(input: ScoreInputs): ScoreBreakdown {
   // A badge counts for more when it sits on an attribute the user prioritized.
   const idx = defIndex(ds);
   let badgeRaw = 0;
-  for (const b of badges) {
+  for (const b of equippedBadges) {
     const uniqueAttrs = idx.badgeAttrs.get(b.badgeId) ?? [];
     const focus = uniqueAttrs.length
       ? uniqueAttrs.reduce((acc, id) => acc + (pw[id] ?? 0), 0) / uniqueAttrs.length
       : 0;
     badgeRaw += levelWeight(ds, b.level) * b.impact * (0.35 + 1.65 * focus);
   }
+  void badges;
   const badgeValue = scale(badgeRaw, 220);
 
   // --- 2. Animation unlocks -------------------------------------------------

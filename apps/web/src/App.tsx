@@ -50,6 +50,7 @@ export default function App() {
   const [showAllPriorities, setShowAllPriorities] = useState(false);
   const [archetypeId, setArchetypeId] = useState<string | null>(null);
   const [resultCount, setResultCount] = useState(3);
+  const [tokenOverrides, setTokenOverrides] = useState<Record<string, number | null>>({});
 
   const [text, setText] = useState('');
   const [parseNotes, setParseNotes] = useState<ParseNote[]>([]);
@@ -120,6 +121,7 @@ export default function App() {
         archetypeId: archetypeId ?? undefined,
         useCapBreakers: true,
         useBadgeBoosts: true,
+        tokenOverrides,
       };
       const res = await runOptimize(DATASET_ID, request);
       setResult(res);
@@ -130,13 +132,13 @@ export default function App() {
     } finally {
       setBusy(false);
     }
-  }, [dataset, body, priorities, archetypeId, resultCount]);
+  }, [dataset, body, priorities, archetypeId, resultCount, tokenOverrides]);
 
   const runDescribe = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
-      const res = await describeBuild(DATASET_ID, text, resultCount);
+      const res = await describeBuild(DATASET_ID, text, resultCount, tokenOverrides);
       setParseNotes(res.parsed.notes);
       setUnparsed(res.parsed.unparsed);
       setResult(res.result);
@@ -150,7 +152,7 @@ export default function App() {
     } finally {
       setBusy(false);
     }
-  }, [text, resultCount]);
+  }, [text, resultCount, tokenOverrides]);
 
   const builds = result?.builds ?? [];
   const current = builds[Math.min(activeBuild, builds.length - 1)];
@@ -352,7 +354,15 @@ export default function App() {
                 </Panel>
               )}
 
-              {current && <BuildCard dataset={dataset} build={current} request={lastRequest ?? undefined} />}
+              {current && (
+                <BuildCard
+                  dataset={dataset}
+                  build={current}
+                  request={lastRequest ?? undefined}
+                  tokenOverrides={tokenOverrides}
+                  onTokenOverrideChange={setTokenOverrides}
+                />
+              )}
 
               <div className="field-hint" style={{ textAlign: 'right' }}>
                 Searched in {result.computeMs} ms · {formatHeight(body.heightInches)} {body.position}

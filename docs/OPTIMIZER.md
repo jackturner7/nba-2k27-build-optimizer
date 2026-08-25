@@ -4,6 +4,11 @@ The goal is not "make every requested attribute as high as possible". It is
 "spend each build point where it buys something", where *something* means a
 badge level, an animation package, or a takeover tier.
 
+In 2K27 there are **two budgets**, not one. Build points buy attributes;
+attributes earn **badge tokens** per discipline, and tokens (plus a limited
+number of badge slots) buy the badges. A threshold you cannot afford to cash in
+is worth nothing, so the engine has to reason about both.
+
 ## Why thresholds are the whole game
 
 Badges, animations and takeovers unlock at discrete ratings. Between two
@@ -42,6 +47,24 @@ evaluateBuild()           badges, animations, takeovers, cap breakers, boosts, w
    ▼
 pickDiverse() + tradeoffs
 ```
+
+### 0. Requirement clauses (`engine/requirements.ts`)
+
+2K27 requirements are conjunctive normal form. `requires` is a list of clauses
+that must all hold; a clause is either a single attribute minimum or an `anyOf`
+choice where one branch is enough. Deadeye Bronze is *"65 Mid-Range **or** 65
+Three-Point"*; Posterizer Bronze is *"73 Driving Dunk **and** 65 Vertical"*.
+
+This matters everywhere:
+
+- **Pricing** — a choice costs the *cheapest reachable branch*, not both. Adding
+  both would roughly double the apparent price of half the badge list.
+- **Breakpoints** — every branch contributes a threshold, because either could
+  be the one you buy.
+- **Commitments** — a choice is *one* decision, not two, so it is not treated as
+  a multi-attribute conjunction worth forcing.
+- **Reachability** — a badge is unreachable only when *no* branch of some clause
+  fits under the caps.
 
 ### 1. Breakpoints (`engine/breakpoints.ts`)
 
@@ -109,14 +132,14 @@ Nine components, each roughly 0–100:
 
 | # | Component | What it measures |
 | --- | --- | --- |
-| 1 | Badge value | Σ level weight × badge impact, amplified for badges on attributes you prioritised |
+| 1 | Badge value | Σ level weight × badge impact over the **equipped** badges, amplified for badges on attributes you prioritised |
 | 2 | Animation unlocks | Best unlock per category counts fully, the rest are flavour; takeovers fold in here |
 | 3 | Attribute efficiency | Share of spend that sits at or below a useful threshold |
 | 4 | Defensive versatility | Sub-linear power mean across the five defensive attributes, so breadth beats one spike |
 | 5 | Shooting | Weighted 3PT / mid-range / free throw |
 | 6 | Finishing | Weighted dunk / layup / close shot / post |
 | 7 | Playmaking | Weighted passing / handle / speed with ball |
-| 8 | Physicals | Weighted speed / acceleration / vertical / strength / stamina |
+| 8 | Physicals | Weighted speed / agility / vertical / strength |
 | 9 | Wasted points | **Negative.** Build points sitting above the last useful threshold |
 
 Components 4–8 are scaled by how much you actually asked for that area, so a
@@ -126,6 +149,33 @@ completely ignored category from being free to tank into unplayability.
 Ratings are passed through `effectiveAttributes()` first, which applies the
 declared dependency rules — a 95 Speed With Ball on a 60 Ball Handle build does
 not score like a 95.
+
+### 5b. The badge loadout (`engine/tokens.ts`)
+
+Attributes decide what is **eligible**. This decides what is **equipped**.
+
+Per discipline it is a two-dimensional knapsack — token budget × badge slots —
+choosing at most one tier per badge. The state space is tiny (a dozen badges,
+single-digit slots, a couple of dozen tokens) so it is solved exactly.
+
+The Badge Value score component then scores the **equipped** list, not the
+eligible one. That is the whole point: a build eligible for 36 badges that can
+only afford 15 should not score as if it had 36.
+
+The optimizer's inner loop cannot afford the exact solver — it scores tens of
+thousands of candidates — so `planBadgeLoadoutFast` stands in with a greedy
+value-per-token pass. The polish stage measures against the greedy result; the
+final report always re-solves exactly. They agree in almost every case, and
+where they differ the exact one wins.
+
+Two honest refusals:
+
+- A badge tier with an unknown `tokenCost` can never be equipped. It is reported
+  under "unpriced" rather than silently skipped, and its attribute threshold is
+  weighted down to 15% in the search so the optimizer does not chase a badge it
+  cannot buy.
+- Cap breakers feed eligibility but **not** the token pool, because 2K27 does
+  not grant tokens for applying one.
 
 ### 6. Cap breakers and badge boosts (`engine/plans.ts`)
 
@@ -162,6 +212,9 @@ guard.
 - **It will not invent a threshold.** If nothing in the data requires an
   attribute, the optimizer leaves it at the floor and the UI reports the
   coverage gap. See `docs/DATA.md`.
+- **It will not equip a badge it cannot price.** The Rebounding and Physicals
+  badge charts are missing, so those badges have no token cost and are listed as
+  unplanned rather than assumed free.
 - **It will not quietly lower a hard minimum.** An impossible requirement is
   reported as infeasible, with the cap that makes it impossible and a suggestion
   of what to change. A best-effort build is still returned so you can see how

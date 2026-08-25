@@ -13,6 +13,7 @@ const CATEGORY_VAR: Record<string, string> = {
   shooting: 'var(--cat-shooting)',
   playmaking: 'var(--cat-playmaking)',
   defense: 'var(--cat-defense)',
+  rebounding: 'var(--cat-rebounding)',
   physicals: 'var(--cat-physicals)',
 };
 

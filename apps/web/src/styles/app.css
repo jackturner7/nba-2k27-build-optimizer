@@ -16,10 +16,11 @@
   --good: #5fd07a;
   --gold: #e8c15a;
 
-  --cat-finishing: #e0563f;
-  --cat-shooting: #3fa7e0;
-  --cat-playmaking: #e0b23f;
-  --cat-defense: #5fd07a;
+  --cat-finishing: #3fa7e0;
+  --cat-shooting: #5fd07a;
+  --cat-playmaking: #e08b3f;
+  --cat-defense: #e0563f;
+  --cat-rebounding: #e0b23f;
   --cat-physicals: #b07fe0;
 
   --radius: 10px;
@@ -489,10 +490,80 @@ select {
   color: #d59ce8;
   border-color: #543063;
 }
-.chip.level-legend {
-  background: #2e1616;
-  color: #ff9b6b;
-  border-color: #6b2f22;
+
+.chip.token {
+  background: #16232e;
+  color: #74b8e0;
+  border-color: #2a4a5e;
+}
+
+.chip.locked {
+  background: #221a12;
+  color: #a68a5e;
+  border-color: #4a3a22;
+}
+
+/* --- Token meters --------------------------------------------------------- */
+
+.token-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 92px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.token-label {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  text-transform: capitalize;
+}
+
+.token-slots {
+  display: flex;
+  gap: 3px;
+}
+
+.token-slots i {
+  flex: 1;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-soft);
+}
+
+.token-slots i.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.token-nums {
+  text-align: right;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.token-nums b {
+  color: var(--text);
+}
+
+.token-input {
+  width: 100%;
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 4px 7px;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.token-input:focus {
+  outline: none;
+  border-color: var(--accent-dim);
 }
 
 .chip.boosted {

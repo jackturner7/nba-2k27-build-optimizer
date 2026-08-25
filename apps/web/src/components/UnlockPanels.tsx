@@ -2,8 +2,13 @@ import type { BuildEvaluation, Dataset } from '@2k27/core';
 import { BadgeLevelChip, Empty, GapPills, Panel, VerificationChip } from './Bits';
 
 export function BadgePanel({ build }: { build: BuildEvaluation }) {
+  const equipped = new Set(build.equippedBadges.map((b) => b.badgeId));
   return (
-    <Panel title="Badges unlocked" count={`${build.badges.length}`}>
+    <Panel
+      title="Badges eligible"
+      count={`${build.badges.length} eligible · ${build.equippedBadges.length} equipped`}
+      collapsible
+    >
       {build.badges.length === 0 ? (
         <Empty>No badge thresholds met yet.</Empty>
       ) : (
@@ -14,6 +19,13 @@ export function BadgePanel({ build }: { build: BuildEvaluation }) {
                 <div className="row-title">
                   {b.name}
                   <BadgeLevelChip level={b.level} name={b.levelName} />
+                  {equipped.has(b.badgeId) ? (
+                    <span className="chip verified">equipped</span>
+                  ) : (
+                    <span className="chip locked" title="Eligible, but no tokens or slots left for it">
+                      not equipped
+                    </span>
+                  )}
                   {b.boostedLevel && b.boostedLevel !== b.level && (
                     <span className="chip boosted" title="Reached with a badge boost slot">
                       boost → {b.boostedLevelName}

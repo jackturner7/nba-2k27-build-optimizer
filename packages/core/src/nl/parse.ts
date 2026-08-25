@@ -1,5 +1,6 @@
 import { parseHeight, formatHeight, heightRange, weightRange, wingspanRange } from '../engine/body.js';
 import { computeCaps } from '../engine/caps.js';
+import { clauseOptions } from '../engine/requirements.js';
 import type { BuildBody, Dataset, OptimizeRequest, PositionId } from '../types.js';
 import { INTENSITY_WORDS, POSITION_ALIASES, aliasIndex } from './aliases.js';
 
@@ -351,7 +352,13 @@ function animationThresholdFor(
 
   const relevant = ds.animations
     .map((anim) => {
-      const req = anim.requires.find((r) => r.attribute === attribute);
+      // Only the branch that mentions this attribute matters; for an "any of"
+      // requirement the other branches are alternative ways to get the same
+      // animation and say nothing about what THIS attribute needs to be.
+      const req = anim.requires
+        .flatMap(clauseOptions)
+        .filter((r) => r.attribute === attribute)
+        .sort((a, b) => a.min - b.min)[0];
       if (!req || req.min > cap) return null;
       const category = ds.animationCategories.find((c) => c.id === anim.category);
       const haystack = `${anim.name} ${category?.name ?? ''} ${category?.description ?? ''} ${anim.category}`.toLowerCase();

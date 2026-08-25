@@ -79,10 +79,15 @@ export function runArchetype(
   });
 }
 
-export function describeBuild(id: string, text: string, resultCount = 3): Promise<DescribeResponse> {
+export function describeBuild(
+  id: string,
+  text: string,
+  resultCount = 3,
+  tokenOverrides?: Record<string, number | null>
+): Promise<DescribeResponse> {
   return request<DescribeResponse>(`/datasets/${id}/describe`, {
     method: 'POST',
-    body: JSON.stringify({ text, resultCount }),
+    body: JSON.stringify({ text, resultCount, tokenOverrides }),
   });
 }
 

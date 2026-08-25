@@ -1,71 +1,61 @@
 {
   "$comment": [
-    "PLACEHOLDER DATA — see meta.json.",
-    "Takeover names follow the NBA 2K series and are unverified for 2K27. Requirements are invented.",
-    "`tiers` lets a takeover have a basic and an upgraded unlock, matching how recent 2K titles have",
-    "handled primary/secondary takeover slots. If 2K27 uses a different structure, extend the schema."
+    "NBA 2K27 takeovers.",
+    "",
+    "SOURCE: the community 'best value attribute thresholds' sheet supplied by the repo owner names",
+    "four takeovers and their unlock ratings. Only those four are recorded. Takeovers that existed in",
+    "earlier 2K titles have been REMOVED rather than carried forward on assumption — if 2K27 has more",
+    "takeovers than these, they are simply missing, not absent from the game.",
+    "",
+    "2K27 coverage also mentions a 'Hydration Hero' takeover ability relating to Adrenaline/Stamina",
+    "drain, which is consistent with Stamina being an in-game (Gatorade gym) stat rather than a",
+    "builder attribute. It has no known attribute requirement so it is not modelled here.",
+    "",
+    "Tier structure (a single unlock vs unlock + upgrade) is UNVERIFIED; each takeover below has one",
+    "known unlock tier."
   ],
 
   "slots": {
     "primary": 1,
     "secondary": 1,
-    "verification": { "status": "unverified", "notes": "Number of takeover slots in 2K27 is unknown." }
+    "verification": {
+      "status": "unverified",
+      "notes": "Number of takeover slots in 2K27 is unknown. 2K27 coverage mentions five ability slots, which may or may not be the same system."
+    }
   },
 
   "takeovers": [
-    { "id": "shot_creator", "name": "Shot Creator", "impact": 5, "verification": { "status": "unverified" },
-      "description": "Boosts off-the-dribble shot making.",
+    {
+      "id": "air_space", "name": "Air Space", "impact": 5,
+      "description": "Boosts above-the-rim finishing.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet: 'Driving Dunk 87 -> Contact Dunks, Silver Posterizer, Air Space Takeover' and 'Vertical 75 -> Air Space Takeover, Pro Contact Dunks, Silver Posterizer'." },
       "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "three_point", "min": 75 }, { "attribute": "ball_handle", "min": 70 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "three_point", "min": 86 }, { "attribute": "ball_handle", "min": 82 }] }
-      ] },
-    { "id": "spot_up_shooter", "name": "Spot-Up Shooter", "impact": 4, "verification": { "status": "unverified" },
-      "description": "Boosts catch-and-shoot jump shots.",
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "driving_dunk", "min": 87 }, { "attribute": "vertical", "min": 75 }] }
+      ]
+    },
+    {
+      "id": "dish_master", "name": "Dish Master", "impact": 4,
+      "description": "Boosts passing and teammate shot quality off the pass.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet: 'Pass Accuracy 80 -> Dish Master Takeover'." },
       "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "three_point", "min": 78 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "three_point", "min": 88 }, { "attribute": "mid_range", "min": 75 }] }
-      ] },
-    { "id": "slasher", "name": "Slasher", "impact": 5, "verification": { "status": "unverified" },
-      "description": "Boosts driving finishes at the rim.",
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "pass_accuracy", "min": 80 }] }
+      ]
+    },
+    {
+      "id": "rim_guardian", "name": "Rim Guardian", "impact": 5,
+      "description": "Boosts interior defense and shot blocking.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet: 'Interior Defense 80 -> Bronze Wall Up + Rim Guardian Takeover' and 'Block 80 -> Needed for Rim Guardian Takeover'." },
       "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "driving_dunk", "min": 75 }, { "attribute": "driving_layup", "min": 65 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "driving_dunk", "min": 88 }, { "attribute": "speed", "min": 80 }] }
-      ] },
-    { "id": "playmaker", "name": "Playmaker", "impact": 4, "verification": { "status": "unverified" },
-      "description": "Boosts passing and dribbling effectiveness.",
-      "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "pass_accuracy", "min": 75 }, { "attribute": "ball_handle", "min": 75 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "pass_accuracy", "min": 86 }, { "attribute": "ball_handle", "min": 86 }] }
-      ] },
-    { "id": "lockdown_defender", "name": "Lockdown Defender", "impact": 5, "verification": { "status": "unverified" },
-      "description": "Boosts perimeter defense and on-ball pressure.",
-      "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "perimeter_defense", "min": 80 }, { "attribute": "steal", "min": 70 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "perimeter_defense", "min": 90 }, { "attribute": "steal", "min": 85 }] }
-      ] },
-    { "id": "rim_protector", "name": "Rim Protector", "impact": 4, "verification": { "status": "unverified" },
-      "description": "Boosts interior defense and blocking.",
-      "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "block", "min": 78 }, { "attribute": "interior_defense", "min": 75 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "block", "min": 88 }, { "attribute": "interior_defense", "min": 86 }] }
-      ] },
-    { "id": "glass_cleaner", "name": "Glass Cleaner", "impact": 4, "verification": { "status": "unverified" },
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "interior_defense", "min": 80 }, { "attribute": "block", "min": 80 }] }
+      ]
+    },
+    {
+      "id": "rebounding", "name": "Rebounding", "impact": 4,
       "description": "Boosts rebounding.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet: 'Offensive Rebound 82 -> Silver Rebounding Badges + Rebounding Takeover'." },
       "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "defensive_rebound", "min": 80 }, { "attribute": "offensive_rebound", "min": 65 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "defensive_rebound", "min": 90 }, { "attribute": "offensive_rebound", "min": 80 }] }
-      ] },
-    { "id": "post_scorer", "name": "Post Scorer", "impact": 3, "verification": { "status": "unverified" },
-      "description": "Boosts post scoring.",
-      "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "post_control", "min": 78 }, { "attribute": "close_shot", "min": 70 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "post_control", "min": 88 }, { "attribute": "close_shot", "min": 85 }] }
-      ] },
-    { "id": "paint_beast", "name": "Paint Beast", "impact": 4, "verification": { "status": "unverified" },
-      "description": "Boosts standing finishes and paint physicality.",
-      "tiers": [
-        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "standing_dunk", "min": 80 }, { "attribute": "strength", "min": 75 }] },
-        { "id": "upgraded", "name": "Upgraded", "requires": [{ "attribute": "standing_dunk", "min": 90 }, { "attribute": "strength", "min": 88 }] }
-      ] }
+        { "id": "unlock", "name": "Unlocked", "requires": [{ "attribute": "offensive_rebound", "min": 82 }] }
+      ]
+    }
   ]
 }

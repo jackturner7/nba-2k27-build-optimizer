@@ -1,5 +1,5 @@
 import type { AttributeVector, BuildBody, Dataset, OptimizeRequest } from '../types.js';
-import { meetsBody } from './requirements.js';
+import { clauseOptions, meetsBody } from './requirements.js';
 
 export interface Breakpoint {
   value: number;
@@ -56,7 +56,7 @@ export function collectBreakpoints(
     }
     for (const tier of badge.tiers) {
       const levelWeight = ds.badgeLevels.find((l) => l.id === tier.level)?.scoreWeight ?? 1;
-      for (const req of tier.requires) {
+      for (const req of tier.requires.flatMap(clauseOptions)) {
         add(req.attribute, req.min, {
           kind: 'badge',
           id: `${badge.id}:${tier.level}`,
@@ -69,7 +69,7 @@ export function collectBreakpoints(
 
   for (const anim of ds.animations) {
     if (!meetsBody(body, anim.bodyRequires)) continue;
-    for (const req of anim.requires) {
+    for (const req of anim.requires.flatMap(clauseOptions)) {
       add(req.attribute, req.min, {
         kind: 'animation',
         id: anim.id,
@@ -81,7 +81,7 @@ export function collectBreakpoints(
 
   for (const t of ds.takeovers) {
     for (const tier of t.tiers) {
-      for (const req of tier.requires) {
+      for (const req of tier.requires.flatMap(clauseOptions)) {
         add(req.attribute, req.min, {
           kind: 'takeover',
           id: `${t.id}:${tier.id}`,

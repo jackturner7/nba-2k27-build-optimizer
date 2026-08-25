@@ -1,11 +1,11 @@
 import type {
-  AttributeRequirement,
   AttributeVector,
   BuildBody,
   Dataset,
   OptimizeRequest,
   OptimizeResult,
   OptimizedBuild,
+  RequirementClause,
   ScoreWeights,
 } from '../types.js';
 import { collectBreakpoints, type BreakpointMap } from './breakpoints.js';
@@ -13,7 +13,7 @@ import { validateBody, formatHeight } from './body.js';
 import { computeBudget, computeCaps } from './caps.js';
 import { costModelFor, type CostModel } from './cost.js';
 import { evaluateBuild, quickScore } from './evaluate.js';
-import { reachable } from './requirements.js';
+import { clauseOptions, reachable } from './requirements.js';
 import { DEFAULT_SCORE_WEIGHTS, priorityWeights, resolveWeights } from './score.js';
 import { levelWeight } from './unlocks.js';
 
@@ -34,7 +34,7 @@ interface Commitment {
   id: string;
   label: string;
   kind: 'badge' | 'animation' | 'takeover';
-  requires: AttributeRequirement[];
+  requires: RequirementClause[];
   value: number;
 }
 
@@ -199,39 +199,50 @@ function buildGainEvents(
   };
 
   const creditRequirement = (
-    requires: AttributeRequirement[],
+    requires: RequirementClause[],
     fullGain: number,
     label: string
   ) => {
-    const attrs = [...new Set(requires.map((r) => r.attribute))];
-    for (const req of requires) {
-      const others = requires.filter((r) => r.attribute !== req.attribute);
-      const othersMetByFloors = others.every((r) => (floors[r.attribute] ?? 0) >= r.min);
-      const share = othersMetByFloors ? 1 : PARTIAL_CREDIT / Math.max(1, attrs.length - 1);
-      push(req.attribute, req.min, fullGain * share, label);
+    const clauseMet = (clause: RequirementClause) =>
+      clauseOptions(clause).some((o) => (floors[o.attribute] ?? 0) >= o.min);
+
+    for (const clause of requires) {
+      const others = requires.filter((c) => c !== clause);
+      const othersMetByFloors = others.every(clauseMet);
+      const options = clauseOptions(clause);
+      // Within an "any of" clause only one branch has to be bought, so each
+      // branch gets the full clause value — they are alternatives, not a set.
+      const share = othersMetByFloors ? 1 : PARTIAL_CREDIT / Math.max(1, requires.length - 1);
+      for (const option of options) {
+        push(option.attribute, option.min, fullGain * share, label);
+      }
     }
   };
 
   for (const badge of ds.badges) {
-    const ids = [...new Set(badge.tiers.flatMap((t) => t.requires.map((r) => r.attribute)))];
+    const ids = [...new Set(badge.tiers.flatMap((t) => t.requires.flatMap(clauseOptions).map((r) => r.attribute)))];
     const focus = focusOf(ids);
     let prevWeight = 0;
     for (const tier of badge.tiers) {
       const w = levelWeight(ds, tier.level);
-      const gain = (w - prevWeight) * badge.impact * (0.35 + 1.65 * focus) * weights.badgeValue;
+      // A tier with no known token cost can never be equipped, so chasing its
+      // attribute threshold buys nothing. Weight it down rather than out — the
+      // threshold may still be shared with something the build does want.
+      const affordable = tier.tokenCost === null ? 0.15 : 1;
+      const gain = (w - prevWeight) * badge.impact * (0.35 + 1.65 * focus) * weights.badgeValue * affordable;
       prevWeight = w;
       creditRequirement(tier.requires, gain, `${badge.name} ${tier.level}`);
     }
   }
 
   for (const anim of ds.animations) {
-    const ids = [...new Set(anim.requires.map((r) => r.attribute))];
+    const ids = [...new Set(anim.requires.flatMap(clauseOptions).map((r) => r.attribute))];
     const gain = anim.impact * 1.4 * (0.35 + 1.65 * focusOf(ids)) * weights.animationUnlocks;
     creditRequirement(anim.requires, gain, anim.name);
   }
 
   for (const t of ds.takeovers) {
-    const ids = [...new Set(t.tiers.flatMap((x) => x.requires.map((r) => r.attribute)))];
+    const ids = [...new Set(t.tiers.flatMap((x) => x.requires.flatMap(clauseOptions).map((r) => r.attribute)))];
     const focus = focusOf(ids);
     for (const tier of t.tiers) {
       const gain = t.impact * 1.6 * (0.35 + 1.65 * focus) * weights.animationUnlocks;
@@ -392,10 +403,20 @@ function collectCommitments(
   const out: Commitment[] = [];
   const focusOf = (ids: string[]) => (ids.length ? ids.reduce((a, id) => a + (pw[id] ?? 0), 0) / ids.length : 0);
 
-  const withinMax = (reqs: AttributeRequirement[]) =>
-    reqs.every((r) => (request.maximums?.[r.attribute] ?? ds.ratingCeiling) >= r.min);
+  const withinMax = (reqs: RequirementClause[]) =>
+    reqs.every((clause) =>
+      clauseOptions(clause).some((o) => (request.maximums?.[o.attribute] ?? ds.ratingCeiling) >= o.min)
+    );
 
-  const alreadyMet = (reqs: AttributeRequirement[]) => reqs.every((r) => (floors[r.attribute] ?? 0) >= r.min);
+  const alreadyMet = (reqs: RequirementClause[]) =>
+    reqs.every((clause) => clauseOptions(clause).some((o) => (floors[o.attribute] ?? 0) >= o.min));
+
+  /**
+   * How many attributes this requirement genuinely forces. An "any of" clause
+   * counts as one because the player picks a branch — only a set of separate
+   * clauses is a true conjunction worth forcing as a commitment.
+   */
+  const clauseCount = (reqs: RequirementClause[]) => reqs.length;
 
   for (const badge of ds.badges) {
     let prev = 0;
@@ -403,8 +424,8 @@ function collectCommitments(
       const w = levelWeight(ds, tier.level);
       const gain = (w - prev) * badge.impact;
       prev = w;
-      const ids = [...new Set(tier.requires.map((r) => r.attribute))];
-      if (ids.length < 2) continue;
+      const ids = [...new Set(tier.requires.flatMap(clauseOptions).map((r) => r.attribute))];
+      if (clauseCount(tier.requires) < 2) continue;
       if (!reachable(tier.requires, caps) || !withinMax(tier.requires) || alreadyMet(tier.requires)) continue;
       out.push({
         id: `badge:${badge.id}:${tier.level}`,
@@ -417,7 +438,7 @@ function collectCommitments(
   }
 
   for (const anim of ds.animations) {
-    const ids = [...new Set(anim.requires.map((r) => r.attribute))];
+    const ids = [...new Set(anim.requires.flatMap(clauseOptions).map((r) => r.attribute))];
     if (ids.length < 2) continue;
     if (!reachable(anim.requires, caps) || !withinMax(anim.requires) || alreadyMet(anim.requires)) continue;
     out.push({
@@ -431,8 +452,8 @@ function collectCommitments(
 
   for (const t of ds.takeovers) {
     for (const tier of t.tiers) {
-      const ids = [...new Set(tier.requires.map((r) => r.attribute))];
-      if (ids.length < 2) continue;
+      const ids = [...new Set(tier.requires.flatMap(clauseOptions).map((r) => r.attribute))];
+      if (clauseCount(tier.requires) < 2) continue;
       if (!reachable(tier.requires, caps) || !withinMax(tier.requires) || alreadyMet(tier.requires)) continue;
       out.push({
         id: `takeover:${t.id}:${tier.id}`,
@@ -466,10 +487,23 @@ function buildFloorSets(
 
   const apply = (floors: AttributeVector, c: Commitment): AttributeVector | null => {
     const next = { ...floors };
-    for (const r of c.requires) {
-      const cap = caps[r.attribute];
-      if (cap === undefined || r.min > cap) return null;
-      next[r.attribute] = Math.max(next[r.attribute] ?? 0, r.min);
+    for (const clause of c.requires) {
+      const options = clauseOptions(clause);
+      // For a choice, commit to the branch that is cheapest from where we are.
+      let best: { attribute: string; min: number; price: number } | null = null;
+      for (const o of options) {
+        const cap = caps[o.attribute];
+        if (cap === undefined || o.min > cap) continue;
+        const from = next[o.attribute] ?? ds.ratingFloor;
+        if (from >= o.min) {
+          best = { attribute: o.attribute, min: o.min, price: -1 };
+          break;
+        }
+        const price = cost.cost(o.attribute, from, o.min);
+        if (!best || price < best.price) best = { attribute: o.attribute, min: o.min, price };
+      }
+      if (!best) return null;
+      next[best.attribute] = Math.max(next[best.attribute] ?? 0, best.min);
     }
     // Leave headroom: a floor set that eats the whole budget leaves the
     // knapsack nothing to optimize with.
@@ -579,6 +613,7 @@ function polish(
     breakpoints,
     priorities: request.priorities ?? {},
     weights,
+    tokenOverrides: request.tokenOverrides,
   };
   const cache = new Map<string, number>();
   const scoreOf = (attrs: AttributeVector): number => {
@@ -701,6 +736,7 @@ function finalize(
     breakpoints,
     useCapBreakers: request.useCapBreakers !== false,
     useBadgeBoosts: request.useBadgeBoosts !== false,
+    tokenOverrides: request.tokenOverrides,
   });
 
   return {

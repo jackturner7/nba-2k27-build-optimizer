@@ -1,12 +1,39 @@
-# Replacing the placeholder data
+# The dataset: what is sourced, what is not, and how to replace it
 
-**Read this first: there is no verified NBA 2K27 data in this repository.**
+**Read this first: the dataset is PARTIALLY sourced.** Some of it is real 2K27
+data; a lot of it is still invented. The two are labelled record by record and
+you should not treat them the same way.
 
-Every number under `data/2k27/` is a structural placeholder. The shapes are
-realistic — they are modelled on how the NBA 2K series works — but the values
-are invented so the engine, API and UI have something well-formed to run
-against. Badge names, animation names and archetype names are not confirmed to
-exist in NBA 2K27 either.
+### Sourced (trust, but re-check against the NBA 2K HQ app)
+
+- **Every badge requirement and badge token cost** for Shooting, Playmaking,
+  Defense and Finishing, from the 2K27 badge cost charts.
+- **Animation and takeover thresholds** named on the community "best value
+  attribute thresholds" sheet.
+- **The attribute list.** Stamina is *not* a 2K27 builder attribute (it is
+  raised at the in-game Gatorade gym). Acceleration is gone; **Agility** is what
+  2K27 badges actually require. Rebounding is its own discipline.
+- **Four badge tiers** — Bronze / Silver / Gold / Hall of Fame. No Legend tier.
+- **The direction** of each body setting's effect on caps, including that a wing
+  at minimum weight and minimum wingspan takes a real hit to Perimeter Defense
+  and Driving Dunk specifically.
+- **That badge tokens exist**, are earned per discipline from attribute
+  investment, must be spent to equip badges, and that cap breakers do not grant
+  extra tokens.
+
+### Not sourced (assume wrong)
+
+- **Attribute caps.** Only directions are known, not magnitudes.
+- **Cost curves and the build point budget.**
+- **The badge token earning formula** and the per-discipline slot split.
+- **Cap breaker quantities** and **badge boost slot counts**.
+
+### Missing entirely
+
+- **The Rebounding and Physicals badge cost charts.** The few badges present in
+  those disciplines were reconstructed from single lines on the best-value
+  sheet, carry one tier each, are flagged `incompleteTiers`, and have no token
+  cost — so the optimizer cannot equip them and says so.
 
 Nothing in the application code hard-codes a game value. The optimizer, the
 scoring model, the natural-language parser and the UI all read from these JSON
@@ -48,11 +75,25 @@ Every record carries a `verification` block:
 
 | status | meaning |
 | --- | --- |
-| `verified` | Confirmed against the shipped 2K27 builder or an official 2K source. |
-| `community-verified` | Reproduced independently by multiple credible testers. |
-| `estimated` | Derived or interpolated from partly known data. |
-| `unverified` | Placeholder. **This is the default and it is currently universal.** |
+| `verified` | Confirmed against the shipped 2K27 builder or an official 2K source. **Nothing currently claims this.** |
+| `community-verified` | Taken from the supplied 2K27 badge charts or community threshold sheets. Trust with care. |
+| `estimated` | Derived, interpolated, or read off a degraded source image. Directionally useful, numerically approximate. |
+| `unverified` | Placeholder. Shaped correctly, numerically meaningless. |
 | `deprecated` | Known wrong, kept for history, ignored by the engine. |
+
+Three records are `estimated` specifically because the supplied chart images
+were ambiguous, and each carries a note saying exactly what to re-check:
+
+- **Post Fade Phenom** — Bronze asks for *more* Mid-Range than Silver (83 vs 71).
+  Probably a misprint for 63. Recorded as printed; `data:validate` warns.
+- **Pick Dodger** — the Bronze cell renders as Interior Defense + Strength while
+  the rest of the ladder is Perimeter Defense + Agility. Recorded to match the
+  ladder.
+- **Wall Up** — the whole row is degraded in the image, the Strength values
+  especially.
+- **Post Lockdown** token costs — Gold/HOF render as 6/7, breaking the otherwise
+  perfectly consistent 1/3/4/5 ladder every other Bronze-costs-1 badge follows.
+  Recorded as 4/5.
 
 When you replace a value, update its `status` and fill in `source`. The UI shows
 this tag next to the value, and `npm run data:report` tracks the share that is
@@ -60,9 +101,9 @@ still placeholder. Do not mark something `verified` you have not personally
 confirmed — the whole point of the tag is that a build's trustworthiness is
 visible.
 
-Set `data/2k27/meta.json` → `provenance.status` to something other than
-`placeholder` and update `uiWarnings.globalBanner` once a meaningful share of
-the dataset is real. Until then the warning banner stays up.
+Set `data/2k27/meta.json` → `provenance.status` and `uiWarnings.globalBanner` as
+the picture changes. It is currently `partial`, and the banner says which half
+is which.
 
 ---
 
@@ -73,10 +114,14 @@ Provenance, the warning banner text, and the file index. Bump
 `datasetVersion` whenever you change data so you can tell builds apart.
 
 ### `attributes.json`
-The attribute list, their categories, which cost curve each uses, and the
+The attribute list, their six disciplines, which cost curve each uses, and the
 **priority groups** the UI sliders map onto. If 2K27 adds or renames an
 attribute, this is the only place its identity is defined; everything else
 references it by id.
+
+The disciplines here must line up with `badge-tokens.json` → `disciplines`,
+because tokens are earned from the attributes in a discipline. `data:validate`
+enforces that.
 
 ### `cost-curves.json`
 How many build points one point of an attribute costs, as a function of the
@@ -142,18 +187,63 @@ If 2K27 turns out to have no shared pool at all, set `enabled: false` and the
 engine optimizes against caps alone.
 
 ### `badges.json`
-Badges, their level ladder, and the attribute thresholds for each level.
+Badges, their level ladder, the attribute thresholds for each level, and the
+**badge token cost** of each tier.
 
-- Each tier's `requires` list is **conjunctive** — all conditions must hold.
-- Ladders are enforced monotonic: a build cannot hold Gold without also
-  satisfying Silver, whatever the file says.
+**Requirement format.** `requires` is a list of clauses that must *all* hold. A
+clause is either a single minimum or an `anyOf` choice:
+
+```json
+"requires": [
+  { "anyOf": [ {"attribute":"mid_range","min":65}, {"attribute":"three_point","min":65} ] },
+  { "attribute": "post_control", "min": 55 }
+]
+```
+
+That reads as *"(65 Mid-Range **or** 65 Three-Point) **and** 55 Post Control"*.
+2K27 uses `anyOf` constantly — Deadeye, Quick Trigger, Unpluckable, Aerial
+Wizard, Float Game, Ghost Stepper, Off-Ball Pest. The engine only ever prices
+the **cheapest branch** of a choice, because you only have to buy one side.
+
+Other fields:
+
+- `tokenCost` — badge tokens to equip that tier. `null` means unknown, and a
+  badge with an unknown cost can never be equipped; the app reports it rather
+  than pretending.
+- `incompleteTiers: true` — the source only covered some tiers. Suppresses the
+  "no token cost" warning.
+- Ladders are enforced monotonic at runtime: a build cannot hold Gold without
+  also satisfying Silver, whatever the file says. A file that *does* go backwards
+  gets a warning (Post Fade Phenom currently does — its Bronze Mid-Range
+  requirement reads higher than its Silver, which is probably a chart misprint).
 - `impact` (1–5) is a hand-set weight for how much the badge matters in
   practice. It feeds the Badge Value score component. Tune it by feel; it is
-  designer judgement, not game data.
-- `restrictions` gates a badge on height/weight/wingspan/position.
+  designer judgement, **not game data**.
+- `restrictions` gates a badge on height/weight/wingspan/position (Mini Marksman
+  is 6'4" or shorter, with no attribute requirement at all).
 
-This file is what the optimizer's entire notion of "stop here" comes from. It is
-the first thing to replace.
+### `badge-tokens.json`
+The 2K27 token economy, and the second budget the optimizer has to respect.
+
+Meeting a threshold makes a badge **eligible**. Equipping it costs **tokens**
+from that discipline's pool and takes one of that discipline's **slots**. A
+build is routinely eligible for twice as many badges as it can afford, so an
+attribute threshold you cannot cash in is not worth chasing.
+
+- `tokenGrants.mode`
+  - `linear-by-investment` (default) — `floor(Σ max(0, rating − freeBelow) / pointsPerToken)`.
+    Captures only the *direction*; the constants are invented.
+  - `table` — an exact list of ratings that each grant a token. This is what the
+    game actually does ("sometimes just one point provides an additional badge
+    token"). Use it once the real breakpoints are known.
+  - `manual` — ignore attributes, use `manualTokens`.
+- `manualTokens` / the UI's per-discipline inputs — type your real in-game token
+  counts and the optimizer plans against those instead. **This is the best way to
+  use the app right now**, because the earning formula is the weakest guess in
+  the file.
+- `slots.total` is 20 (sourced); the per-discipline split is invented.
+- `upgradeCostMode` — whether upgrading pays the difference or the full new tier
+  price. Unknown; `absolute` is the conservative reading.
 
 ### `animations.json`
 Animation packages and their requirements. Same conjunctive `requires`, plus an
@@ -211,9 +301,13 @@ That is correct behaviour given incomplete data, and it looks like a bug unless
 the gap is visible — so `npm run data:report` lists coverage per attribute and
 the UI shows a "Dataset coverage gaps" panel.
 
-In the current placeholder set, for example, Free Throw has no requirements at
-all and Speed has one, so builds leave them at 25. The fix is to add the real
-NBA 2K27 requirements, not to invent a threshold to make the number look right.
+In the current set, for example, Free Throw has no requirements at all in any
+supplied chart, so builds leave it at 25. The fix is to add the real NBA 2K27
+requirements, not to invent a threshold to make the number look right.
+
+The same applies to token costs: a badge whose `tokenCost` is `null` can never
+be equipped, and the app lists it under "unpriced" rather than quietly dropping
+it.
 
 ---
 

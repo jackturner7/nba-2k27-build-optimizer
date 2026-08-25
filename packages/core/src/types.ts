@@ -28,11 +28,22 @@ export interface Verification {
   lastReviewed?: string | null;
 }
 
-/** A conjunctive attribute requirement: every entry must be met. */
+/** A single attribute minimum. */
 export interface AttributeRequirement {
   attribute: AttributeId;
   min: number;
 }
+
+/** Satisfying any one branch satisfies the clause. 2K27 uses these heavily. */
+export interface AnyOfRequirement {
+  anyOf: AttributeRequirement[];
+}
+
+/**
+ * One clause of a requirement list. The list itself is an AND; a clause is
+ * either a single minimum or an "any of" choice.
+ */
+export type RequirementClause = AttributeRequirement | AnyOfRequirement;
 
 export interface BodyRequirement {
   minHeightInches?: number;
@@ -195,7 +206,9 @@ export interface BadgeLevelDef {
 
 export interface BadgeTier {
   level: BadgeLevelId;
-  requires: AttributeRequirement[];
+  requires: RequirementClause[];
+  /** Badge tokens to equip this tier. null when the cost is not known. */
+  tokenCost: number | null;
 }
 
 export interface BadgeDef {
@@ -206,6 +219,8 @@ export interface BadgeDef {
   description: string;
   restrictions?: BodyRequirement & { positions?: PositionId[]; note?: string };
   tiers: BadgeTier[];
+  /** True when the source data only covers some of this badge's tiers. */
+  incompleteTiers?: boolean;
   verification: Verification;
 }
 
@@ -220,7 +235,7 @@ export interface AnimationDef {
   name: string;
   category: string;
   impact: number;
-  requires: AttributeRequirement[];
+  requires: RequirementClause[];
   bodyRequires?: BodyRequirement;
   notes?: string;
   verification: Verification;
@@ -229,7 +244,7 @@ export interface AnimationDef {
 export interface TakeoverTier {
   id: string;
   name: string;
-  requires: AttributeRequirement[];
+  requires: RequirementClause[];
 }
 
 export interface TakeoverDef {
@@ -267,6 +282,70 @@ export interface BadgeBoostData {
     excludedBadges: BadgeId[];
   };
   verification: Verification;
+}
+
+/**
+ * The 2K27 badge token economy. Meeting an attribute threshold makes a badge
+ * tier eligible; tokens and slots decide whether you can actually equip it.
+ */
+export interface BadgeTokenData {
+  enabled: boolean;
+  disciplines: string[];
+  upgradeCostMode: { value: 'absolute' | 'incremental'; options: string[]; verification: Verification };
+  slots: { total: number; byDiscipline: Record<string, number>; verification: Verification };
+  tokenGrants: {
+    mode: 'linear-by-investment' | 'table' | 'manual';
+    verification: Verification;
+    freeBelow: number;
+    pointsPerToken: number;
+    maxPerDiscipline: number;
+    /** discipline -> list of ratings that each grant a token. Used when mode is 'table'. */
+    table: Record<string, { attribute: AttributeId; rating: number; tokens: number }[]>;
+  };
+  manualTokens: Record<string, number | null>;
+  rules: {
+    capBreakersGrantTokens: boolean;
+    unspentTokensCarryOver: boolean | null;
+    canRefundTokens: boolean | null;
+  };
+  verification: Verification;
+}
+
+export interface EquippedBadge {
+  badgeId: BadgeId;
+  name: string;
+  category: string;
+  impact: number;
+  level: BadgeLevelId;
+  levelName: string;
+  levelOrder: number;
+  tokenCost: number;
+  /** Level after +1/+2 boosts are applied, if any. */
+  boostedLevel?: BadgeLevelId;
+  boostedLevelName?: string;
+  verification: Verification;
+}
+
+export interface DisciplineTokenReport {
+  discipline: string;
+  earned: number;
+  spent: number;
+  remaining: number;
+  slots: number;
+  slotsUsed: number;
+  /** Eligible badge tiers that were left unequipped, and why. */
+  unaffordable: { badgeId: BadgeId; name: string; level: BadgeLevelId; levelName: string; tokenCost: number | null; reason: string }[];
+}
+
+export interface TokenReport {
+  enabled: boolean;
+  byDiscipline: DisciplineTokenReport[];
+  totalEarned: number;
+  totalSpent: number;
+  totalSlots: number;
+  totalSlotsUsed: number;
+  /** Badges whose token cost is unknown in the dataset, so they cannot be planned. */
+  unpricedBadges: string[];
 }
 
 export type DependencyKind = 'hard-min' | 'soft-link' | 'diminishing';
@@ -341,6 +420,7 @@ export interface Dataset {
   takeoverSlots: { primary: number; secondary: number; verification: Verification };
   takeovers: TakeoverDef[];
   capBreakers: CapBreakerData;
+  badgeTokens: BadgeTokenData;
   badgeBoosts: BadgeBoostData;
   dependencies: DependencyRule[];
   archetypes: ArchetypeDef[];
@@ -378,6 +458,11 @@ export interface OptimizeRequest {
   useCapBreakers?: boolean;
   /** Include +1/+2 badge boosts in the plan. */
   useBadgeBoosts?: boolean;
+  /**
+   * Override the badge token pool per discipline, for players who can read the
+   * real numbers off the in-game builder. null/absent = compute from the dataset.
+   */
+  tokenOverrides?: Record<string, number | null>;
 }
 
 export interface ScoreWeights {
@@ -526,7 +611,11 @@ export interface BuildEvaluation {
   budget: number;
   spent: number;
   remaining: number;
+  /** Every badge tier the attributes make ELIGIBLE, before tokens are spent. */
   badges: UnlockedBadge[];
+  /** The badges actually equipped within the token and slot budgets. */
+  equippedBadges: EquippedBadge[];
+  tokens: TokenReport;
   nextBadges: NextBadgeThreshold[];
   animations: UnlockedAnimation[];
   nextAnimations: NextAnimationThreshold[];

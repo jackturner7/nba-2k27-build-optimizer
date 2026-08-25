@@ -1,4 +1,6 @@
 import type { AttributeVector, BuildEvaluation, BuildBody, Dataset, ScoreWeights } from '../types.js';
+import { computeTokens, planBadgeLoadout, planBadgeLoadoutFast } from './tokens.js';
+import { defIndex, priorityWeights } from './score.js';
 import { collectBreakpoints, type BreakpointMap } from './breakpoints.js';
 import { computeBudget, computeCaps } from './caps.js';
 import { costModelFor } from './cost.js';
@@ -30,17 +32,28 @@ export function quickScore(
     breakpoints: BreakpointMap;
     priorities: Record<string, number>;
     weights: ScoreWeights;
+    tokenOverrides?: Record<string, number | null>;
   }
 ): number {
   const cost = costModelFor(ds);
   const badges = evaluateBadges(ds, attributes, body);
   const animations = evaluateAnimations(ds, attributes, body);
   const takeovers = evaluateTakeoversLight(ds, attributes);
+
+  // Badge value has to be measured on what the build can AFFORD to equip, not
+  // on what it is merely eligible for. The exact loadout solver is too slow for
+  // this loop, so a greedy value-per-token pass stands in; `evaluateBuild`
+  // reports the exact one.
+  const pw = priorityWeights(ds, ctx.priorities);
+  const tokens = computeTokens(ds, attributes, ctx.tokenOverrides);
+  const equipped = planBadgeLoadoutFast(ds, attributes, body, tokens, pw, defIndex(ds).badgeAttrs);
+
   return scoreBuild({
     ds,
     body,
     attributes,
     badges,
+    equippedBadges: equipped,
     animations,
     takeovers,
     breakpoints: ctx.breakpoints,
@@ -61,6 +74,8 @@ export interface EvaluateOptions {
   useCapBreakers?: boolean;
   useBadgeBoosts?: boolean;
   breakpoints?: BreakpointMap;
+  /** Per-discipline badge token pool overrides, for real in-game numbers. */
+  tokenOverrides?: Record<string, number | null>;
 }
 
 /**
@@ -108,13 +123,19 @@ export function evaluateBuild(
   const animations = evaluateAnimations(ds, effective, body);
   const takeovers = evaluateTakeovers(ds, effective, caps, cost);
 
+  // Attributes decide eligibility; badge tokens and slots decide what is
+  // actually equipped. Cap breakers deliberately feed eligibility here but not
+  // the token pool — 2K27 does not grant tokens for applying a cap breaker.
+  const tokenPool = computeTokens(ds, clamped, options.tokenOverrides);
+  const loadout = planBadgeLoadout(ds, effective, body, tokenPool, priorityWeights(ds, priorities), badges);
+
   const badgeBoostPlan =
     options.useBadgeBoosts === false ? [] : planBadgeBoosts(ds, effective, body, priorities);
 
-  // Reflect the boost plan back onto the badge list so the UI can show the
+  // Reflect the boost plan back onto both badge lists so the UI can show the
   // level a player would actually be playing with.
   const boostByBadge = new Map(badgeBoostPlan.map((b) => [b.badgeId, b]));
-  for (const b of badges) {
+  for (const b of [...badges, ...loadout.equipped]) {
     const boost = boostByBadge.get(b.badgeId);
     if (boost) {
       b.boostedLevel = boost.toLevel;
@@ -127,6 +148,7 @@ export function evaluateBuild(
     body,
     attributes: clamped,
     badges,
+    equippedBadges: loadout.equipped,
     animations,
     takeovers,
     breakpoints,
@@ -146,6 +168,8 @@ export function evaluateBuild(
     spent,
     remaining,
     badges,
+    equippedBadges: loadout.equipped,
+    tokens: loadout.report,
     nextBadges: nextBadgeThresholds(ds, effective, body, caps, cost),
     animations,
     nextAnimations: nextAnimationThresholds(ds, effective, body, caps, cost),

@@ -10,7 +10,21 @@
     "badge / animation / takeover threshold."
   ],
 
-  "verification": { "status": "unverified", "notes": "Entire cap breaker ruleset invented." },
+  "verification": {
+    "status": "estimated",
+    "source": "2K27 builder coverage confirms cap breakers exist, are earned post-launch, are not viewable until the build reaches 99 overall, and do NOT grant additional badge tokens.",
+    "notes": "The rules below are sourced where marked. Every QUANTITY (how many, how much each raises, per-attribute limits) is still invented."
+  },
+
+  "rules": {
+    "visibleOnlyAt99Overall": true,
+    "grantsBadgeTokens": false,
+    "verification": {
+      "status": "community-verified",
+      "source": "2K27 builder coverage: cap breaker amounts are not viewable until 99 overall, and applying them does not provide additional badge tokens."
+    },
+    "note": "grantsBadgeTokens=false is why the optimizer treats cap breakers as a pure post-build overlay: a breaker can push an attribute over a badge threshold but cannot pay for the badge."
+  },
 
   "enabled": true,
   "totalAvailable": 4,

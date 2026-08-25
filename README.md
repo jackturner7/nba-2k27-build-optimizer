@@ -4,17 +4,21 @@ A full-stack build optimizer for NBA 2K27 MyPLAYER. You describe the player you
 want; it works out the most *efficient* attribute allocation within the
 builder's restrictions — not simply the highest one.
 
-> ## ⚠️ There is no verified NBA 2K27 data in this repository
+> ## ⚠️ The dataset is PARTIALLY sourced — check the label on each number
 >
-> Every rating, cap, cost, badge threshold, animation requirement and archetype
-> name under `data/2k27/` is a clearly-labelled **placeholder**. The structure is
-> modelled on how the NBA 2K series works; the numbers are invented and are
-> almost certainly wrong. Badge, animation and archetype names are not confirmed
-> to exist in 2K27 either.
+> **Real 2K27 data:** every badge requirement and badge token cost for Shooting,
+> Playmaking, Defense and Finishing; the animation and takeover thresholds from
+> the community "best value attribute thresholds" sheet; the builder's attribute
+> list; and the *direction* of each body setting's effect on caps.
 >
-> Nothing is fabricated as fact: every record carries a `verification.status`,
-> which is `unverified` everywhere right now, and the UI shows that tag next to
-> the value. **Replace the data before trusting any build.** See
+> **Still invented:** attribute **caps** (magnitudes), **cost curves**, the
+> **build point budget**, the badge **token-earning formula**, cap breaker
+> counts, and badge boost slots.
+>
+> **Missing entirely:** the Rebounding and Physicals badge cost charts.
+>
+> Every record carries a `verification.status` and the UI shows it next to the
+> value. `npm run data:report` tells you where you stand. See
 > [`docs/DATA.md`](docs/DATA.md).
 
 ---
@@ -29,6 +33,14 @@ worse: identical gameplay, fewer points left for everything else.
 The optimizer is built entirely around that. It only ever considers ratings that
 cross a threshold, then spends what it saves elsewhere, then reports anything
 still sitting above the last useful threshold as waste you can recover.
+
+**2K27 adds a second budget.** Badges are no longer granted automatically when
+you hit a threshold — hitting it makes the badge *eligible*, and you then spend
+**badge tokens** (earned per discipline by investing in that discipline) to
+equip it, into a limited number of badge slots. A build is routinely eligible
+for twice as many badges as it can afford. The engine models both budgets, and
+scores the badges you can actually equip rather than the ones you merely
+qualify for.
 
 ## What it does
 
@@ -49,10 +61,14 @@ still sitting above the last useful threshold as waste you can recover.
 - **A nine-part optimization score** — badge value, animation unlocks, attribute
   efficiency, defensive versatility, shooting, finishing, playmaking, physicals,
   and wasted points.
-- **Full unlock report** — badges held, next badge thresholds with the exact
-  point cost to reach them, available and locked animations, takeover tiers, cap
-  breaker recommendations, +1/+2 badge boost placement, and every point that may
-  be wasted.
+- **Badge loadout and token planner** — which badges are eligible, which ones
+  the token and slot budgets actually let you equip, what each costs, and which
+  eligible badges got left behind and why. Type your real in-game token counts
+  in to override the estimate.
+- **Full unlock report** — next badge thresholds with the exact point cost to
+  reach them, available and locked animations, takeover tiers, cap breaker
+  recommendations, +1/+2 badge boost placement, and every point that may be
+  wasted.
 - **Per-attribute rationale** — why each rating stopped where it did, and what
   the next unlock would cost.
 
@@ -92,7 +108,7 @@ The API reloads a dataset without restarting:
 ## Architecture
 
 ```
-data/2k27/          14 JSON files — all game knowledge lives here, nowhere else
+data/2k27/          15 JSON files — all game knowledge lives here, nowhere else
 packages/core/      engine: caps, costs, breakpoints, knapsack, scoring, NL parsing
 apps/api/           Express: dataset serving, optimize, evaluate, describe
 apps/web/           React + Vite builder UI
@@ -123,16 +139,28 @@ file changes the app's behaviour with no code change.
 
 ## Known limitations
 
-- **The data is placeholder.** This is the big one. See the banner above.
+- **Caps, cost curves and the budget are still invented.** Builds will pick the
+  right thresholds but may be affordable when they should not be. This is the
+  most valuable thing left to replace — the NBA 2K HQ app's builder is the place
+  to read exact caps off and paste them into `caps.json` → `overrides.entries`.
+- **The token-earning formula is a guess.** Only the direction is sourced. It is
+  currently calibrated so badge *slots* are the binding constraint, which is what
+  "20 badge slots" being the headline number implies. Type your real per-
+  discipline token counts into the UI to plan against those instead.
+- **No Rebounding or Physicals badge charts.** Those badges have no token cost,
+  so they cannot be equipped, and the app lists them as unpriced rather than
+  assuming they are free.
+- **Four rows need re-checking against the source.** Post Fade Phenom's Bronze
+  Mid-Range requirement reads *higher* than its Silver; Pick Dodger's Bronze cell
+  names different attributes from the rest of its ladder; Wall Up's row is badly
+  degraded; Post Lockdown's Gold/HOF token costs break the otherwise perfect
+  cost ladder. All four are marked `estimated` with a note, and `data:validate`
+  warns about the first.
 - **Attributes nothing gates on stay at the floor.** The engine only buys points
   that cross a threshold, so an attribute with no badge, animation or takeover
-  requirement is worth nothing to it. In the current placeholder set that means
-  Free Throw (zero requirements) and Speed (one) sit at 25 in most builds. That
-  is the data being incomplete, not the optimizer misbehaving — the app reports
-  the gap rather than inventing a threshold. `npm run data:report` lists it.
+  requirement is worth nothing to it. Free Throw has zero requirements in any
+  supplied chart, so it sits at 25. That is the data being incomplete, not the
+  optimizer misbehaving — the app reports the gap rather than inventing a
+  threshold.
 - **`badge.impact` and the dependency rules are judgement, not game data.** They
   are labelled as modelling choices and are meant to be tuned by hand.
-- **The budget model is a joint fiction with the cost curves.** NBA 2K does not
-  display a build-point total; this app needs one, so `budget.json` and
-  `cost-curves.json` are calibrated against each other. Recalibrate them
-  together, or set `budget.enabled: false` to optimize against caps alone.
