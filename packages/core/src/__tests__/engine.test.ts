@@ -29,13 +29,28 @@ describe('dataset', () => {
   it('is honest about what is and is not sourced', () => {
     const report = verificationReport(ds);
     expect(report.totalRecords).toBeGreaterThan(0);
-    // Nothing may claim 'verified' — that status is reserved for values read
-    // straight off the shipped builder, which nobody here has done.
-    expect(report.byStatus['verified'] ?? 0).toBe(0);
     expect(ds.meta.provenance.status).toBe('partial');
     // The files that are still guesses must still say so.
     expect(ds.budget.verification.status).toBe('unverified');
     expect(ds.costCurves.every((c) => c.verification.status === 'unverified')).toBe(true);
+  });
+
+  it('only claims "verified" where an official 2K source is cited', () => {
+    // 'verified' is reserved for things 2K themselves published. Anything
+    // claiming it must name where it came from.
+    const verified = [
+      ['badge-tokens', ds.badgeTokens.verification],
+      ['badge-tokens.slots', ds.badgeTokens.slots.verification],
+      ['badge-tokens.rules', ds.badgeTokens.rules.verification],
+      ['badge-boosts', ds.badgeBoosts.verification],
+      ['badge-boosts.rules', ds.badgeBoosts.rules.verification],
+      ['badges.globalRules', ds.badgeGlobalRules.verification],
+    ].filter(([, v]) => (v as { status: string })?.status === 'verified');
+
+    expect(verified.length).toBeGreaterThan(0);
+    for (const [name, v] of verified) {
+      expect(`${name}: ${(v as { source?: string | null }).source ?? ''}`).toMatch(/2K official/i);
+    }
   });
 
   it('has the 2K27 attribute set, not the 2K26 one', () => {
@@ -51,8 +66,38 @@ describe('dataset', () => {
     );
   });
 
-  it('uses the four 2K27 badge tiers', () => {
-    expect(ds.badgeLevels.map((l) => l.id)).toEqual(['bronze', 'silver', 'gold', 'hof']);
+  it('has four buildable badge tiers plus an unbuildable Legend', () => {
+    expect(ds.badgeLevels.map((l) => l.id)).toEqual(['bronze', 'silver', 'gold', 'hof', 'legend']);
+
+    // 2K official: "Legend Badges cannot be obtained at build creation, but they
+    // can still be earned." So Legend must exist as a level but must never carry
+    // an attribute requirement — it is reached by Synergy, not by a rating.
+    const legend = ds.badgeLevels.find((l) => l.id === 'legend')!;
+    expect(legend.obtainableAtBuildCreation).toBe(false);
+    expect(ds.badgeGlobalRules.legendRequiresSynergy).toBe(true);
+    for (const badge of ds.badges) {
+      expect(badge.tiers.some((t) => t.level === 'legend')).toBe(false);
+    }
+  });
+
+  it('matches the badge count 2K published', () => {
+    // 2K official: "There are 53 Badges in 2K27".
+    expect(ds.badges.length).toBe(53);
+  });
+
+  it('models the Synergy slot counts 2K published', () => {
+    // 2K official: "16 total Synergy slots. Twelve ... +1 boost, and four ... +2".
+    expect(ds.badgeBoosts.totalSlots).toBe(16);
+    expect(ds.badgeBoosts.plusOne.slots).toBe(12);
+    expect(ds.badgeBoosts.plusTwo.slots).toBe(4);
+    expect(ds.badgeBoosts.plusOne.slots + ds.badgeBoosts.plusTwo.slots).toBe(ds.badgeBoosts.totalSlots);
+  });
+
+  it('models the 20 badge slots 2K published', () => {
+    expect(ds.badgeTokens.slots.total).toBe(20);
+    const split = Object.values(ds.badgeTokens.slots.byDiscipline).reduce((a, b) => a + b, 0);
+    expect(split).toBe(20);
+    expect(ds.badgeTokens.disciplines).toEqual(['shooting', 'finishing', 'playmaking', 'defense', 'rebounding', 'physicals']);
   });
 
   it('every badge tier is reachable in principle', () => {
@@ -455,14 +500,26 @@ describe('badge height gating', () => {
 });
 
 describe('badge tokens', () => {
-  it('earns more tokens in a discipline the build invests in', () => {
+  it('does not derive the token pool from attribute spend', () => {
+    // 2K official: tokens come from playing — discipline meters, practice drills,
+    // Gatorade workouts — NOT from how you allocate attributes in the builder.
+    // An earlier version of this app had that backwards.
     const base: Record<string, number> = {};
     for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
     const poor = computeTokens(ds, base);
     const rich = computeTokens(ds, { ...base, three_point: 95, mid_range: 90, free_throw: 80 });
-    expect(rich['shooting']!).toBeGreaterThan(poor['shooting']!);
-    // Investing in shooting must not conjure defense tokens.
-    expect(rich['defense']).toBe(poor['defense']);
+    expect(rich['shooting']).toBe(poor['shooting']);
+    expect(ds.badgeTokens.tokenGrants.mode).toBe('flat');
+  });
+
+  it('lets the player supply their real token counts', () => {
+    const base: Record<string, number> = {};
+    for (const a of ds.attributes) base[a.id] = ds.ratingFloor;
+    const overridden = computeTokens(ds, base, { shooting: 3, defense: 25 });
+    expect(overridden['shooting']).toBe(3);
+    expect(overridden['defense']).toBe(25);
+    // Disciplines left alone keep the dataset's pool.
+    expect(overridden['rebounding']).toBe(computeTokens(ds, base)['rebounding']);
   });
 
   it('never equips more badges than there are slots or tokens', () => {

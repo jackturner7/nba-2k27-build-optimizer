@@ -96,6 +96,7 @@ export function buildDataset(input: RawDatasetFiles): LoadResult {
     animationCategories: animations.categories,
     animations: animations.animations as Dataset['animations'],
     takeoverSlots: takeovers.slots,
+    ...(takeovers.abilities ? { takeoverAbilities: takeovers.abilities } : {}),
     takeovers: takeovers.takeovers,
     capBreakers: capBreakers as Dataset['capBreakers'],
     badgeTokens: badgeTokens as Dataset['badgeTokens'],

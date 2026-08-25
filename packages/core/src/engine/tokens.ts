@@ -52,6 +52,14 @@ export function computeTokens(
       continue;
     }
 
+    if (cfg.tokenGrants.mode === 'flat') {
+      // 2K27 earns tokens by PLAYING — discipline meters, practice drills,
+      // Gatorade workouts — not by how attributes are allocated. So the pool is
+      // a fact about the account, not about the build.
+      out[discipline] = Math.max(0, Math.round(cfg.tokenGrants.flatByDiscipline[discipline] ?? 0));
+      continue;
+    }
+
     if (cfg.tokenGrants.mode === 'table') {
       const rows = cfg.tokenGrants.table[discipline] ?? [];
       let total = 0;
@@ -93,12 +101,43 @@ interface BadgeOption {
  * supply a fallback price. Anything priced that way is flagged all the way
  * through to the UI so it is never mistaken for real data.
  */
-function priceOf(ds: Dataset, tier: BadgeDef['tiers'][number]): { cost: number; inferred: boolean } | null {
-  if (tier.tokenCost !== null) return { cost: tier.tokenCost, inferred: false };
-  const fallback = ds.badgeTokens.fallbackTokenCost;
-  if (!fallback?.enabled) return null;
-  const cost = fallback.byLevel[tier.level];
-  return cost === undefined ? null : { cost, inferred: true };
+function priceOf(
+  ds: Dataset,
+  badge: BadgeDef,
+  tier: BadgeDef['tiers'][number],
+  body: BuildBody
+): { cost: number; inferred: boolean } | null {
+  let base: number;
+  let inferred: boolean;
+
+  if (tier.tokenCost !== null) {
+    base = tier.tokenCost;
+    inferred = false;
+  } else {
+    const fallback = ds.badgeTokens.fallbackTokenCost;
+    if (!fallback?.enabled) return null;
+    const cost = fallback.byLevel[tier.level];
+    if (cost === undefined) return null;
+    base = cost;
+    inferred = true;
+  }
+
+  // 2K states outright that badge token cost varies with size and position.
+  // The chart costs are a single-body snapshot, so this adjusts them — by zero
+  // until someone supplies the real relationship, which is a known gap rather
+  // than an assertion that no relationship exists.
+  const byBody = ds.badgeTokens.costByBody;
+  if (byBody?.enabled) {
+    const override = byBody.overrides[`${badge.id}:${tier.level}:${body.position}:${body.heightInches}`];
+    if (override !== undefined) return { cost: override, inferred: false };
+    if (byBody.perInchHeight !== 0 && byBody.referenceHeightInches !== null) {
+      const adjusted = base + byBody.perInchHeight * (body.heightInches - byBody.referenceHeightInches);
+      base = Math.max(byBody.minCost, Math.round(adjusted));
+      inferred = true;
+    }
+  }
+
+  return { cost: base, inferred };
 }
 
 /**
@@ -125,7 +164,7 @@ function eligibleOptions(
     let sawUnpriced = false;
     for (const tier of badge.tiers) {
       if (!meetsRequirements(tier.requires, attrs)) break; // ladder: stop at the first unmet tier
-      const price = priceOf(ds, tier);
+      const price = priceOf(ds, badge, tier, body);
       if (!price) {
         sawUnpriced = true;
         continue;
@@ -400,7 +439,7 @@ export function planBadgeLoadoutFast(
       let chosen: { level: string; levelOrder: number; cost: number; value: number } | null = null;
       for (const tier of badge.tiers) {
         if (!meetsRequirements(tier.requires, attrs)) break;
-        const price = priceOf(ds, tier);
+        const price = priceOf(ds, badge, tier, body);
         if (!price) continue;
         chosen = {
           level: tier.level,

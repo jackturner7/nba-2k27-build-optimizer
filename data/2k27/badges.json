@@ -3,6 +3,10 @@
     "NBA 2K27 badge requirements, height ranges and badge token costs.",
     "",
     "REQUIREMENTS + HEIGHT RANGES: imported from NBA 2K Lab (https://www.nba2klab.com/badge-requirements),",
+    "TIERS: 2K27 badges have Bronze/Silver/Gold/Hall of Fame requirement rows. LEGEND exists but has no",
+    "requirement row \u2014 it is unobtainable at build creation and is reached only by Synergy boosting a",
+    "Hall of Fame badge. See badge-boosts.json.",
+    "",
     "which states the data was collected at NBA 2K27 Community Day and that 2K may still change it before",
     "full release. Regenerate with `node scripts/import-2klab.mjs`.",
     "CORROBORATION: a second independent chart (@jpforthreee) agrees on 211 of 212 tiers and height",
@@ -30,33 +34,47 @@
       "id": "bronze",
       "name": "Bronze",
       "order": 1,
-      "scoreWeight": 1
+      "scoreWeight": 1.0,
+      "obtainableAtBuildCreation": true
     },
     {
       "id": "silver",
       "name": "Silver",
       "order": 2,
-      "scoreWeight": 1.8
+      "scoreWeight": 1.8,
+      "obtainableAtBuildCreation": true
     },
     {
       "id": "gold",
       "name": "Gold",
       "order": 3,
-      "scoreWeight": 3
+      "scoreWeight": 3.0,
+      "obtainableAtBuildCreation": true
     },
     {
       "id": "hof",
       "name": "Hall of Fame",
       "order": 4,
-      "scoreWeight": 4.6
+      "scoreWeight": 4.6,
+      "obtainableAtBuildCreation": true
+    },
+    {
+      "id": "legend",
+      "name": "Legend",
+      "order": 5,
+      "scoreWeight": 6.5,
+      "obtainableAtBuildCreation": false,
+      "note": "2K official: 'Legend Badges cannot be obtained at build creation, but they can still be earned.' The Synergy system is what pushes a badge to Legend. No badge therefore has a Legend row of attribute requirements \u2014 Legend is reached by boosting Hall of Fame, not by hitting a rating."
     }
   ],
   "globalRules": {
     "maxLegendBadges": null,
     "maxBadgesPerCategory": null,
+    "legendRequiresSynergy": true,
     "verification": {
-      "status": "unverified",
-      "notes": "2K27 uses Bronze/Silver/Gold/Hall of Fame on the supplied charts \u2014 no Legend tier is shown. Per-category badge limits are enforced through badge SLOTS (see badge-tokens.json) rather than a rule here."
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "Legend exists but is unreachable at build creation; Synergy is the route to it. Any cap on how many Legend badges you can hold is not published \u2014 it is bounded in practice by the 16 Synergy slots."
     }
   },
   "badges": [

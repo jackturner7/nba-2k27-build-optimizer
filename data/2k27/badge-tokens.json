@@ -1,30 +1,33 @@
 {
   "$comment": [
-    "NBA 2K27 BADGE TOKENS.",
+    "NBA 2K27 BADGE TOKENS AND SLOTS.",
     "",
-    "In 2K27 badges are no longer granted automatically when you hit an attribute threshold. Meeting",
-    "the threshold makes a badge tier ELIGIBLE; you then have to SPEND BADGE TOKENS to equip it, into",
-    "a limited number of badge slots. Tokens are earned per discipline by investing in that",
-    "discipline's attributes \u2014 raising Three-Point earns shooting tokens, and a single point can be",
-    "worth an extra token.",
+    "SOURCED from 2K's official MyPLAYER Builder page:",
+    "  - Every build starts with 20 Badge slots across six disciplines: Shooting, Finishing, Playmaking,",
+    "    Defense, Rebounding, Physicals. All 20 are available immediately; you must earn TOKENS to fill them.",
+    "  - Meeting a badge's attribute requirement puts it in your INVENTORY. Spending tokens equips it.",
+    "  - Tokens are earned by PLAYING \u2014 the six discipline progression meters, Team Practice drills and",
+    "    Gatorade workouts \u2014 NOT by how you allocate attributes at build creation.",
+    "  - Tokens can be reassigned at any time, but tokens earned in-game stay locked to their discipline.",
+    "  - Bonus Slots and Bonus Tokens from Build Specialization, Seasons and Crews are discipline-agnostic.",
+    "  - Rebirth immediately unlocks a percentage of your default tokens.",
+    "  - TOKEN COST VARIES BY BODY: 'you can see in real time how your selected size and position affect",
+    "    which Badges you qualify for and how many tokens each Badge will cost. Taller players may see a",
+    "    different number of tokens required than shorter ones for the same Badge.'",
     "",
-    "This makes the optimizer a two-budget problem: build points buy attributes, and attributes earn",
-    "tokens that buy badges. An attribute threshold you cannot afford to cash in is not worth chasing.",
+    "THIS CHANGES THE DEFAULT MODEL. An earlier version derived tokens from attribute investment. That is",
+    "wrong: tokens are a progression resource, so how many you have is a fact about YOUR ACCOUNT, not about",
+    "the build. The default is now a flat per-discipline pool you set to match your own progress, and the",
+    "UI exposes it. `linear-by-investment` is retained only as a fallback for planning in the abstract.",
     "",
-    "WHAT IS VERIFIED: that the mechanic exists, that tokens are per-discipline, that they scale with",
-    "attribute investment in that discipline, that badges must be bought rather than granted, that",
-    "there are limited slots, and that cap breakers do NOT grant extra tokens.",
-    "",
-    "WHAT IS NOT VERIFIED: the exact token-earning formula, the exact slot counts per discipline, and",
-    "whether upgrading a badge pays the difference between tiers or the full new tier price. All the",
-    "numbers below are placeholders. Enter your real in-game numbers via the UI (they override this",
-    "file per-request) or edit `manualTokens` here."
+    "STILL NOT SOURCED: the size of the token pool at any progression level, the per-discipline slot split,",
+    "the height/position cost adjustment, and whether upgrading a tier pays the difference or the full price."
   ],
   "enabled": true,
   "verification": {
-    "status": "estimated",
-    "source": "NBA 2K27 badge cost charts (token costs per tier) + community builder coverage of the token mechanic.",
-    "notes": "Mechanic confirmed; every quantity below is a placeholder."
+    "status": "verified",
+    "source": "2K official MyPLAYER Builder page, 2026-08-25",
+    "notes": "The mechanic, the 20 slots, the six disciplines, how tokens are earned and that cost varies by size/position are all official. Every QUANTITY below is not."
   },
   "disciplines": [
     "shooting",
@@ -56,24 +59,40 @@
       "physicals": 3
     },
     "verification": {
-      "status": "estimated",
-      "source": "20 starting badge slots across six disciplines is reported by 2K27 builder coverage.",
-      "notes": "The TOTAL of 20 is sourced. The per-discipline SPLIT below is invented and sums to 20. Bonus Slots earned through progression are not modelled."
+      "status": "verified",
+      "source": "2K official: 'Every single build starts with 20 Badge slots distributed across six specific disciplines'.",
+      "notes": "The TOTAL of 20 is official. The per-discipline SPLIT below is invented \u2014 2K does not publish it. Bonus Slots earned through Build Specialization, Seasons and Crews are not modelled."
     }
   },
   "tokenGrants": {
-    "mode": "linear-by-investment",
+    "mode": "flat",
     "$comment": [
-      "mode 'linear-by-investment': tokens = floor( sum over that discipline's attributes of",
-      "  max(0, rating - freeBelow) / pointsPerToken ), capped at maxPerDiscipline.",
-      "mode 'table': use `table` below \u2014 an exact list of { attribute, rating } ratings that each",
-      "  grant one token. Use this once the real breakpoints are known; it is what the game actually",
-      "  does ('sometimes just one point provides an additional badge token').",
-      "mode 'manual': ignore attributes entirely and use `manualTokens`."
+      "mode 'flat' (default): use `flatByDiscipline`. Correct in KIND \u2014 tokens are earned by playing, so the",
+      "  size of your pool is a property of your account, not of the build. Set it to what you actually have.",
+      "mode 'table': exact ratings that grant tokens. Retained in case 2K27 also grants some from attributes.",
+      "mode 'linear-by-investment': derive tokens from attribute spend. Known to be the WRONG model for 2K27;",
+      "  kept only for planning an abstract 'fully progressed in what I invested in' build.",
+      "mode 'manual': treat as unlimited unless manualTokens says otherwise."
     ],
     "verification": {
-      "status": "unverified",
-      "notes": "Formula and constants are invented. Only the direction (more investment -> more tokens) is sourced. Calibrated so that a committed build earns enough tokens for BADGE SLOTS to be the binding constraint rather than tokens \u2014 which is what '20 badge slots' being the headline number implies. If real numbers show tokens are the tighter limit, lower pointsPerToken."
+      "status": "estimated",
+      "source": "2K official for the mechanic; the numbers are invented.",
+      "notes": "flatByDiscipline is set so that badge SLOTS bind rather than tokens, matching '20 badge slots' being the headline constraint. Replace with your real counts."
+    },
+    "flatByDiscipline": {
+      "shooting": 18,
+      "finishing": 18,
+      "playmaking": 14,
+      "defense": 18,
+      "rebounding": 9,
+      "physicals": 13
+    },
+    "progressionPresets": {
+      "$comment": "Rough multipliers on flatByDiscipline for the UI. Tokens are earned over time, so a fresh build has far fewer than a maxed account.",
+      "new": 0.0,
+      "early": 0.35,
+      "established": 0.7,
+      "maxed": 1.0
     },
     "freeBelow": 50,
     "pointsPerToken": 5,
@@ -91,12 +110,14 @@
   },
   "rules": {
     "capBreakersGrantTokens": false,
-    "capBreakersGrantTokensVerification": {
-      "status": "community-verified",
-      "source": "2K27 builder coverage: 'applying cap breakers does not provide additional badge tokens'."
-    },
-    "unspentTokensCarryOver": null,
-    "canRefundTokens": null
+    "tokensReassignable": true,
+    "inGameTokensLockedToDiscipline": true,
+    "bonusTokensAnyDiscipline": true,
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "'You can reassign Tokens at any time, but Tokens earned through in-game events remain locked to their respective discipline.' Cap breakers not granting tokens is from 2K27 builder coverage."
+    }
   },
   "fallbackTokenCost": {
     "$comment": [
@@ -125,5 +146,26 @@
       "gold": 5,
       "hof": 6
     }
+  },
+  "costByBody": {
+    "$comment": [
+      "2K states outright that badge token cost depends on your size and position: a taller player may pay a",
+      "different number of tokens for the same badge. The token costs in badges.json were read off charts",
+      "that do not say which body they were captured at, so they are a SINGLE-BODY SNAPSHOT.",
+      "",
+      "`perInchHeight` adjusts a badge tier's cost by that many tokens per inch away from `referenceHeight`,",
+      "rounded and clamped to >= 1. It is 0 by default, i.e. 'no adjustment known' \u2014 NOT 'no adjustment",
+      "exists'. Set it once the direction and size are known, or fill `overrides` with exact costs."
+    ],
+    "enabled": true,
+    "verification": {
+      "status": "unverified",
+      "source": "2K official confirms cost VARIES by size and position; the magnitude and direction are not published.",
+      "notes": "perInchHeight is 0 so the app currently uses the chart costs unchanged. This is a known gap, surfaced in the UI."
+    },
+    "referenceHeightInches": null,
+    "perInchHeight": 0,
+    "minCost": 1,
+    "overrides": {}
   }
 }
