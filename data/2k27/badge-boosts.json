@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Models the 'maximum +1 / maximum +2 badge boost' mechanic: a limited number of badges can be",
+    "elevated above the level your attributes actually earned. Slot counts, whether boosts can stack,",
+    "whether they can push a badge to Legend, and any eligibility rules are UNKNOWN for 2K27.",
+    "",
+    "If 2K27 turns out to have no such mechanic, set `enabled` to false and the optimizer stops",
+    "reporting boost recommendations entirely."
+  ],
+
+  "verification": { "status": "unverified", "notes": "Entire boost ruleset invented." },
+
+  "enabled": true,
+
+  "plusOne": {
+    "slots": 2,
+    "levelsGained": 1,
+    "note": "Number of +1 slots is invented."
+  },
+  "plusTwo": {
+    "slots": 1,
+    "levelsGained": 2,
+    "note": "Number of +2 slots is invented."
+  },
+
+  "rules": {
+    "canStackOnSameBadge": false,
+    "canBoostToLegend": true,
+    "requiresBadgeAlreadyUnlocked": true,
+    "minimumLevelToBoost": "bronze",
+    "eligibleCategories": ["shooting", "finishing", "playmaking", "defense", "rebounding", "allaround"],
+    "excludedBadges": []
+  }
+}

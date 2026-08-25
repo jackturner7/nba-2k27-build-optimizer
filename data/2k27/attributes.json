@@ -1,0 +1,57 @@
+{
+  "$comment": "PLACEHOLDER DATA — see meta.json. Attribute list is modeled on the NBA 2K series and is unverified for 2K27.",
+  "ratingFloor": 25,
+  "ratingCeiling": 99,
+  "categories": [
+    { "id": "finishing", "name": "Finishing", "color": "#e0563f" },
+    { "id": "shooting", "name": "Shooting", "color": "#3fa7e0" },
+    { "id": "playmaking", "name": "Playmaking", "color": "#e0b23f" },
+    { "id": "defense", "name": "Defense / Rebounding", "color": "#5fd07a" },
+    { "id": "physicals", "name": "Physicals", "color": "#b07fe0" }
+  ],
+  "attributes": [
+    { "id": "close_shot", "name": "Close Shot", "short": "CLS", "category": "finishing", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "driving_layup", "name": "Driving Layup", "short": "DLU", "category": "finishing", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "driving_dunk", "name": "Driving Dunk", "short": "DDK", "category": "finishing", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "standing_dunk", "name": "Standing Dunk", "short": "SDK", "category": "finishing", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "post_control", "name": "Post Control", "short": "PST", "category": "finishing", "costCurve": "standard", "verification": { "status": "unverified" } },
+
+    { "id": "mid_range", "name": "Mid-Range Shot", "short": "MID", "category": "shooting", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "three_point", "name": "Three-Point Shot", "short": "3PT", "category": "shooting", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "free_throw", "name": "Free Throw", "short": "FT", "category": "shooting", "costCurve": "cheap", "verification": { "status": "unverified" } },
+
+    { "id": "pass_accuracy", "name": "Pass Accuracy", "short": "PAC", "category": "playmaking", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "ball_handle", "name": "Ball Handle", "short": "BHD", "category": "playmaking", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "speed_with_ball", "name": "Speed With Ball", "short": "SWB", "category": "playmaking", "costCurve": "premium", "verification": { "status": "unverified" } },
+
+    { "id": "interior_defense", "name": "Interior Defense", "short": "IND", "category": "defense", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "perimeter_defense", "name": "Perimeter Defense", "short": "PRD", "category": "defense", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "steal", "name": "Steal", "short": "STL", "category": "defense", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "block", "name": "Block", "short": "BLK", "category": "defense", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "offensive_rebound", "name": "Offensive Rebound", "short": "ORB", "category": "defense", "costCurve": "cheap", "verification": { "status": "unverified" } },
+    { "id": "defensive_rebound", "name": "Defensive Rebound", "short": "DRB", "category": "defense", "costCurve": "standard", "verification": { "status": "unverified" } },
+
+    { "id": "speed", "name": "Speed", "short": "SPD", "category": "physicals", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "acceleration", "name": "Acceleration", "short": "ACC", "category": "physicals", "costCurve": "premium", "verification": { "status": "unverified" } },
+    { "id": "strength", "name": "Strength", "short": "STR", "category": "physicals", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "vertical", "name": "Vertical", "short": "VRT", "category": "physicals", "costCurve": "standard", "verification": { "status": "unverified" } },
+    { "id": "stamina", "name": "Stamina", "short": "STA", "category": "physicals", "costCurve": "cheap", "verification": { "status": "unverified" } }
+  ],
+
+  "priorityGroups": [
+    { "id": "three_point_shooting", "name": "3PT Shooting", "attributes": ["three_point"], "supporting": ["mid_range", "free_throw"] },
+    { "id": "perimeter_defense", "name": "Perimeter Defense", "attributes": ["perimeter_defense"], "supporting": ["speed", "acceleration", "strength"] },
+    { "id": "steal", "name": "Steal", "attributes": ["steal"], "supporting": ["perimeter_defense"] },
+    { "id": "driving_dunk", "name": "Driving Dunk", "attributes": ["driving_dunk"], "supporting": ["vertical", "speed", "driving_layup"] },
+    { "id": "ball_handle", "name": "Ball Handle", "attributes": ["ball_handle"], "supporting": ["speed_with_ball", "pass_accuracy"] },
+    { "id": "speed_with_ball", "name": "Speed With Ball", "attributes": ["speed_with_ball"], "supporting": ["ball_handle", "speed"] },
+    { "id": "interior_defense", "name": "Interior Defense", "attributes": ["interior_defense"], "supporting": ["strength", "block"] },
+    { "id": "block", "name": "Block", "attributes": ["block"], "supporting": ["vertical", "interior_defense"] },
+    { "id": "rebounding", "name": "Rebounding", "attributes": ["defensive_rebound", "offensive_rebound"], "supporting": ["strength", "vertical"] },
+    { "id": "athleticism", "name": "Athleticism", "attributes": ["speed", "acceleration", "vertical"], "supporting": ["strength", "stamina"] },
+    { "id": "finishing", "name": "Inside Finishing", "attributes": ["close_shot", "driving_layup", "standing_dunk"], "supporting": ["strength", "post_control"] },
+    { "id": "playmaking", "name": "Playmaking", "attributes": ["pass_accuracy", "ball_handle"], "supporting": ["speed_with_ball"] },
+    { "id": "mid_range", "name": "Mid-Range", "attributes": ["mid_range"], "supporting": ["three_point"] },
+    { "id": "post_scoring", "name": "Post Scoring", "attributes": ["post_control", "close_shot"], "supporting": ["standing_dunk", "strength"] }
+  ]
+}

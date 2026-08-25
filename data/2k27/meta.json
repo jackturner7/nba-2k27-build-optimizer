@@ -1,0 +1,58 @@
+{
+  "$schema": "../schema/meta.schema.json",
+  "datasetId": "2k27",
+  "gameTitle": "NBA 2K27",
+  "datasetVersion": "0.1.0-placeholder",
+  "schemaVersion": 1,
+  "lastUpdated": "2026-08-25",
+
+  "provenance": {
+    "status": "placeholder",
+    "headline": "NO VERIFIED NBA 2K27 DATA IS PRESENT IN THIS DATASET.",
+    "explanation": [
+      "Every numeric value in this dataset directory is a STRUCTURAL PLACEHOLDER. It exists so the",
+      "optimization engine, API and UI have something well-formed to run against. It is NOT sourced",
+      "from NBA 2K27, from 2K Sports, from Visual Concepts, or from any verified community dataset.",
+      "Placeholder values are shaped like values from the NBA 2K series so that the data model is",
+      "realistic, but the specific numbers should be assumed WRONG until a human replaces them.",
+      "Attribute names, badge names, animation names and archetype names are likewise unverified for",
+      "2K27 and may not exist in the shipped game."
+    ],
+    "howToReplace": "See docs/DATA.md. Replace values in place and set each record's verification.status to 'verified' with a source. Nothing in the UI or engine hard-codes these numbers.",
+    "verificationLevels": {
+      "verified": "Confirmed against the shipped NBA 2K27 builder or an official 2K source. Safe to trust.",
+      "community-verified": "Reproduced independently by multiple credible community testers. Trust with care.",
+      "estimated": "Derived or interpolated from partially known data. Directionally useful, numerically approximate.",
+      "unverified": "Placeholder. Shaped correctly, numerically meaningless. THIS IS THE DEFAULT.",
+      "deprecated": "Known to be wrong / no longer applies. Retained for history, ignored by the engine."
+    }
+  },
+
+  "defaultVerification": {
+    "status": "unverified",
+    "source": null,
+    "notes": "Placeholder generated with the initial application scaffold.",
+    "lastReviewed": "2026-08-25"
+  },
+
+  "uiWarnings": {
+    "globalBanner": "Running on PLACEHOLDER NBA 2K27 data. Every rating, cost, cap, badge threshold and animation requirement below is unverified and almost certainly wrong. Replace the files in /data/2k27 with verified data before trusting any build.",
+    "showPerRecordBadges": true
+  },
+
+  "files": [
+    { "file": "attributes.json", "describes": "Attribute definitions, categories, min/max, cost curve binding." },
+    { "file": "cost-curves.json", "describes": "Per-point upgrade cost curves referenced by attributes." },
+    { "file": "positions.json", "describes": "Positions and their body-setting envelopes." },
+    { "file": "body.json", "describes": "Height / weight / wingspan legal ranges and their interaction rules." },
+    { "file": "caps.json", "describes": "How body settings translate into per-attribute maximums." },
+    { "file": "budget.json", "describes": "Total build point budget and how body settings modify it." },
+    { "file": "badges.json", "describes": "Badges, levels, and the attribute thresholds that unlock each level." },
+    { "file": "animations.json", "describes": "Animation packages and their attribute / body requirements." },
+    { "file": "takeovers.json", "describes": "Takeovers and their unlock requirements." },
+    { "file": "cap-breakers.json", "describes": "Post-launch cap breaker rules and eligibility." },
+    { "file": "badge-boosts.json", "describes": "Maximum +1 / +2 badge level boost rules." },
+    { "file": "dependencies.json", "describes": "Declared attribute interaction / dependency rules." },
+    { "file": "archetypes.json", "describes": "Named build archetypes and their preset priorities." }
+  ]
+}

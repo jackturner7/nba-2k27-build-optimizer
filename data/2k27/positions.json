@@ -1,0 +1,45 @@
+{
+  "$comment": "PLACEHOLDER DATA — see meta.json. Height envelopes per position are unverified for 2K27.",
+  "positions": [
+    {
+      "id": "PG",
+      "name": "Point Guard",
+      "heightInchesMin": 66,
+      "heightInchesMax": 79,
+      "secondaryPositions": ["SG", "SF"],
+      "verification": { "status": "unverified" }
+    },
+    {
+      "id": "SG",
+      "name": "Shooting Guard",
+      "heightInchesMin": 69,
+      "heightInchesMax": 82,
+      "secondaryPositions": ["PG", "SF"],
+      "verification": { "status": "unverified" }
+    },
+    {
+      "id": "SF",
+      "name": "Small Forward",
+      "heightInchesMin": 72,
+      "heightInchesMax": 85,
+      "secondaryPositions": ["SG", "PF"],
+      "verification": { "status": "unverified" }
+    },
+    {
+      "id": "PF",
+      "name": "Power Forward",
+      "heightInchesMin": 75,
+      "heightInchesMax": 88,
+      "secondaryPositions": ["SF", "C"],
+      "verification": { "status": "unverified" }
+    },
+    {
+      "id": "C",
+      "name": "Center",
+      "heightInchesMin": 77,
+      "heightInchesMax": 90,
+      "secondaryPositions": ["PF"],
+      "verification": { "status": "unverified" }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "NBA 2K does not display a 'total build points' number in the builder UI; the constraint is",
+    "expressed through per-attribute caps and escalating upgrade costs. This app models the spend",
+    "budget explicitly because an optimizer needs one. If 2K27 turns out to have no shared budget at",
+    "all, set `enabled` to false and the engine will optimize against caps alone.",
+    "",
+    "budget = base + perInchHeight*(h-ref) + perPoundWeight*(w-ref) + perInchWingspan*(ws-ref) + positionAdjust"
+  ],
+
+  "enabled": true,
+  "verification": { "status": "unverified", "notes": "The entire budget concept and every number here is invented." },
+
+  "referenceBody": {
+    "heightInches": 78,
+    "weightPounds": 215,
+    "wingspanInches": 80
+  },
+
+  "base": 2900,
+  "perInchHeight": 0,
+  "perPoundWeight": 0,
+  "perInchWingspan": 0,
+  "positionAdjust": { "PG": 0, "SG": 0, "SF": 0, "PF": 0, "C": 0 },
+  "minimum": 200,
+
+  "notes": [
+    "Body modifiers are all zero on purpose: in the NBA 2K series body settings move CAPS, not the",
+    "spending pool. They are exposed here anyway so you can model a budget effect if 2K27 has one.",
+    "",
+    "`base` is calibrated against the invented cost curves in cost-curves.json so that a plausible",
+    "full build — four or five elite attributes plus a functional spread everywhere else — is exactly",
+    "affordable. It is a joint fiction with those curves: changing one without the other will make",
+    "builds look either impossibly stacked or absurdly bare. Recalibrate both together against real",
+    "2K27 numbers."
+  ]
+}

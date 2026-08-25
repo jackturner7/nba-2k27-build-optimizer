@@ -1,0 +1,286 @@
+import type { Dataset } from '../types.js';
+import {
+  animationsSchema,
+  archetypesSchema,
+  attributesSchema,
+  badgeBoostsSchema,
+  badgesSchema,
+  bodySchema,
+  budgetSchema,
+  capBreakersSchema,
+  capsSchema,
+  costCurvesSchema,
+  dependenciesSchema,
+  metaSchema,
+  positionsSchema,
+  takeoversSchema,
+  type RawDatasetFiles,
+} from './schema.js';
+
+export interface DataIssue {
+  severity: 'error' | 'warning';
+  file: string;
+  message: string;
+}
+
+export interface LoadResult {
+  dataset: Dataset;
+  issues: DataIssue[];
+}
+
+/**
+ * Validates and assembles the dataset from already-parsed JSON.
+ *
+ * Pure: takes plain objects, touches no filesystem. The browser gets the same
+ * dataset over HTTP and runs the identical checks.
+ */
+export function buildDataset(raw: RawDatasetFiles): LoadResult {
+  const issues: DataIssue[] = [];
+
+  const meta = metaSchema.parse(raw.meta);
+  const attributes = attributesSchema.parse(raw.attributes);
+  const costCurves = costCurvesSchema.parse(raw.costCurves);
+  const positions = positionsSchema.parse(raw.positions);
+  const body = bodySchema.parse(raw.body);
+  const caps = capsSchema.parse(raw.caps);
+  const budget = budgetSchema.parse(raw.budget);
+  const badges = badgesSchema.parse(raw.badges);
+  const animations = animationsSchema.parse(raw.animations);
+  const takeovers = takeoversSchema.parse(raw.takeovers);
+  const capBreakers = capBreakersSchema.parse(raw.capBreakers);
+  const badgeBoosts = badgeBoostsSchema.parse(raw.badgeBoosts);
+  const dependencies = dependenciesSchema.parse(raw.dependencies);
+  const archetypes = archetypesSchema.parse(raw.archetypes);
+
+  const dataset: Dataset = {
+    meta,
+    ratingFloor: attributes.ratingFloor,
+    ratingCeiling: attributes.ratingCeiling,
+    categories: attributes.categories,
+    attributes: attributes.attributes,
+    priorityGroups: attributes.priorityGroups,
+    costCurves: costCurves.curves,
+    positions: positions.positions,
+    body: body as Dataset['body'],
+    caps: {
+      capModel: caps.capModel,
+      attributeCaps: caps.attributeCaps,
+      overrides: caps.overrides.entries,
+    },
+    budget,
+    badgeLevels: [...badges.levels].sort((a, b) => a.order - b.order),
+    badgeGlobalRules: badges.globalRules,
+    badges: badges.badges as Dataset['badges'],
+    animationCategories: animations.categories,
+    animations: animations.animations as Dataset['animations'],
+    takeoverSlots: takeovers.slots,
+    takeovers: takeovers.takeovers,
+    capBreakers: capBreakers as Dataset['capBreakers'],
+    badgeBoosts,
+    dependencies: dependencies.dependencies as Dataset['dependencies'],
+    archetypes: archetypes.archetypes as Dataset['archetypes'],
+  };
+
+  issues.push(...checkReferentialIntegrity(dataset));
+
+  return { dataset, issues };
+}
+
+/**
+ * Cross-file checks the per-file schemas cannot express: every attribute id a
+ * badge/animation/archetype mentions must actually exist, cost curves must tile
+ * the whole rating range, badge ladders must be monotonic, and so on.
+ */
+export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
+  const issues: DataIssue[] = [];
+  const attrIds = new Set(ds.attributes.map((a) => a.id));
+  const curveIds = new Set(ds.costCurves.map((c) => c.id));
+  const categoryIds = new Set(ds.categories.map((c) => c.id));
+  const levelOrder = new Map(ds.badgeLevels.map((l) => [l.id, l.order]));
+  const positionIds = new Set(ds.positions.map((p) => p.id));
+
+  const err = (file: string, message: string) => issues.push({ severity: 'error', file, message });
+  const warn = (file: string, message: string) => issues.push({ severity: 'warning', file, message });
+
+  for (const a of ds.attributes) {
+    if (!curveIds.has(a.costCurve)) err('attributes.json', `Attribute "${a.id}" references unknown cost curve "${a.costCurve}".`);
+    if (!categoryIds.has(a.category)) err('attributes.json', `Attribute "${a.id}" references unknown category "${a.category}".`);
+  }
+
+  for (const g of ds.priorityGroups) {
+    for (const id of [...g.attributes, ...g.supporting]) {
+      if (!attrIds.has(id)) err('attributes.json', `Priority group "${g.id}" references unknown attribute "${id}".`);
+    }
+  }
+
+  // Cost curves must cover every point from floor+1 to ceiling with no gap or overlap.
+  for (const curve of ds.costCurves) {
+    const sorted = [...curve.ranges].sort((a, b) => a.from - b.from);
+    let expected = ds.ratingFloor + 1;
+    for (const r of sorted) {
+      if (r.from !== expected) {
+        err('cost-curves.json', `Curve "${curve.id}" has a gap or overlap at rating ${expected} (next range starts at ${r.from}).`);
+        break;
+      }
+      if (r.to < r.from) err('cost-curves.json', `Curve "${curve.id}" has an inverted range ${r.from}-${r.to}.`);
+      expected = r.to + 1;
+    }
+    if (expected !== ds.ratingCeiling + 1) {
+      err('cost-curves.json', `Curve "${curve.id}" stops at ${expected - 1} but the rating ceiling is ${ds.ratingCeiling}.`);
+    }
+  }
+
+  const capAttrs = new Set(ds.caps.attributeCaps.map((c) => c.attribute));
+  for (const a of ds.attributes) {
+    if (!capAttrs.has(a.id)) err('caps.json', `No cap rule for attribute "${a.id}".`);
+  }
+  for (const c of ds.caps.attributeCaps) {
+    if (!attrIds.has(c.attribute)) err('caps.json', `Cap rule references unknown attribute "${c.attribute}".`);
+    if (c.hardMin > c.hardMax) err('caps.json', `Cap rule for "${c.attribute}" has hardMin above hardMax.`);
+  }
+
+  for (const badge of ds.badges) {
+    if (badge.tiers.length === 0) warn('badges.json', `Badge "${badge.id}" has no tiers and can never unlock.`);
+    let prevOrder = 0;
+    const seenLevels = new Set<string>();
+    for (const tier of badge.tiers) {
+      const order = levelOrder.get(tier.level);
+      if (order === undefined) {
+        err('badges.json', `Badge "${badge.id}" references unknown level "${tier.level}".`);
+        continue;
+      }
+      if (seenLevels.has(tier.level)) err('badges.json', `Badge "${badge.id}" defines level "${tier.level}" twice.`);
+      seenLevels.add(tier.level);
+      if (order <= prevOrder) err('badges.json', `Badge "${badge.id}" lists levels out of order at "${tier.level}".`);
+      prevOrder = order;
+      for (const req of tier.requires) {
+        if (!attrIds.has(req.attribute)) err('badges.json', `Badge "${badge.id}" requires unknown attribute "${req.attribute}".`);
+        if (req.min < ds.ratingFloor || req.min > ds.ratingCeiling) {
+          err('badges.json', `Badge "${badge.id}" level "${tier.level}" requires ${req.attribute} ${req.min}, outside ${ds.ratingFloor}-${ds.ratingCeiling}.`);
+        }
+      }
+    }
+    // Higher tiers must not be cheaper than lower ones, or the ladder is nonsense.
+    for (let i = 1; i < badge.tiers.length; i++) {
+      const lower = badge.tiers[i - 1]!;
+      const higher = badge.tiers[i]!;
+      for (const req of higher.requires) {
+        const lowerReq = lower.requires.find((r) => r.attribute === req.attribute);
+        if (lowerReq && lowerReq.min > req.min) {
+          err('badges.json', `Badge "${badge.id}": ${req.attribute} requirement drops from ${lowerReq.min} (${lower.level}) to ${req.min} (${higher.level}).`);
+        }
+      }
+    }
+    if (badge.restrictions?.positions) {
+      for (const p of badge.restrictions.positions) {
+        if (!positionIds.has(p)) err('badges.json', `Badge "${badge.id}" restricts to unknown position "${p}".`);
+      }
+    }
+  }
+
+  const animCategoryIds = new Set(ds.animationCategories.map((c) => c.id));
+  for (const anim of ds.animations) {
+    if (!animCategoryIds.has(anim.category)) err('animations.json', `Animation "${anim.id}" references unknown category "${anim.category}".`);
+    for (const req of anim.requires) {
+      if (!attrIds.has(req.attribute)) err('animations.json', `Animation "${anim.id}" requires unknown attribute "${req.attribute}".`);
+    }
+  }
+
+  for (const t of ds.takeovers) {
+    for (const tier of t.tiers) {
+      for (const req of tier.requires) {
+        if (!attrIds.has(req.attribute)) err('takeovers.json', `Takeover "${t.id}" tier "${tier.id}" requires unknown attribute "${req.attribute}".`);
+      }
+    }
+  }
+
+  for (const dep of ds.dependencies) {
+    if (!attrIds.has(dep.source)) err('dependencies.json', `Dependency "${dep.id}" references unknown source "${dep.source}".`);
+    if (!attrIds.has(dep.target)) err('dependencies.json', `Dependency "${dep.id}" references unknown target "${dep.target}".`);
+    if (dep.kind === 'diminishing' && (dep.threshold === undefined || dep.factor === undefined)) {
+      err('dependencies.json', `Dependency "${dep.id}" is 'diminishing' but is missing threshold or factor.`);
+    }
+    if (dep.kind === 'soft-link' && dep.ratio === undefined) {
+      err('dependencies.json', `Dependency "${dep.id}" is 'soft-link' but is missing ratio.`);
+    }
+  }
+
+  const groupIds = new Set(ds.priorityGroups.map((g) => g.id));
+  for (const arch of ds.archetypes) {
+    if (!positionIds.has(arch.position)) err('archetypes.json', `Archetype "${arch.id}" uses unknown position "${arch.position}".`);
+    for (const g of Object.keys(arch.priorities)) {
+      if (!groupIds.has(g)) err('archetypes.json', `Archetype "${arch.id}" prioritizes unknown group "${g}".`);
+    }
+    for (const a of [...Object.keys(arch.constraints.minimums), ...Object.keys(arch.constraints.softTargets)]) {
+      if (!attrIds.has(a)) err('archetypes.json', `Archetype "${arch.id}" constrains unknown attribute "${a}".`);
+    }
+  }
+
+  for (const id of ds.capBreakers.eligibility.excludedAttributes) {
+    if (!attrIds.has(id)) err('cap-breakers.json', `Excluded attribute "${id}" does not exist.`);
+  }
+  for (const id of ds.capBreakers.includedAttributes) {
+    if (!attrIds.has(id)) err('cap-breakers.json', `Included attribute "${id}" does not exist.`);
+  }
+
+  const badgeIds = new Set(ds.badges.map((b) => b.id));
+  for (const id of ds.badgeBoosts.rules.excludedBadges) {
+    if (!badgeIds.has(id)) err('badge-boosts.json', `Excluded badge "${id}" does not exist.`);
+  }
+  if (!levelOrder.has(ds.badgeBoosts.rules.minimumLevelToBoost)) {
+    err('badge-boosts.json', `minimumLevelToBoost "${ds.badgeBoosts.rules.minimumLevelToBoost}" is not a known badge level.`);
+  }
+
+  return issues;
+}
+
+/** Summarises how much of the dataset is still placeholder data. */
+export interface VerificationReport {
+  totalRecords: number;
+  byStatus: Record<string, number>;
+  unverifiedShare: number;
+  byFile: { file: string; total: number; unverified: number }[];
+}
+
+export function verificationReport(ds: Dataset): VerificationReport {
+  const byStatus: Record<string, number> = {};
+  const byFile: { file: string; total: number; unverified: number }[] = [];
+
+  const tally = (file: string, records: { verification?: { status?: string } }[]) => {
+    let unverified = 0;
+    for (const r of records) {
+      const status = r.verification?.status ?? 'unverified';
+      byStatus[status] = (byStatus[status] ?? 0) + 1;
+      if (status === 'unverified' || status === 'estimated') unverified++;
+    }
+    byFile.push({ file, total: records.length, unverified });
+  };
+
+  tally('attributes.json', ds.attributes);
+  tally('cost-curves.json', ds.costCurves);
+  tally('positions.json', ds.positions);
+  tally('body.json', [
+    { verification: ds.body.weightModel.verification },
+    { verification: ds.body.wingspanModel.verification },
+    { verification: ds.body.interactions.verification },
+  ]);
+  tally('caps.json', [{ verification: ds.caps.capModel.verification }, ...ds.caps.attributeCaps]);
+  tally('budget.json', [{ verification: ds.budget.verification }]);
+  tally('badges.json', ds.badges);
+  tally('animations.json', ds.animations);
+  tally('takeovers.json', ds.takeovers);
+  tally('cap-breakers.json', [{ verification: ds.capBreakers.verification }]);
+  tally('badge-boosts.json', [{ verification: ds.badgeBoosts.verification }]);
+  tally('dependencies.json', ds.dependencies);
+  tally('archetypes.json', ds.archetypes);
+
+  const totalRecords = Object.values(byStatus).reduce((a, b) => a + b, 0);
+  const unverifiedCount = (byStatus['unverified'] ?? 0) + (byStatus['estimated'] ?? 0);
+
+  return {
+    totalRecords,
+    byStatus,
+    unverifiedShare: totalRecords === 0 ? 0 : unverifiedCount / totalRecords,
+    byFile,
+  };
+}

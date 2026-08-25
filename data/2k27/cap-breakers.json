@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "PLACEHOLDER DATA — see meta.json.",
+    "Cap Breakers in the NBA 2K series let a player raise a small number of attributes above the cap",
+    "the builder allowed, earned after launch. The count, the per-attribute limit, the eligibility",
+    "rules and whether they cost build points are ALL unknown for 2K27 and invented here.",
+    "",
+    "The optimizer treats cap breakers as a POST-BUILD overlay: it optimizes the build first, then",
+    "recommends where each +1 lands by measuring which single point crosses the most valuable",
+    "badge / animation / takeover threshold."
+  ],
+
+  "verification": { "status": "unverified", "notes": "Entire cap breaker ruleset invented." },
+
+  "enabled": true,
+  "totalAvailable": 4,
+  "maxPerAttribute": 2,
+  "raisePerBreaker": 1,
+  "costsBuildPoints": false,
+  "absoluteCeiling": 99,
+
+  "eligibility": {
+    "mode": "all-except",
+    "excludedAttributes": [],
+    "note": "mode may be 'all', 'all-except' (uses excludedAttributes) or 'only' (uses includedAttributes)."
+  },
+  "includedAttributes": [],
+
+  "tiers": [
+    { "id": "t1", "name": "Cap Breaker 1", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
+    { "id": "t2", "name": "Cap Breaker 2", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
+    { "id": "t3", "name": "Cap Breaker 3", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } },
+    { "id": "t4", "name": "Cap Breaker 4", "unlockNote": "Unlock requirement unknown for 2K27.", "verification": { "status": "unverified" } }
+  ]
+}
