@@ -52,8 +52,27 @@ files, so replacing a file changes the app's behaviour with no code change.
 ```bash
 npm run data:validate      # structural + referential checks; exits 1 on error
 npm run data:report        # how much is still unverified, and coverage gaps
+npm run data:crosscheck    # diff against independent sources; exits 1 on an unrecorded conflict
 npm test                   # engine invariants against the current dataset
 ```
+
+### Cross-checking against a second source
+
+`data/<id>/sources/*.json` holds independently-produced transcriptions of the
+same data. They are **not loaded by the app** — they exist so the shipped dataset
+can be diffed against something that did not come from the same place.
+
+Two sources agreeing on a threshold is much stronger evidence than one. Where
+they disagree, `data:crosscheck` **fails** unless the conflict is recorded in
+that source's `knownConflicts` with a note saying which side the dataset follows
+and why. A conflict can be accepted; it cannot be ignored.
+
+Today the badge data is corroborated by a second chart that agrees on 211 of 212
+tiers and height gates. The single disagreement — Smooth Operator's height cap —
+is recorded and shown in the app.
+
+To add a source, drop a file in `sources/` following the format documented at the
+top of the existing one, then run the cross-check.
 
 While the API is running you can edit a JSON file and pick it up without a
 restart:

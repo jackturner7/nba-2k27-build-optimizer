@@ -3,6 +3,8 @@ export * from './types.js';
 export { buildDataset, checkReferentialIntegrity, verificationReport } from './data/loader.js';
 export type { DataIssue, LoadResult, VerificationReport } from './data/loader.js';
 export { datasetCoverage } from './data/coverage.js';
+export { crossCheckBadges } from './data/crosscheck.js';
+export type { CrossCheckConflict, CrossCheckReport, SecondSource } from './data/crosscheck.js';
 export type { AttributeCoverage, CoverageReport } from './data/coverage.js';
 export type { RawDatasetFiles } from './data/schema.js';
 

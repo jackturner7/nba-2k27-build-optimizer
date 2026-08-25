@@ -6,6 +6,7 @@ import { z } from 'zod';
 import {
   checkReferentialIntegrity,
   collectBreakpoints,
+  crossCheckBadges,
   datasetCoverage,
   computeBudget,
   computeCaps,
@@ -14,6 +15,7 @@ import {
   heightRange,
   listDatasets,
   loadDatasetFromDisk,
+  loadSecondSources,
   optimize,
   parseBuildRequest,
   requestFromArchetype,
@@ -100,6 +102,7 @@ app.get('/api/datasets/:id', (req, res) => {
     issues,
     verification: verificationReport(dataset),
     coverage: datasetCoverage(dataset),
+    crossChecks: loadSecondSources(req.params.id).map((source) => crossCheckBadges(dataset, source)),
   });
 });
 

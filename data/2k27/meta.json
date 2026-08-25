@@ -2,12 +2,12 @@
   "$schema": "../schema/meta.schema.json",
   "datasetId": "2k27",
   "gameTitle": "NBA 2K27",
-  "datasetVersion": "0.3.0-badges-sourced",
+  "datasetVersion": "0.4.0-badges-corroborated",
   "schemaVersion": 2,
   "lastUpdated": "2026-08-25",
   "provenance": {
     "status": "partial",
-    "headline": "BADGE DATA IS SOURCED FROM NBA 2K LAB. Attribute caps, cost curves and the build budget are still invented.",
+    "headline": "BADGE DATA IS CORROBORATED BY TWO INDEPENDENT SOURCES. Attribute caps, cost curves and the build budget are still invented.",
     "explanation": [
       "SOURCED (trust, but re-check):",
       "  - All 53 badges: attribute requirements, AND/OR logic and HEIGHT RANGES, imported from NBA 2K Lab",
@@ -15,6 +15,9 @@
       "    2K can still change any of it before full release. Regenerate: node scripts/import-2klab.mjs",
       "  - Badge TOKEN COSTS for 42 of the 53 badges, from the 2K27 badge cost charts (2K Lab does not",
       "    publish token costs, so the two sources are complementary).",
+      "  - CORROBORATED: a second, independently-produced chart (@jpforthreee) agrees on 211 of 212 badge",
+      "    tiers and height gates. The single disagreement is recorded in data/2k27/sources/ and surfaced",
+      "    in the app rather than silently resolved. Check with: npm run data:crosscheck",
       "  - Animation and takeover thresholds named on a community 'best value attribute thresholds' sheet.",
       "  - The builder attribute list, and the 5'9\"-7'4\" overall height range.",
       "  - The direction of each body setting's effect on caps.",
@@ -50,6 +53,16 @@
     "showPerRecordBadges": true
   },
   "changelog": [
+    {
+      "version": "0.4.0-badges-corroborated",
+      "date": "2026-08-25",
+      "changes": [
+        "Added data/2k27/sources/ for independently-produced sources, and a cross-check that diffs the shipped dataset against each one.",
+        "Transcribed the @jpforthreee badge requirements chart as a second source: 211 of 212 tiers and height gates agree with the NBA 2K Lab import.",
+        "The one disagreement (Smooth Operator max height 6'11\" vs unrestricted) is recorded as a known conflict, shown in the UI, and left unresolved rather than silently decided.",
+        "npm run data:crosscheck exits non-zero on any disagreement not recorded with a note, so a conflict can be accepted but not ignored."
+      ]
+    },
     {
       "version": "0.3.0-badges-sourced",
       "date": "2026-08-25",
@@ -144,6 +157,10 @@
     {
       "file": "archetypes.json",
       "describes": "Named build archetypes. Threshold values sourced, archetype names are community convention."
+    },
+    {
+      "file": "sources/*.json",
+      "describes": "Independently-produced sources the dataset is cross-checked against. Not loaded by the app."
     }
   ]
 }

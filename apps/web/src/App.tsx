@@ -20,6 +20,7 @@ import { Panel } from './components/Bits';
 import { PriorityPanel } from './components/PriorityPanel';
 import { ArchetypePanel, DescribePanel } from './components/PresetPanel';
 import { CoveragePanel } from './components/CoveragePanel';
+import { CrossCheckPanel } from './components/CrossCheckPanel';
 
 const DATASET_ID = '2k27';
 
@@ -373,6 +374,8 @@ export default function App() {
           {payload.coverage.uncovered.length > 0 && (
             <CoveragePanel dataset={dataset} coverage={payload.coverage} />
           )}
+
+          <CrossCheckPanel reports={payload.crossChecks} />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { loadDatasetFromDisk } from '../data/node-loader.js';
+import { loadDatasetFromDisk, loadSecondSources } from '../data/node-loader.js';
+import { crossCheckBadges } from '../data/crosscheck.js';
 import { verificationReport } from '../data/loader.js';
 import { datasetCoverage } from '../data/coverage.js';
 import { collectBreakpoints, lastUsefulBreakpoint } from '../engine/breakpoints.js';
@@ -63,6 +64,44 @@ describe('dataset', () => {
         }
       }
     }
+  });
+});
+
+describe('second-source cross-check', () => {
+  const sources = loadSecondSources('2k27');
+
+  it('has at least one independent source to check against', () => {
+    expect(sources.length).toBeGreaterThan(0);
+  });
+
+  it('agrees with every independent source, or records why not', () => {
+    for (const source of sources) {
+      const report = crossCheckBadges(ds, source);
+      // Every badge the source covers must exist in the dataset.
+      expect(report.onlyInSource).toEqual([]);
+      expect(report.tiersCompared).toBeGreaterThan(100);
+
+      // A disagreement is allowed — sources differ — but it must be recorded
+      // in the source file with a note saying which side is trusted and why.
+      // Silently picking a winner is the thing this guards against.
+      const undocumented = report.undocumentedConflicts.map((c) => `${c.badge}.${c.field}: dataset=${c.dataset} source=${c.source}`);
+      expect(undocumented).toEqual([]);
+
+      // Two independently-produced sources should overwhelmingly agree; if this
+      // drops, one of them has been mis-transcribed.
+      expect(report.agreementRate).toBeGreaterThan(0.95);
+    }
+  });
+
+  it('would actually catch a divergence', () => {
+    const source = sources[0]!;
+    const firstId = Object.keys(source.badges)[0]!;
+    const tampered = {
+      ...source,
+      badges: { ...source.badges, [firstId]: { ...source.badges[firstId]!, tiers: ['99 strength', '99 strength', '99 strength', '99 strength'] } },
+    };
+    const report = crossCheckBadges(ds, tampered);
+    expect(report.undocumentedConflicts.length).toBeGreaterThan(0);
   });
 });
 
