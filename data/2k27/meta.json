@@ -2,12 +2,12 @@
   "$schema": "../schema/meta.schema.json",
   "datasetId": "2k27",
   "gameTitle": "NBA 2K27",
-  "datasetVersion": "0.6.0-first-real-caps",
+  "datasetVersion": "0.7.0-caps-corrected",
   "schemaVersion": 2,
   "lastUpdated": "2026-08-25",
   "provenance": {
     "status": "partial",
-    "headline": "MECHANICS ARE OFFICIAL, BADGES ARE CORROBORATED, AND ONE BODY NOW HAS REAL CAPS. Every other body's caps, the cost curves and the build budget are still invented.",
+    "headline": "MECHANICS ARE OFFICIAL AND BADGES ARE CORROBORATED. Three builds now give PROVEN caps for 31 attribute/frame pairs. A previous release published one player's ALLOCATION as caps — that is corrected here.",
     "explanation": [
       "OFFICIAL (from https://nba.2k.com/2k27/features/myplayer-builder/):",
       "  - 53 badges (matches this dataset exactly), across six disciplines.",
@@ -22,13 +22,15 @@
       "  - Cap Breaker preview unlocks once the build reaches 99 OVR in the Builder.",
       "  - Builder paths: Create Your Own, Community Builds, and 40 Signature Blueprints.",
       "",
-      "READ OFF THE REAL BUILDER (NBA 2K HQ app):",
-      "  - All 21 attribute CAPS for PF 6'11\" / 210 lb / 6'11\", the build the app names BUCKET CHASER.",
-      "  - That build's full CAP BREAKER table: five slots per attribute, per-attribute variable gains,",
-      "    diminishing down the row, with whole attributes locked out. This replaced a cap breaker model",
-      "    that was wrong in kind, not just in its numbers.",
-      "  - Measuring the linear cap model against those caps put its error at 12.9 points mean absolute,",
-      "    biased high on 19 of 21 attributes. Any body without an exact table inherits that error.",
+      "READ OFF THE REAL BUILDER (NBA 2K HQ app) — three builds:",
+      "  - PF 6'11\"/210/6'11\" (BUCKET CHASER), SG 6'8\"/190/6'8\" (2-WAY PLAYMAKING CREATOR) and",
+      "    SG 6'5\"/200/6'8\" (2-WAY OFF-SCREEN SHOOTER), with their full Cap Breaker tables.",
+      "  - 31 attribute caps PROVEN. The Cap Breaker page is what exposes a ceiling: a ladder that ends in a",
+      "    LOCKED slot has run into the frame's cap, so its New Cap IS the cap. A ladder that spends all five",
+      "    slots without locking only gives a lower bound, and those 32 are stored as capFloors.",
+      "  - The derived caps are coherent across the three frames in a way the raw columns were not:",
+      "    Three-Point 93/92/91 and Perimeter Defense 96/87/77 fall with height, Block 67/75/>=90 rises.",
+      "  - The linear model, scored against those 31: 6.6 mean absolute error, high on 24 of 31.",
       "",
       "SOURCED + CORROBORATED:",
       "  - All 53 badges' requirements, AND/OR logic and HEIGHT RANGES from NBA 2K Lab, cross-checked",
@@ -37,10 +39,10 @@
       "    SINGLE-BODY SNAPSHOT — 2K says cost varies by size, so they are only exact at one height.",
       "  - Animation and takeover thresholds from a community 'best value thresholds' sheet.",
       "",
-      "NOT SOURCED (assume wrong): attribute CAP magnitudes for every body except PF|83|210|83, per-point",
-      "COST CURVES, the BUILD POINT BUDGET, the size of the token pool at any progression level, the",
-      "per-discipline slot split, the height/position token cost adjustment, and HOW MANY cap breakers a",
-      "player may claim (the per-slot gains themselves are now verified for one body).",
+      "NOT SOURCED (assume wrong): attribute CAP magnitudes on any frame with no transcribed build,",
+      "per-point COST CURVES, the BUILD POINT BUDGET, the size of the token pool at any progression level,",
+      "the per-discipline slot split, the height/position token cost adjustment, and HOW MANY cap breakers",
+      "a player may claim (the per-slot GAINS are verified; the budget for them is not).",
       "",
       "KNOWN GAPS: 15 of the 19 unlockable Takeover Abilities have no known requirements and are absent.",
       "Token costs for the 11 Rebounding/Physicals badges are inferred from the pattern of the other 42."
@@ -61,10 +63,26 @@
     "lastReviewed": "2026-08-25"
   },
   "uiWarnings": {
-    "globalBanner": "Mechanics and badge data are sourced — 2K's official builder page plus two independent badge charts. ONE body (PF 6'11\" / 210 / 6'11\") has real caps and a real cap breaker table read off the NBA 2K HQ app; every other body uses a model measured 12.9 points off at that body and biased high, so those builds look more affordable than they are. COST CURVES and the BUILD POINT BUDGET are still placeholders.",
+    "globalBanner": "Mechanics and badge data are sourced — 2K's official builder page plus two independent badge charts. Three builds read off the NBA 2K HQ app give 31 PROVEN attribute caps across three frames, plus lower bounds on the rest; every other frame uses a model measured 6.6 points off and biased high. COST CURVES and the BUILD POINT BUDGET are still placeholders.",
     "showPerRecordBadges": true
   },
   "changelog": [
+    {
+      "version": "0.7.0-caps-corrected",
+      "date": "2026-08-25",
+      "changes": [
+        "CORRECTION, and the reason for the version bump. 0.6.0 published 21 numbers as verified caps for PF|83|210|83. They were not caps — they were what that player ALLOCATED. The builder's Cap Breaker page labels its first column 'Original Cap', and I read that as the frame's ceiling. It is the build's current rating.",
+        "Two more builds made the error unmissable. Ball Handle reads 70 on a 6'5\" guard, 86 on a 6'8\" guard and 75 on a 6'11\" big; Pass Accuracy reads 65 / 87 / 77; Speed With Ball 73 / 80 / 68. No body-cap model makes a 6'5\" guard the worst ball handler of the three. Those columns track the ARCHETYPE — the 6'8\" is a Playmaking Creator, the 6'5\" an Off-Screen Shooter who never dribbles.",
+        "WHAT ACTUALLY EXPOSES A CAP is the padlock. A cap breaker ladder that ends in a LOCKED slot has run into the frame's ceiling, so that row's New Cap IS the cap. A ladder that spends all five slots without locking merely ran out of slots and gives a lower bound. caps.json now carries `caps` (31 proven) and `capFloors` (32 lower bounds) derived that way.",
+        "The derived caps are coherent across frames in a way the raw columns never were: Three-Point 93 / 92 / 91 and Perimeter Defense 96 / 87 / 77 fall with height, Block 67 / 75 / >=90 rises with it, Steal runs 99 / 84 / 67. That coherence is the evidence the derivation is right.",
+        "computeCaps now lifts a modelled cap to any proven floor, so the app can never claim a ceiling the builder was observed to exceed. That silently fixed 8 attributes.",
+        "Model accuracy re-measured against the corrected caps: 6.6 mean absolute error over 31 proven caps, high on 24. The earlier 12.9 figure was measured against the wrong numbers and is withdrawn. Still not refit.",
+        "Cap breaker tables are now keyed by BUILD, not by body, and carry `body` plus `sampledAt` (the allocation the ladder was measured from). The planner applies a row only where the build's rating equals sampledAt, and reports 'allocation-mismatch' rather than extrapolating.",
+        "Dropped the 'only place breakers on attributes already at their cap' rule, which was an artefact of the wrong model. Post Control 31 -> 77 on the 6'5\" build is a breaker ladder starting nowhere near a ceiling.",
+        "The loader now cross-checks the two derivations against each other in both directions: sampledAt + slots must equal newCap, a locked row's newCap must match caps.json's exact cap, and an unlocked row's newCap must match its floor. These are the guards that would have caught the original misreading.",
+        "Added the two new official build names, and pointed Two-Way Shot Creator at the 6'8\" frame and Lockdown Defender at the 6'5\" frame, so three presets now plan against proven ceilings."
+      ]
+    },
     {
       "version": "0.6.0-first-real-caps",
       "date": "2026-08-25",

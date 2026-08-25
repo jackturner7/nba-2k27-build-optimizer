@@ -20,17 +20,17 @@ builder's restrictions — not simply the highest one.
 > and takeover thresholds; the attribute list; the 5'9"–7'4" builder height
 > range; and the *direction* of each body setting's effect on caps.
 >
-> **Read off the real builder** (NBA 2K HQ app): all 21 attribute **caps** for one
-> body — PF 6'11" / 210 lb / 6'11", which the app names **Bucket Chaser** — and
-> that body's full **cap breaker table**: five slots per attribute, each worth a
-> different amount, gains diminishing down the row, seven attributes locked out
-> entirely. Having one real table made it possible to score the linear cap model
-> for the first time: **12.9 points mean absolute error**, biased high on 19 of 21
-> attributes. It was not refit — one body cannot calibrate four coefficients per
-> attribute — so every *other* body still carries that error, and the UI says so
-> per body.
+> **Read off the real builder** (NBA 2K HQ app): three builds — *Bucket Chaser*
+> (PF 6'11"), *2-Way Playmaking Creator* (SG 6'8") and *2-Way Off-Screen Shooter*
+> (SG 6'5") — with their full **cap breaker tables**. Those yield **31 proven
+> attribute caps** and 32 lower bounds. The trick is that the builder never shows
+> you a cap directly: its "Original Cap" column is what the *player allocated*.
+> What exposes a ceiling is the **padlock** — a cap breaker ladder that ends in a
+> locked slot has run into the cap. Scored against those 31, the linear model is
+> **6.6 points off** and reads high on 24 of them; it was not refit, so every
+> other frame still carries that error and the UI says so per frame.
 >
-> **Still invented:** attribute **cap magnitudes for every other body**, **cost
+> **Still invented:** attribute **cap magnitudes on untranscribed frames**, **cost
 > curves**, the **build point budget**, the badge **token-earning formula**, the
 > per-discipline **slot split**, **how many cap breakers** a player may claim, and
 > badge boost slots.
@@ -183,12 +183,12 @@ file changes the app's behaviour with no code change.
 
 ## Known limitations
 
-- **Caps are real for exactly one body.** PF 6'11" / 210 / 6'11" has verified
-  caps and a verified cap breaker table; every other body uses a linear model
-  measured 12.9 points off and biased high at that body, so those builds look
-  more affordable than they are. This is still the most valuable thing left to
-  replace — read caps off the NBA 2K HQ app's builder and paste them into
-  `caps.json` → `overrides.entries`, one body per entry.
+- **Caps are proven on three frames, and only partly even there.** 31 attribute
+  caps are derived from real cap breaker ladders; 32 more are known only as lower
+  bounds; every other frame uses a linear model measured 6.6 points off and
+  biased high. This is still the most valuable thing left to replace — the
+  derivation is documented in [`docs/DATA.md`](docs/DATA.md), and it is *not* a
+  matter of copying the attribute page.
 - **How many cap breakers you get is unknown.** The per-slot *gains* are read
   straight off the builder and are exact. The app assumes a shared pool of five
   across all attributes, which is the conservative of the two readings the

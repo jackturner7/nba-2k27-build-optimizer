@@ -4,7 +4,7 @@ import { crossCheckBadges } from '../data/crosscheck.js';
 import { checkReferentialIntegrity, verificationReport } from '../data/loader.js';
 import { datasetCoverage } from '../data/coverage.js';
 import { collectBreakpoints, lastUsefulBreakpoint } from '../engine/breakpoints.js';
-import { capBreakerGain, capBreakerTableFor, computeBudget, computeCaps } from '../engine/caps.js';
+import { capBreakerTableFor, computeBudget, computeCaps } from '../engine/caps.js';
 import { planCapBreakers, unlockValue } from '../engine/plans.js';
 import { costModelFor } from '../engine/cost.js';
 import { evaluateBuild } from '../engine/evaluate.js';
@@ -363,8 +363,8 @@ describe('evaluation report', () => {
     const build = optimize(ds, request).builds[0]!;
     const hasTable = capBreakerTableFor(ds, build.body) !== null;
     if (!hasTable) {
-      // Gains run from +1 to +7 on the one frame that is transcribed, so an
-      // untranscribed body must get nothing rather than an extrapolation.
+      // Gains run from +1 to +13 across attributes on the transcribed builds,
+      // so an untranscribed body must get nothing rather than an extrapolation.
       expect(build.capBreakerPlan).toEqual([]);
       expect(build.capBreakerStatus.kind).toBe('no-data');
     } else {
@@ -372,37 +372,11 @@ describe('evaluation report', () => {
     }
   });
 
-  it('respects locked slots and the published newCap on a transcribed body', () => {
-    const [key, table] = Object.entries(ds.capBreakers.gainTables.entries)[0] ?? [];
-    if (!key || !table) return;
-    const [position, h, w, ws] = key.split('|');
-    const body = {
-      position: position!,
-      heightInches: Number(h),
-      weightPounds: Number(w),
-      wingspanInches: Number(ws),
-    };
-    const caps = computeCaps(ds, body);
-    // Every attribute pinned to its cap: the only state where a breaker does
-    // anything, and the state the builder screenshots were taken in.
-    const atCap = { ...caps };
-    const plan = planCapBreakers(ds, atCap, body, caps, {});
-
-    expect(plan.status.kind).toBe('planned');
-    for (const rec of plan.plan) {
-      const row = table.attributes[rec.attribute]!;
-      expect(row.slots[0]).not.toBeNull();
-      expect(rec.to).toBeLessThanOrEqual(row.newCap);
-      expect(rec.to).toBe(caps[rec.attribute]! + capBreakerGain(row, rec.breakersUsed));
-    }
-    const used = plan.plan.reduce((a, r) => a + r.breakersUsed, 0);
-    expect(used).toBeLessThanOrEqual(ds.capBreakers.allocation.poolSize);
-  });
 
   it('catches a mis-transcribed cap breaker row', () => {
-    // The gain table and the cap table are both read off screenshots by eye, so
-    // newCap is deliberately redundant: original cap + slots must equal it. This
-    // proves the check is load-bearing rather than decorative.
+    // The ladders and the caps come from the same screenshots, and newCap is
+    // deliberately redundant: sampledAt + slots must equal it. This proves the
+    // check is load-bearing rather than decorative.
     const key = Object.keys(ds.capBreakers.gainTables.entries)[0];
     if (!key) return;
     const table = ds.capBreakers.gainTables.entries[key]!;
@@ -429,29 +403,31 @@ describe('evaluation report', () => {
     expect(errors.some((e) => e.message.includes('does not add up'))).toBe(true);
   });
 
-  it('spends breakers on a run of slots when no single slot crosses anything', () => {
-    // Pass Accuracy's slots are +2 each on the transcribed frame, and none of
-    // them alone crosses a threshold — but three together do. A planner that
-    // only looked one slot ahead saw a zero gain, stopped, and left all five
-    // breakers unplaced. This is that bug.
-    const key = 'PF|83|210|83';
-    const table = ds.capBreakers.gainTables.entries[key];
-    if (!table) return;
-    const body = { position: 'PF', heightInches: 83, weightPounds: 210, wingspanInches: 83 };
-    const caps = computeCaps(ds, body);
-    const plan = planCapBreakers(ds, { ...caps }, body, caps, {});
-
-    expect(plan.plan.length).toBeGreaterThan(0);
-    const multi = plan.plan.find((p) => p.breakersUsed > 1);
-    expect(multi).toBeDefined();
-    expect(multi!.unlocks.length).toBeGreaterThan(0);
-    // And a single slot on that same attribute really would have unlocked nothing.
-    const row = table.attributes[multi!.attribute]!;
-    const oneSlot = { ...caps, [multi!.attribute]: caps[multi!.attribute]! + (row.slots[0] ?? 0) };
-    expect(unlockValue(ds, oneSlot, body, {})).toBe(unlockValue(ds, { ...caps }, body, {}));
+  it('derives every exact cap from a ladder that locks, and every floor from one that does not', () => {
+    // This is the invariant the 0.7.0 correction turned on: a locked slot means
+    // the ladder hit the frame's ceiling, so its newCap IS the cap; a ladder that
+    // spends all five slots without locking only proves a lower bound.
+    let exact = 0;
+    let floors = 0;
+    for (const table of Object.values(ds.capBreakers.gainTables.entries)) {
+      const entry = ds.caps.overrides[table.body];
+      expect(entry).toBeDefined();
+      for (const [id, row] of Object.entries(table.attributes)) {
+        if (row.slots.some((s) => s === null)) {
+          expect(entry!.caps[id]).toBe(row.newCap);
+          exact++;
+        } else {
+          expect(entry!.capFloors[id]).toBe(row.newCap);
+          expect(entry!.caps[id]).toBeUndefined();
+          floors++;
+        }
+      }
+    }
+    expect(exact).toBeGreaterThan(20);
+    expect(floors).toBeGreaterThan(20);
   });
 
-  it('matches the transcribed builder caps exactly for a body with an override', () => {
+  it('never reports a cap below a rating the builder was seen to reach', () => {
     for (const [key, entry] of Object.entries(ds.caps.overrides)) {
       const [position, h, w, ws] = key.split('|');
       const caps = computeCaps(ds, {
@@ -460,10 +436,61 @@ describe('evaluation report', () => {
         weightPounds: Number(w),
         wingspanInches: Number(ws),
       });
-      for (const [attr, cap] of Object.entries(entry.caps)) {
-        expect(caps[attr]).toBe(cap);
+      for (const [attr, cap] of Object.entries(entry.caps)) expect(caps[attr]).toBe(cap);
+      // A floor is a proven lower bound, so the model may exceed it but never undercut it.
+      for (const [attr, floor] of Object.entries(entry.capFloors)) {
+        expect(caps[attr]).toBeGreaterThanOrEqual(floor as number);
       }
     }
+  });
+
+  it('will not apply a cap breaker ladder to an allocation it was not measured at', () => {
+    // Gains are relative to what the sampled player allocated. Applying that
+    // ladder to a build sitting somewhere else is exactly the class of guess
+    // that produced the 0.7.0 correction.
+    const table = Object.values(ds.capBreakers.gainTables.entries)[0];
+    if (!table) return;
+    const [position, h, w, ws] = table.body.split('|');
+    const body = {
+      position: position!,
+      heightInches: Number(h),
+      weightPounds: Number(w),
+      wingspanInches: Number(ws),
+    };
+    const caps = computeCaps(ds, body);
+
+    // Sitting exactly where it was sampled: the ladder applies.
+    const atSample = { ...caps, ...table.sampledAt } as Record<string, number>;
+    const matched = planCapBreakers(ds, atSample, body, caps, {});
+    expect(matched.status.kind).toBe('planned');
+    for (const rec of matched.plan) {
+      expect(rec.from).toBe(table.sampledAt[rec.attribute]);
+      expect(rec.to).toBeLessThanOrEqual(table.attributes[rec.attribute]!.newCap);
+    }
+
+    // One point away on every attribute: nothing applies, and it says so.
+    const shifted: Record<string, number> = {};
+    for (const [k, v] of Object.entries(atSample)) shifted[k] = Math.max(ds.ratingFloor, v - 1);
+    const mismatched = planCapBreakers(ds, shifted, body, caps, {});
+    expect(mismatched.plan).toEqual([]);
+    expect(mismatched.status.kind).toBe('allocation-mismatch');
+  });
+
+  it('spends breakers on a run of slots when no single slot crosses anything', () => {
+    // Pass Accuracy's slots are +2 each on the Bucket Chaser build, and none of
+    // them alone crosses a threshold - but three together do. A planner that
+    // only looked one slot ahead saw a zero gain, stopped, and left all five
+    // breakers unplaced. This is that bug.
+    const table = ds.capBreakers.gainTables.entries['bucket_chaser'];
+    if (!table) return;
+    const body = { position: 'PF', heightInches: 83, weightPounds: 210, wingspanInches: 83 };
+    const caps = computeCaps(ds, body);
+    const plan = planCapBreakers(ds, { ...caps, ...table.sampledAt } as Record<string, number>, body, caps, {});
+
+    expect(plan.plan.length).toBeGreaterThan(0);
+    const multi = plan.plan.find((p) => p.breakersUsed > 1);
+    expect(multi).toBeDefined();
+    expect(multi!.unlocks.length).toBeGreaterThan(0);
   });
 
   it('never boosts a badge it does not hold', () => {

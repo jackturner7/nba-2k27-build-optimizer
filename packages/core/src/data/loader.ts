@@ -267,22 +267,32 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
     if (key.split('|').length !== 4) {
       err('caps.json', `Cap override key "${key}" must be POSITION|height|weight|wingspan.`);
     }
-    for (const id of Object.keys(entry.caps)) {
+    for (const id of [...Object.keys(entry.caps), ...Object.keys(entry.capFloors)]) {
       if (!attrIds.has(id)) err('caps.json', `Cap override "${key}" sets unknown attribute "${id}".`);
     }
-    const missing = [...attrIds].filter((id) => entry.caps[id] === undefined);
+    for (const [id, floor] of Object.entries(entry.capFloors)) {
+      const exact = entry.caps[id];
+      if (exact !== undefined) {
+        err('caps.json', `Cap override "${key}" gives "${id}" both an exact cap (${exact}) and a floor (${floor}); it can only be one.`);
+      }
+    }
+    const covered = new Set([...Object.keys(entry.caps), ...Object.keys(entry.capFloors)]);
+    const missing = [...attrIds].filter((id) => !covered.has(id));
     if (missing.length) {
-      warn('caps.json', `Cap override "${key}" omits ${missing.length} attribute(s) (${missing.join(', ')}); they fall back to the modelled cap.`);
+      warn('caps.json', `Cap override "${key}" says nothing about ${missing.length} attribute(s) (${missing.join(', ')}); they fall back to the modelled cap.`);
     }
   }
 
+  // The gain tables and the derived caps come from the same screenshots, so they
+  // get checked against each other. These are the guards that would have caught
+  // the misreading corrected in 0.7.0.
   for (const [key, table] of Object.entries(ds.capBreakers.gainTables.entries)) {
-    if (key.split('|').length !== 4) {
-      err('cap-breakers.json', `Gain table key "${key}" must be POSITION|height|weight|wingspan.`);
+    if (table.body.split('|').length !== 4) {
+      err('cap-breakers.json', `Gain table "${key}" has body "${table.body}"; expected POSITION|height|weight|wingspan.`);
     }
-    const capsHere = ds.caps.overrides[key]?.caps;
-    if (!capsHere) {
-      warn('cap-breakers.json', `Gain table "${key}" has no matching cap override in caps.json, so its newCap values cannot be checked.`);
+    const entry = ds.caps.overrides[table.body];
+    if (!entry) {
+      warn('cap-breakers.json', `Gain table "${key}" has no cap entry for body "${table.body}" in caps.json, so its ceilings cannot be cross-checked.`);
     }
     for (const [id, row] of Object.entries(table.attributes)) {
       if (!attrIds.has(id)) {
@@ -298,15 +308,35 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
       if (firstLock >= 0 && row.slots.slice(firstLock).some((s) => s !== null)) {
         err('cap-breakers.json', `Gain table "${key}" row "${id}" has an unlocked slot after a locked one; slots fill in order, so that gain is unreachable.`);
       }
-      const original = capsHere?.[id];
-      if (original !== undefined) {
-        const total = row.slots.reduce<number>((a, s) => a + (s ?? 0), 0);
-        if (original + total !== row.newCap) {
-          err(
-            'cap-breakers.json',
-            `Gain table "${key}" row "${id}" does not add up: original cap ${original} + slots (${total}) = ${original + total}, but newCap says ${row.newCap}. One of the two was mis-transcribed.`
-          );
-        }
+
+      const sampled = table.sampledAt[id];
+      if (sampled === undefined) {
+        err('cap-breakers.json', `Gain table "${key}" row "${id}" has no sampledAt rating, so its gains have no origin.`);
+        continue;
+      }
+      const total = row.slots.reduce<number>((a, s) => a + (s ?? 0), 0);
+      if (sampled + total !== row.newCap) {
+        err(
+          'cap-breakers.json',
+          `Gain table "${key}" row "${id}" does not add up: sampled at ${sampled} + slots (${total}) = ${sampled + total}, but newCap says ${row.newCap}. One of the two was mis-transcribed.`
+        );
+      }
+
+      // A ladder that ends in a lock has reached the frame's ceiling, which is
+      // exactly how the caps in caps.json were derived. They must agree.
+      const locked = row.slots.some((s) => s === null);
+      const derived = entry?.caps[id];
+      if (locked && entry && derived !== row.newCap) {
+        err(
+          'cap-breakers.json',
+          `Gain table "${key}" row "${id}" locks at ${row.newCap}, so that is the cap for ${table.body} — but caps.json ${derived === undefined ? 'does not record it as an exact cap' : `says ${derived}`}.`
+        );
+      }
+      if (!locked && entry && entry.capFloors[id] !== row.newCap) {
+        err(
+          'cap-breakers.json',
+          `Gain table "${key}" row "${id}" never locks, so ${row.newCap} is only a floor for ${table.body} — but caps.json ${entry.capFloors[id] === undefined ? 'does not record it as a floor' : `says ${entry.capFloors[id]}`}.`
+        );
       }
     }
   }

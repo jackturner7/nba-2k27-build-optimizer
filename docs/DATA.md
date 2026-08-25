@@ -46,31 +46,50 @@ had guessed wrong:
 
 ### Read off the real builder (NBA 2K HQ app)
 
-- **All 21 attribute caps for one body** — PF, 6'11", 210 lb, 6'11" wingspan,
-  which the app names **Bucket Chaser**. In `caps.json` →
-  `overrides.entries["PF|83|210|83"]`.
-- **That body's full cap breaker table** — five slots per attribute, each worth
-  a different amount, gains diminishing down the row, and seven attributes
-  locked out of breakers entirely.
+Three builds, with their full cap breaker tables:
 
-Having one real cap table made it possible to *score* the linear model for the
-first time: mean absolute error **12.9 points** over 21 attributes, biased high
-on **19 of 21**, and wrong in sign on shooting for a slender big — it predicts
-86 Mid-Range / 84 Three where the builder gives 94 / 91. Recorded in
-`caps.json` → `capModel.measuredAccuracy`.
+| Frame | The name the builder gives it |
+| --- | --- |
+| PF 6'11" / 210 lb / 6'11" | Bucket Chaser |
+| SG 6'8" / 190 lb / 6'8" | 2-Way Playmaking Creator |
+| SG 6'5" / 200 lb / 6'8" | 2-Way Off-Screen Shooter |
 
-The model was deliberately **not** refit to it. Fitting four coefficients per
-attribute to a single body produces something that looks calibrated and is not.
+**How caps are derived from these, because it is not obvious.** The builder's
+attribute page shows what a player *allocated*, not what the frame allows — and
+the Cap Breaker page's first column, labelled "Original Cap", is the same
+number. What actually exposes a ceiling is the **padlock**: a cap breaker ladder
+that ends in a locked slot has run into the cap, so that row's New Cap *is* the
+cap. A ladder that spends all five slots without locking merely ran out of
+slots, and gives only a lower bound.
+
+That yields **31 proven caps** (`caps`) and **32 lower bounds** (`capFloors`).
+The proven ones are coherent across the three frames in a way the raw columns
+never were — Three-Point 93 / 92 / 91 and Perimeter Defense 96 / 87 / 77 fall
+with height, Block 67 / 75 / ≥90 rises, Steal runs 99 / 84 / 67. That coherence
+is the evidence the derivation is right.
+
+Scored against those 31, the linear model has a mean absolute error of **6.6
+points** and reads high on **24 of 31**. On 8 further attributes it claimed a
+ceiling *below* a proven floor; `computeCaps` now lifts a modelled cap to any
+floor, so that class of error is gone.
+
+The model was deliberately **not** refit. Fitting four coefficients per
+attribute to three bodies produces something that looks calibrated and is not.
+
+> **An earlier release got this wrong**, publishing one player's allocation as
+> verified caps. See `meta.json` 0.7.0. The tell was Ball Handle reading 70 on a
+> 6'5" guard, 86 on a 6'8" guard and 75 on a 6'11" big — those columns track the
+> *archetype*, not the body.
 
 ### Not sourced (assume wrong)
 
-- **Attribute caps for every body except `PF|83|210|83`.** Only directions are
-  known, not magnitudes, and the magnitudes are measurably ~13 points off.
+- **Attribute caps on any frame with no transcribed build.** Only directions are
+  known, not magnitudes, and the magnitudes measure ~6.6 points off where they
+  can be checked.
 - **Cost curves and the build point budget.**
 - **The badge token earning formula** and the per-discipline slot split.
 - **How many cap breakers a player may claim**, and **badge boost slot counts**.
-  The per-slot cap breaker *gains* are now verified for one body; the *budget*
-  is not.
+  The per-slot cap breaker *gains* are verified; the *budget* for them is not.
 
 ### Inferred
 
@@ -140,7 +159,7 @@ Every record carries a `verification` block:
 
 | status | meaning |
 | --- | --- |
-| `verified` | Confirmed against the shipped 2K27 builder or an official 2K source. **Nothing currently claims this.** |
+| `verified` | Confirmed against the shipped 2K27 builder or an official 2K source. Claimed by the official mechanics and by the caps and cap-breaker ladders derived from the NBA 2K HQ app. |
 | `community-verified` | Taken from the supplied 2K27 badge charts or community threshold sheets. Trust with care. |
 | `estimated` | Derived, interpolated, or read off a degraded source image. Directionally useful, numerically approximate. |
 | `unverified` | Placeholder. Shaped correctly, numerically meaningless. |
@@ -218,14 +237,15 @@ body settings. Same two-mechanism pattern:
    "PF|83|210|83": {
      "label": "6'11\" / 210 lb / 6'11\" PF — Bucket Chaser",
      "verification": { "status": "verified", "source": "NBA 2K HQ app builder" },
-     "caps": { "three_point": 91, "block": 70, "…": 0 }
+     "caps":      { "three_point": 91, "steal": 67 },   // ladder locked: proven
+     "capFloors": { "block": 90, "free_throw": 93 }     // ladder ran out: at least
    }
    ```
-   One body is filled in. Adding another is the single most valuable thing you
-   can do to this dataset — open the build in the NBA 2K HQ app, read the
-   attribute page with everything pushed to its ceiling, and paste the 21
-   numbers in. The UI tells you, per body, whether you are looking at real caps
-   or modelled ones.
+   Three bodies are filled in, and these entries are **derived, not typed** —
+   run the transcription through the cap breaker ladder rule above rather than
+   copying the attribute page. Adding another frame is the single most valuable
+   thing you can do to this dataset. The UI tells you, per body, how many of its
+   caps are proven and how many are still modelled.
 2. `attributeCaps` — the linear model:
    ```
    cap = baseCap
@@ -344,30 +364,43 @@ Takeovers and their unlock tiers. `slots` records how many a player gets — set
 it once 2K27's structure is known.
 
 ### `cap-breakers.json`
-The post-launch above-the-cap mechanic, and a **per-body lookup table** rather
+The post-launch above-the-cap mechanic, and a **per-build lookup table** rather
 than a formula. Every attribute has five slots; each is worth a different,
-per-attribute amount; gains diminish down the row; and slots can be locked out
-entirely. `null` in a slot array means locked.
+per-attribute amount; gains diminish down the row; and slots can be locked out.
+`null` in a slot array means locked.
 
 ```json
-"PF|83|210|83": {
+"playmaking_creator": {
   "label": "…",
+  "body": "SG|80|190|80",
   "verification": { "status": "verified", "source": "NBA 2K HQ app" },
+  "sampledAt":  { "block": 73, "mid_range": 93, "…": 0 },
   "attributes": {
-    "block":     { "slots": [6, 5, 4, 3, 2],                  "newCap": 90 },
-    "steal":     { "slots": [7, null, null, null, null],      "newCap": 67 },
-    "mid_range": { "slots": [null, null, null, null, null],   "newCap": 94 }
+    "block":     { "slots": [2, null, null, null, null], "newCap": 75 },
+    "mid_range": { "slots": [1, 1, 1, 1, null],          "newCap": 97 },
+    "post_control": { "slots": [3, 3, 2, 2, 2],          "newCap": 63 }
   }
 }
 ```
 
-`newCap` is deliberately redundant — the loader checks that the cap in
-`caps.json` under the same key plus the slot gains equals it, and errors if a
-row was mis-read. It also rejects an unlocked slot following a locked one, since
-slots fill in order and that gain would be unreachable.
+**Keyed by build, not by body**, because the ladder is measured from what that
+player allocated (`sampledAt`) rather than from the frame's ceiling. Two players
+on one frame with different allocations see different ladders — which is why the
+planner applies a row only where the build's rating equals `sampledAt`, and
+otherwise reports `allocation-mismatch`.
 
-**A body with no entry gets no cap breaker plan.** Gains run from +1 to +7
-across attributes on a single frame, so there is nothing safe to extrapolate.
+`newCap` is deliberately redundant, and the loader cross-checks all three
+derivations against each other:
+
+- `sampledAt` + slot gains must equal `newCap`;
+- a row that **locks** must match the exact cap in `caps.json`;
+- a row that **never locks** must match the floor in `caps.json`;
+- an unlocked slot may not follow a locked one, since slots fill in order.
+
+These are the guards that would have caught the 0.7.0 misreading.
+
+**A frame with no entry gets no cap breaker plan.** Gains run from +1 to +13
+across attributes on a single build, so there is nothing safe to extrapolate.
 
 The optimizer treats cap breakers as a **post-build overlay**: it optimizes the
 build first, then allocates slots against the table, always taking whichever run

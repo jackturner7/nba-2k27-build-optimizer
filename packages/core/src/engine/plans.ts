@@ -9,7 +9,7 @@ import type {
 } from '../types.js';
 import type { BreakpointMap } from './breakpoints.js';
 import { lastUsefulBreakpoint } from './breakpoints.js';
-import { capBreakerGain, capBreakerTableFor, isCapBreakerEligible, usableSlots } from './caps.js';
+import { capBreakerGain, capBreakerTableFor, isCapBreakerEligible, matchingRows, usableSlots } from './caps.js';
 import type { CostModel } from './cost.js';
 import { clauseOptions } from './requirements.js';
 import { priorityWeights } from './score.js';
@@ -71,13 +71,21 @@ const fakeCost = {
  * only question is where the raises land.
  *
  * Each slot is worth a different, per-attribute amount that the builder
- * publishes (Steal's first slot is +7 on one frame, Close Shot's is +1), and
- * gains diminish down the row. So this is not "which single point crosses a
- * threshold" any more — it is a marginal-value allocation over a real table,
- * one slot at a time, always taking whichever next slot unlocks the most.
+ * publishes, and gains diminish down the row — Post Control on one build runs
+ * +13/+11/+9/+7/+6. So this is not "which single point crosses a threshold" any
+ * more; it is a marginal-value allocation over a real table.
  *
- * With no table for this body it plans nothing and says why. Gains vary far too
- * much between attributes to extrapolate from another frame.
+ * Two things make it stricter than it looks:
+ *
+ * - The ladder is measured **from what the player allocated**, not from the
+ *   frame's ceiling. A row therefore only applies to a build sitting on the
+ *   same rating, and rows that do not match are skipped rather than guessed.
+ * - Where the ladder ends in a locked slot it has reached the frame's real
+ *   ceiling, so `newCap` is a hard stop.
+ *
+ * With no table for this body — or none sampled near this allocation — it plans
+ * nothing and says which. Gains run from +1 to +13 between attributes on a
+ * single build, so there is nothing here worth extrapolating.
  */
 export function planCapBreakers(
   ds: Dataset,
@@ -93,7 +101,7 @@ export function planCapBreakers(
 } {
   const cb = ds.capBreakers;
   const effective = { ...attrs };
-  const table = capBreakerTableFor(ds, body);
+  const table = capBreakerTableFor(ds, body, attrs);
 
   if (!cb.enabled) {
     return { plan: [], remaining: 0, effective, status: { kind: 'disabled', note: 'Cap breakers are disabled in this dataset.' } };
@@ -106,9 +114,30 @@ export function planCapBreakers(
       status: {
         kind: 'no-data',
         note:
-          'No cap breaker table has been transcribed for this body. Gains are per-attribute and vary ' +
-          'from +1 to +7 on the one frame we have, so nothing is extrapolated — read this build off the ' +
-          'NBA 2K HQ app and add it to cap-breakers.json.',
+          'No cap breaker table has been transcribed for this body. Gains are per-attribute and run from ' +
+          '+1 to +13 on the builds we have, so nothing is extrapolated — read this build off the NBA 2K HQ ' +
+          'app and add it to cap-breakers.json.',
+      },
+    };
+  }
+
+  // The ladder is measured from what the sampled player allocated, so a row is
+  // only meaningful where this build sits on the same rating. Anywhere else the
+  // real gains are unknown, and guessing them is what put wrong caps in this
+  // dataset once already.
+  const applicable = new Set(matchingRows(table, attrs));
+  if (applicable.size === 0) {
+    return {
+      plan: [],
+      remaining: 0,
+      effective,
+      status: {
+        kind: 'allocation-mismatch',
+        tableLabel: table.label,
+        note:
+          `A cap breaker table exists for this frame (${table.label}) but its ladder was measured from a ` +
+          'different allocation, and gains are relative to where you sit. No row of it applies to this ' +
+          'build, so nothing is planned.',
       },
     };
   }
@@ -132,6 +161,7 @@ export function planCapBreakers(
 
     for (const a of ds.attributes) {
       if (!isCapBreakerEligible(ds, a.id)) continue;
+      if (!applicable.has(a.id)) continue; // ladder measured from a different rating
       const row = table.attributes[a.id];
       const used = usedPerAttribute[a.id] ?? 0;
       const available = usableSlots(row) - used;
@@ -140,9 +170,6 @@ export function planCapBreakers(
       const current = effective[a.id];
       const cap = caps[a.id];
       if (current === undefined || cap === undefined) continue;
-      // A breaker raises the CAP, so it does nothing unless the attribute is
-      // already sitting on it — below the cap, ordinary build points are cheaper.
-      if (current < cap) continue;
 
       // Slots must be considered as RUNS, not one at a time. Pass Accuracy's
       // slots are +2 each and no single one of them crosses anything, but three
@@ -216,7 +243,7 @@ function breakerReason(unlocks: string[], from: number, to: number): string {
   const move = `+${to - from} (${from} → ${to})`;
   return unlocks.length > 0
     ? `${move}, crossing ${unlocks.join(', ')}.`
-    : `${move}, the largest raise available on an attribute already at its cap.`;
+    : `${move}, the largest raise per slot available on this build.`;
 }
 
 function newUnlockNames(ds: Dataset, before: AttributeVector, after: AttributeVector, body: BuildBody): string[] {

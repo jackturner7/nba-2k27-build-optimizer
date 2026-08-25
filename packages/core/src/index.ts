@@ -23,12 +23,14 @@ export {
   baseAttributes,
   capBreakerGain,
   capBreakerTableFor,
+  capBreakerTablesFor,
   capOverrideFor,
   capsWithBreakers,
   computeBudget,
   computeCaps,
   isCapBreakerEligible,
   lookupByBody,
+  matchingRows,
   usableSlots,
 } from './engine/caps.js';
 export { CostModel, costModelFor } from './engine/cost.js';
