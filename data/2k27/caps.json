@@ -25,7 +25,6 @@
     "using `*` for 'any', and the most specific matching key wins. The NBA 2K HQ app's builder is the",
     "right place to read exact caps off and paste them in here."
   ],
-
   "capModel": {
     "kind": "linear-adjustment",
     "verification": {
@@ -35,26 +34,27 @@
     },
     "measuredAccuracy": {
       "$comment": [
-        "The first real cap table (PF|83|210|83) makes it possible to score the model for the first time.",
-        "It does badly, and in a specific way worth knowing about:",
+        "Scored against the 31 attribute caps PROVEN across three transcribed builds (a cap-breaker ladder",
+        "that ends in a locked slot has reached the ceiling, so its New Cap is the cap).",
         "",
-        "  - mean absolute error 12.9 points across 21 attributes; worst is Standing Dunk, +28.",
-        "  - it is biased HIGH on 19 of 21 attributes (sum of caps 1849 modelled vs 1609 real), so builds",
-        "    planned off the model look more affordable than they are.",
-        "  - it gets the SIGN wrong on shooting for a slender big. The model reads 6'11\" as a shooting",
-        "    penalty (86 mid-range, 84 three) whereas the builder gives that frame 94 and 91. Weight, not",
-        "    height, appears to drive shooting caps — 210 lb is near the minimum at this height.",
+        "  - mean absolute error 6.6 points; worst is Steal on the 6'11\" PF, +16.",
+        "  - biased HIGH on 24 of 31, so builds planned off the model look more affordable than they are.",
+        "  - on 8 further attributes the model sat BELOW a proven floor, i.e. it claimed a ceiling the builder",
+        "    was observed to exceed. computeCaps now lifts those to the floor, so that class of error is gone.",
         "",
-        "The model was NOT refit to this. Fitting four coefficients per attribute to a single body would",
-        "produce something that looks calibrated and is not. It stands as-is, with its error measured, and",
-        "gets replaced body by body as real tables arrive."
+        "An earlier figure of 12.9 was measured against the WRONG numbers — see meta.json 0.7.0 — and is",
+        "withdrawn. The model has still not been refit: three bodies cannot calibrate four coefficients per",
+        "attribute, and a model that looks calibrated without being calibrated is worse than an honest one."
       ],
       "measuredAt": "2026-08-25",
-      "againstBody": "PF|83|210|83",
-      "meanAbsoluteError": 12.9,
-      "worstAttribute": { "attribute": "standing_dunk", "error": 28 },
-      "biasedHighOn": 19,
-      "attributesCompared": 21
+      "againstBody": "PF|83|210|83, SG|80|190|80, SG|77|200|80",
+      "meanAbsoluteError": 6.6,
+      "worstAttribute": {
+        "attribute": "steal",
+        "error": 16
+      },
+      "biasedHighOn": 24,
+      "attributesCompared": 31
     },
     "referenceBody": {
       "position": "SF",
@@ -63,73 +63,374 @@
       "wingspanInches": 80
     }
   },
-
   "attributeCaps": [
-    { "attribute": "close_shot",        "baseCap": 90, "perInchHeight":  1.2, "perPoundWeight":  0.03, "perInchWingspan":  0.4, "hardMin": 40, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "driving_layup",     "baseCap": 92, "perInchHeight": -1.0, "perPoundWeight": -0.04, "perInchWingspan":  0.1, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "driving_dunk",      "baseCap": 86, "perInchHeight":  0.2, "perPoundWeight":  0.05, "perInchWingspan":  0.8, "hardMin": 25, "hardMax": 99, "verification": { "status": "estimated", "notes": "Weight and wingspan signs are POSITIVE on the sourced note that minimum weight + minimum wingspan hurts driving dunk." } },
-    { "attribute": "standing_dunk",     "baseCap": 80, "perInchHeight":  2.2, "perPoundWeight":  0.05, "perInchWingspan":  0.7, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "post_control",      "baseCap": 82, "perInchHeight":  1.8, "perPoundWeight":  0.06, "perInchWingspan":  0.5, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-
-    { "attribute": "mid_range",         "baseCap": 92, "perInchHeight": -1.1, "perPoundWeight": -0.02, "perInchWingspan": -0.2, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "three_point",       "baseCap": 92, "perInchHeight": -1.4, "perPoundWeight": -0.03, "perInchWingspan": -0.3, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "free_throw",        "baseCap": 95, "perInchHeight": -0.4, "perPoundWeight": -0.01, "perInchWingspan":  0.0, "hardMin": 40, "hardMax": 99, "verification": { "status": "unverified" } },
-
-    { "attribute": "pass_accuracy",     "baseCap": 90, "perInchHeight": -1.0, "perPoundWeight": -0.02, "perInchWingspan":  0.0, "hardMin": 35, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "ball_handle",       "baseCap": 90, "perInchHeight": -1.7, "perPoundWeight": -0.05, "perInchWingspan": -0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "speed_with_ball",   "baseCap": 90, "perInchHeight": -1.6, "perPoundWeight": -0.05, "perInchWingspan": -0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-
-    { "attribute": "interior_defense",  "baseCap": 82, "perInchHeight":  1.7, "perPoundWeight":  0.06, "perInchWingspan":  0.6, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "perimeter_defense", "baseCap": 88, "perInchHeight": -0.9, "perPoundWeight":  0.05, "perInchWingspan":  0.7, "hardMin": 30, "hardMax": 99, "verification": { "status": "estimated", "notes": "Weight and wingspan signs are POSITIVE on the sourced note that minimum weight + minimum wingspan hurts perimeter defense." } },
-    { "attribute": "steal",             "baseCap": 88, "perInchHeight": -1.3, "perPoundWeight": -0.03, "perInchWingspan":  0.4, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "block",             "baseCap": 78, "perInchHeight":  2.2, "perPoundWeight":  0.03, "perInchWingspan":  1.0, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "offensive_rebound", "baseCap": 80, "perInchHeight":  1.8, "perPoundWeight":  0.05, "perInchWingspan":  0.7, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "defensive_rebound", "baseCap": 82, "perInchHeight":  1.8, "perPoundWeight":  0.05, "perInchWingspan":  0.7, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-
-    { "attribute": "speed",             "baseCap": 90, "perInchHeight": -1.1, "perPoundWeight": -0.07, "perInchWingspan":  0.0, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "agility",           "baseCap": 90, "perInchHeight": -1.2, "perPoundWeight": -0.08, "perInchWingspan":  0.0, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "strength",          "baseCap": 80, "perInchHeight":  1.4, "perPoundWeight":  0.12, "perInchWingspan":  0.2, "hardMin": 25, "hardMax": 99, "verification": { "status": "unverified" } },
-    { "attribute": "vertical",          "baseCap": 88, "perInchHeight": -0.4, "perPoundWeight": -0.07, "perInchWingspan":  0.2, "hardMin": 30, "hardMax": 99, "verification": { "status": "unverified" } }
+    {
+      "attribute": "close_shot",
+      "baseCap": 90,
+      "perInchHeight": 1.2,
+      "perPoundWeight": 0.03,
+      "perInchWingspan": 0.4,
+      "hardMin": 40,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "driving_layup",
+      "baseCap": 92,
+      "perInchHeight": -1.0,
+      "perPoundWeight": -0.04,
+      "perInchWingspan": 0.1,
+      "hardMin": 35,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "driving_dunk",
+      "baseCap": 86,
+      "perInchHeight": 0.2,
+      "perPoundWeight": 0.05,
+      "perInchWingspan": 0.8,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "estimated",
+        "notes": "Weight and wingspan signs are POSITIVE on the sourced note that minimum weight + minimum wingspan hurts driving dunk."
+      }
+    },
+    {
+      "attribute": "standing_dunk",
+      "baseCap": 80,
+      "perInchHeight": 2.2,
+      "perPoundWeight": 0.05,
+      "perInchWingspan": 0.7,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "post_control",
+      "baseCap": 82,
+      "perInchHeight": 1.8,
+      "perPoundWeight": 0.06,
+      "perInchWingspan": 0.5,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "mid_range",
+      "baseCap": 92,
+      "perInchHeight": -1.1,
+      "perPoundWeight": -0.02,
+      "perInchWingspan": -0.2,
+      "hardMin": 35,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "three_point",
+      "baseCap": 92,
+      "perInchHeight": -1.4,
+      "perPoundWeight": -0.03,
+      "perInchWingspan": -0.3,
+      "hardMin": 30,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "free_throw",
+      "baseCap": 95,
+      "perInchHeight": -0.4,
+      "perPoundWeight": -0.01,
+      "perInchWingspan": 0.0,
+      "hardMin": 40,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "pass_accuracy",
+      "baseCap": 90,
+      "perInchHeight": -1.0,
+      "perPoundWeight": -0.02,
+      "perInchWingspan": 0.0,
+      "hardMin": 35,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "ball_handle",
+      "baseCap": 90,
+      "perInchHeight": -1.7,
+      "perPoundWeight": -0.05,
+      "perInchWingspan": -0.2,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "speed_with_ball",
+      "baseCap": 90,
+      "perInchHeight": -1.6,
+      "perPoundWeight": -0.05,
+      "perInchWingspan": -0.2,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "interior_defense",
+      "baseCap": 82,
+      "perInchHeight": 1.7,
+      "perPoundWeight": 0.06,
+      "perInchWingspan": 0.6,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "perimeter_defense",
+      "baseCap": 88,
+      "perInchHeight": -0.9,
+      "perPoundWeight": 0.05,
+      "perInchWingspan": 0.7,
+      "hardMin": 30,
+      "hardMax": 99,
+      "verification": {
+        "status": "estimated",
+        "notes": "Weight and wingspan signs are POSITIVE on the sourced note that minimum weight + minimum wingspan hurts perimeter defense."
+      }
+    },
+    {
+      "attribute": "steal",
+      "baseCap": 88,
+      "perInchHeight": -1.3,
+      "perPoundWeight": -0.03,
+      "perInchWingspan": 0.4,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "block",
+      "baseCap": 78,
+      "perInchHeight": 2.2,
+      "perPoundWeight": 0.03,
+      "perInchWingspan": 1.0,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "offensive_rebound",
+      "baseCap": 80,
+      "perInchHeight": 1.8,
+      "perPoundWeight": 0.05,
+      "perInchWingspan": 0.7,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "defensive_rebound",
+      "baseCap": 82,
+      "perInchHeight": 1.8,
+      "perPoundWeight": 0.05,
+      "perInchWingspan": 0.7,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "speed",
+      "baseCap": 90,
+      "perInchHeight": -1.1,
+      "perPoundWeight": -0.07,
+      "perInchWingspan": 0.0,
+      "hardMin": 30,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "agility",
+      "baseCap": 90,
+      "perInchHeight": -1.2,
+      "perPoundWeight": -0.08,
+      "perInchWingspan": 0.0,
+      "hardMin": 30,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "strength",
+      "baseCap": 80,
+      "perInchHeight": 1.4,
+      "perPoundWeight": 0.12,
+      "perInchWingspan": 0.2,
+      "hardMin": 25,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    },
+    {
+      "attribute": "vertical",
+      "baseCap": 88,
+      "perInchHeight": -0.4,
+      "perPoundWeight": -0.07,
+      "perInchWingspan": 0.2,
+      "hardMin": 30,
+      "hardMax": 99,
+      "verification": {
+        "status": "unverified"
+      }
+    }
   ],
-
   "overrides": {
     "$comment": [
-      "Exact caps keyed by `<POSITION>|<height>|<weight>|<wingspan>`; `*` matches anything. Value is a",
-      "partial map of attribute id -> cap. Most specific match wins.",
+      "Exact caps keyed by `<POSITION>|<height>|<weight>|<wingspan>`; `*` matches anything. Most specific wins.",
       "",
-      "These are the ONLY verified caps in the dataset. Everything not covered here falls back to the",
-      "invented linear model above. Read more off the NBA 2K HQ app's builder and paste them in."
+      "`caps` are proven ceilings. `capFloors` are proven LOWER BOUNDS: the real cap is at least this, and the",
+      "engine takes max(modelled, floor) so it can never claim a cap below something known to be reachable.",
+      "",
+      "HOW THESE WERE DERIVED, because it is not obvious: the builder's attribute page shows what a player",
+      "ALLOCATED, not what the body allows. The Cap Breaker page is what exposes the ceiling — a breaker ladder",
+      "that ends in a locked slot has run into the cap, so its New Cap is the cap. A ladder that uses all five",
+      "slots without locking merely ran out of slots, and only gives a lower bound.",
+      "",
+      "See meta.json 0.7.0 for why the earlier reading (attribute page = caps) was wrong."
     ],
     "entries": {
       "PF|83|210|83": {
-        "label": "6'11\" / 210 lb / 6'11\" PF — shown in the NBA 2K HQ builder as BUCKET CHASER",
+        "label": "6'11\" / 210 lb / 6'11\" PF — the builder names this build BUCKET CHASER",
         "verification": {
           "status": "verified",
           "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
-          "notes": "Read off the builder's attribute page with every attribute pushed to its ceiling; each value equals the Original Cap column of the same build's Cap Breaker page, so all 21 are maximums, not an allocation."
+          "notes": "Derived from the Cap Breaker page, not the attribute page. A cap-breaker ladder that ends in a locked slot has reached this body's ceiling, so its New Cap IS the cap. A ladder with all five slots unlocked ran out of slots before reaching the ceiling, so its New Cap is only a lower bound and lives in capFloors."
         },
         "caps": {
-          "close_shot": 90,
-          "driving_layup": 85,
-          "driving_dunk": 80,
-          "standing_dunk": 65,
-          "post_control": 86,
+          "close_shot": 92,
+          "driving_layup": 88,
+          "driving_dunk": 82,
           "mid_range": 94,
           "three_point": 91,
-          "free_throw": 71,
-          "pass_accuracy": 77,
           "ball_handle": 75,
           "speed_with_ball": 68,
-          "interior_defense": 70,
-          "perimeter_defense": 71,
-          "steal": 60,
-          "block": 70,
-          "offensive_rebound": 70,
+          "perimeter_defense": 77,
+          "steal": 67,
+          "offensive_rebound": 78,
           "defensive_rebound": 80,
           "speed": 79,
           "agility": 73,
-          "strength": 79,
-          "vertical": 75
+          "strength": 80
+        },
+        "capFloors": {
+          "standing_dunk": 70,
+          "post_control": 91,
+          "free_throw": 93,
+          "pass_accuracy": 87,
+          "interior_defense": 86,
+          "block": 90,
+          "vertical": 80
+        }
+      },
+      "SG|80|190|80": {
+        "label": "6'8\" / 190 lb / 6'8\" SG — the builder names this build 2-WAY PLAYMAKING CREATOR",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "Derived from the Cap Breaker page, not the attribute page. A cap-breaker ladder that ends in a locked slot has reached this body's ceiling, so its New Cap IS the cap. A ladder with all five slots unlocked ran out of slots before reaching the ceiling, so its New Cap is only a lower bound and lives in capFloors."
+        },
+        "caps": {
+          "mid_range": 97,
+          "three_point": 92,
+          "ball_handle": 86,
+          "speed_with_ball": 80,
+          "perimeter_defense": 87,
+          "steal": 84,
+          "block": 75,
+          "offensive_rebound": 70,
+          "speed": 88
+        },
+        "capFloors": {
+          "close_shot": 88,
+          "driving_layup": 77,
+          "driving_dunk": 87,
+          "standing_dunk": 81,
+          "post_control": 63,
+          "free_throw": 92,
+          "pass_accuracy": 92,
+          "interior_defense": 75,
+          "defensive_rebound": 74,
+          "agility": 88,
+          "strength": 55,
+          "vertical": 86
+        }
+      },
+      "SG|77|200|80": {
+        "label": "6'5\" / 200 lb / 6'8\" SG — the builder names this build 2-WAY OFF-SCREEN SHOOTER",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "Derived from the Cap Breaker page, not the attribute page. A cap-breaker ladder that ends in a locked slot has reached this body's ceiling, so its New Cap IS the cap. A ladder with all five slots unlocked ran out of slots before reaching the ceiling, so its New Cap is only a lower bound and lives in capFloors."
+        },
+        "caps": {
+          "standing_dunk": 68,
+          "three_point": 93,
+          "interior_defense": 78,
+          "perimeter_defense": 96,
+          "block": 67,
+          "offensive_rebound": 71,
+          "defensive_rebound": 74,
+          "strength": 76
+        },
+        "capFloors": {
+          "close_shot": 90,
+          "driving_layup": 69,
+          "driving_dunk": 90,
+          "post_control": 77,
+          "mid_range": 95,
+          "free_throw": 95,
+          "pass_accuracy": 75,
+          "ball_handle": 75,
+          "speed_with_ball": 78,
+          "steal": 99,
+          "speed": 93,
+          "agility": 92,
+          "vertical": 88
         }
       }
     }

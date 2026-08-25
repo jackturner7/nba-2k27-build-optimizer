@@ -3,37 +3,39 @@
     "Named build archetypes.",
     "",
     "The NAMES are community archetype names used across the NBA 2K series, not confirmed NBA 2K27",
-    "in-game build names \u2014 2K27's official archetype naming is still unknown.",
+    "in-game build names — 2K27's official archetype naming is still unknown.",
     "",
     "The CONSTRAINTS were rewritten on 2026-08-25 to land on real 2K27 thresholds taken from the badge",
     "cost charts and the community 'best value attribute thresholds' sheet, so each preset parks on a",
     "badge or animation unlock instead of a round number. Which thresholds each archetype should chase",
-    "is still an opinion \u2014 the numbers are sourced, the choice of them is not.",
+    "is still an opinion — the numbers are sourced, the choice of them is not.",
     "",
     "`priorities` maps a priorityGroup id (see attributes.json) to a weight from 0-100.",
     "`constraints.minimums` are HARD floors the optimizer must satisfy or report as infeasible.",
     "`constraints.softTargets` are 'try to reach' values that add score but are not required."
   ],
-
   "officialBuildNames": {
     "$comment": [
-      "2K27's builder names a build itself rather than making you pick an archetype off a list, so these",
-      "are OBSERVED LABELS for specific bodies, not presets a player selects. They are recorded here",
-      "because they are the only confirmed 2K27 build names in the dataset — the eight archetypes below",
-      "still carry community names.",
+      "2K27's builder names a build itself rather than making you pick an archetype off a list, so these are",
+      "OBSERVED LABELS for specific bodies+allocations, not presets a player selects. They are the only",
+      "confirmed 2K27 build names in the dataset — the eight archetypes below still carry community names.",
       "",
-      "Add one per body as it is seen in the NBA 2K HQ app. Do not guess a name for a body you have not",
-      "opened: the naming rule (body only? body plus allocation?) is not known."
+      "Keyed by body alone, which is an approximation: the name plainly reflects the ALLOCATION too (the",
+      "6'8\" SG is a 'Playmaking Creator' with 87 passing, the 6'5\" an 'Off-Screen Shooter' with 65). Two",
+      "different builds on one frame would collide here. Split the key if that ever happens.",
+      "",
+      "Do not guess a name for a build you have not opened."
     ],
     "verification": {
       "status": "verified",
       "source": "NBA 2K HQ app MyPLAYER builder, screenshots supplied 2026-08-25."
     },
     "entries": {
-      "PF|83|210|83": "BUCKET CHASER"
+      "PF|83|210|83": "BUCKET CHASER",
+      "SG|80|190|80": "2-WAY PLAYMAKING CREATOR",
+      "SG|77|200|80": "2-WAY OFF-SCREEN SHOOTER"
     }
   },
-
   "archetypes": [
     {
       "id": "three_and_d_wing",
@@ -84,9 +86,9 @@
       "summary": "Creates his own shot off the dribble and still guards the ball.",
       "position": "SG",
       "suggestedBody": {
-        "heightInches": 77,
-        "weightPounds": 200,
-        "wingspanInches": 83
+        "heightInches": 80,
+        "weightPounds": 190,
+        "wingspanInches": 80
       },
       "priorities": {
         "three_point_shooting": 95,
@@ -110,7 +112,12 @@
           "perimeter_defense": 85,
           "mid_range": 85
         }
-      }
+      },
+      "$bodyNote": [
+        "Sits on 6'8\" / 190 lb / 6'8\" — the frame the builder calls 2-WAY PLAYMAKING CREATOR, and one of the",
+        "three with caps derived from real data. Every constraint below is inside the derived ceilings:",
+        "Ball Handle caps at exactly 86, Three-Point at 92, Perimeter Defense at 87, Mid-Range at 97."
+      ]
     },
     {
       "id": "point_forward",
@@ -162,9 +169,9 @@
       "summary": "Point-of-attack stopper. Everything else is a rounding error.",
       "position": "SG",
       "suggestedBody": {
-        "heightInches": 78,
-        "weightPounds": 205,
-        "wingspanInches": 86
+        "heightInches": 77,
+        "weightPounds": 200,
+        "wingspanInches": 80
       },
       "priorities": {
         "perimeter_defense": 100,
@@ -188,7 +195,12 @@
           "perimeter_defense": 92,
           "speed": 85
         }
-      }
+      },
+      "$bodyNote": [
+        "Sits on 6'5\" / 200 lb / 6'8\" — the frame the builder calls 2-WAY OFF-SCREEN SHOOTER, and the best",
+        "defensive frame in the derived data by a distance: Perimeter Defense caps at 96 and Steal at 99,",
+        "against 87 / 84 on the 6'8\" guard and 77 / 67 on the 6'11\" big."
+      ]
     },
     {
       "id": "stretch_big",
@@ -201,16 +213,13 @@
       "summary": "Pick-and-pop big who drags rim protectors out of the paint.",
       "position": "PF",
       "$bodyNote": [
-        "Retargeted 2026-08-25 onto 6'11\" / 210 lb / 6'11\", the ONE frame whose caps have been read off",
-        "the real builder. Every other preset sits on modelled caps that measure ~13 points off, so this",
-        "is currently the only preset whose ceilings are facts.",
+        "Sits on 6'11\" / 210 lb / 6'11\" — the BUCKET CHASER frame, one of three whose caps are derived from",
+        "the real builder. The derived caps vindicate the archetype: Mid-Range 94 and Three-Point 91 with a",
+        "Perimeter Defense of 77 and a Steal of 67 is a stretch big and nothing else.",
         "",
-        "The real caps also vindicate the archetype on this frame: 94 Mid-Range and 91 Three-Point with a",
-        "70 Block and an 80 Defensive Rebound is a stretch big and nothing else. The previous suggestion",
-        "(6'10\" / 235 / 7'3\") had soft targets — Block 84, Defensive Rebound 87, Offensive Rebound 82 —",
-        "that the modelled caps allowed and that may well be unreachable in the real builder.",
-        "",
-        "In-game the NBA 2K HQ builder labels this frame BUCKET CHASER. See officialBuildNames below."
+        "(An earlier revision set soft targets against numbers that turned out to be that player's ALLOCATION",
+        "rather than the frame's ceilings. Block and Interior Defense in particular are far more available on",
+        "this frame than that revision assumed - see meta.json 0.7.0.)"
       ],
       "suggestedBody": {
         "heightInches": 83,

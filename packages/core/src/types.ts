@@ -191,11 +191,19 @@ export interface CapModel {
   };
 }
 
-/** An exact cap table read off the real builder, for one specific body. */
+/**
+ * Caps derived from the real builder for one specific body.
+ *
+ * `caps` are proven ceilings — the attribute's cap breaker ladder ran into a
+ * locked slot, which is the builder saying "this is as high as this frame goes".
+ * `capFloors` are proven lower bounds — the ladder spent all five slots without
+ * locking, so it ran out of slots rather than reaching the ceiling.
+ */
 export interface CapOverrideEntry {
   label: string;
   verification: Verification;
   caps: Partial<Record<AttributeId, number>>;
+  capFloors: Partial<Record<AttributeId, number>>;
 }
 
 export interface CapsData {
@@ -296,7 +304,16 @@ export interface CapBreakerRow {
 
 export interface CapBreakerTable {
   label: string;
+  /** The name the real builder gave this build, when known. */
+  buildName: string;
+  /** `POSITION|height|weight|wingspan` this build was made on. */
+  body: string;
   verification: Verification;
+  /**
+   * The allocation the ladder was read at. Gains are relative to it, so a row
+   * only applies to a build sitting on the same rating for that attribute.
+   */
+  sampledAt: Partial<Record<AttributeId, number>>;
   attributes: Record<AttributeId, CapBreakerRow>;
 }
 
@@ -662,12 +679,13 @@ export interface CapBreakerRecommendation {
 }
 
 /**
- * Why the cap breaker plan looks the way it does. `no-data` is the common case
- * and is a statement about the dataset, not about the build: gains are a
- * per-body lookup, so a body nobody has transcribed gets no plan at all.
+ * Why the cap breaker plan looks the way it does. Both `no-data` and
+ * `allocation-mismatch` are statements about the dataset rather than the build:
+ * a ladder is a per-build lookup measured from that player's allocation, so an
+ * untranscribed frame — or one sampled at different ratings — gets no plan.
  */
 export interface CapBreakerPlanStatus {
-  kind: 'planned' | 'no-data' | 'disabled' | 'no-breakers';
+  kind: 'planned' | 'no-data' | 'allocation-mismatch' | 'disabled' | 'no-breakers';
   /** Which transcribed body the plan came from, when there is one. */
   tableLabel?: string;
   note: string;

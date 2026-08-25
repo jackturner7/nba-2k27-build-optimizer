@@ -190,28 +190,28 @@ Two honest refusals:
 Both are post-build overlays, planned after the build is fixed.
 
 **Cap breakers** are a lookup, not a formula. Every attribute has five breaker
-slots, each worth a *different* amount that the builder publishes per body —
-Steal's first slot is +7 on the one frame that has been transcribed, Close
-Shot's is +1 — with gains diminishing down the row (Block runs +6/+5/+4/+3/+2)
-and whole attributes locked out entirely (nothing raises Mid-Range, Ball Handle
-or Speed on that frame).
+slots, each worth a *different* amount that the builder publishes — Post Control
+runs +13/+11/+9/+7/+6 on one build while Close Shot's first slot is +1 on
+another — with gains diminishing down the row and whole attributes locked out.
 
-So the planner reads the table and allocates against it. Three details matter:
+Two properties of the real data drive the planner:
 
-- It only considers attributes **already at their cap**. A breaker raises the
-  ceiling, so below the ceiling it does nothing a build point would not do more
-  cheaply.
-- It allocates **runs of slots, not single slots**. Pass Accuracy's slots are +2
-  each and no single one of them crosses anything, but three together cross four
-  thresholds. A one-slot lookahead sees zero gain, stops, and leaves every
-  breaker unplaced — which is exactly what the previous version did. Candidates
-  are ranked by unlock value *per slot spent*, ties going to the shorter run.
-- A body with **no transcribed table gets no plan at all**. Gains run from +1 to
-  +7 across attributes on a single frame; there is nothing there to extrapolate.
+- **The ladder is measured from what the player allocated**, not from the
+  frame's ceiling. So a table belongs to a *build*, and a row only applies to a
+  build sitting on the same rating. Rows that do not match are skipped, and a
+  frame whose only table was sampled elsewhere reports `allocation-mismatch`
+  rather than being extrapolated.
+- **A locked slot means the ladder hit the ceiling.** That is what makes the
+  caps in `caps.json` derivable, and it is a hard stop for the planner.
+
+It allocates **runs of slots, not single slots**. Pass Accuracy's slots are +2
+each on one build and no single one crosses anything, but three together cross
+four thresholds. A one-slot lookahead sees zero gain, stops, and leaves every
+breaker unplaced — which is exactly what an earlier version did. Candidates are
+ranked by unlock value *per slot spent*, ties going to the shorter run.
 
 How many breakers a player may actually claim is not published. The app assumes
-the conservative reading — a shared pool of five — and says so in the UI, rather
-than the reading that would hand the transcribed frame +112 attribute points.
+the conservative reading — a shared pool of five — and says so in the UI.
 
 **Badge boosts** allocate the +2 slot first — a +2 on the wrong badge is the
 most expensive mistake available — then the +1 slots, ranked by level-weight

@@ -53,7 +53,9 @@ export function capOverrideFor(ds: Dataset, body: BuildBody): CapOverrideEntry |
 /** Per-attribute maximums produced by the chosen body settings. */
 export function computeCaps(ds: Dataset, body: BuildBody): AttributeVector {
   const ref = ds.caps.capModel.referenceBody;
-  const overrides = capOverrideFor(ds, body)?.caps ?? {};
+  const entry = capOverrideFor(ds, body);
+  const overrides = entry?.caps ?? {};
+  const floors = entry?.capFloors ?? {};
   const caps: AttributeVector = {};
 
   for (const rule of ds.caps.attributeCaps) {
@@ -69,8 +71,11 @@ export function computeCaps(ds: Dataset, body: BuildBody): AttributeVector {
       rule.perInchWingspan * (body.wingspanInches - ref.wingspanInches) +
       (rule.positionAdjust?.[body.position] ?? 0);
 
+    // A floor is a rating the builder has been *observed* to reach on this
+    // frame, so the model is never allowed to claim a cap below it.
+    const floor = floors[rule.attribute] ?? ds.ratingFloor;
     caps[rule.attribute] = clamp(
-      Math.round(clamp(raw, rule.hardMin, rule.hardMax)),
+      Math.max(floor, Math.round(clamp(raw, rule.hardMin, rule.hardMax))),
       ds.ratingFloor,
       ds.ratingCeiling
     );
@@ -99,9 +104,43 @@ export function baseAttributes(ds: Dataset): AttributeVector {
   return v;
 }
 
-/** The transcribed cap breaker gain table for this body, or null if none. */
-export function capBreakerTableFor(ds: Dataset, body: BuildBody): CapBreakerTable | null {
-  return lookupByBody(ds.capBreakers.gainTables?.entries, body);
+/** Every transcribed cap breaker table taken on this body. */
+export function capBreakerTablesFor(ds: Dataset, body: BuildBody): CapBreakerTable[] {
+  const key = `${body.position}|${body.heightInches}|${body.weightPounds}|${body.wingspanInches}`;
+  return Object.values(ds.capBreakers.gainTables?.entries ?? {}).filter((t) => t.body === key);
+}
+
+/**
+ * The best transcribed table for a build on this body.
+ *
+ * A cap breaker ladder is relative to what the player allocated, so a table
+ * belongs to a *build*, not a frame. When several were sampled on the same
+ * frame, the one agreeing with this build on the most attributes wins; rows
+ * where it disagrees are not applied at all.
+ */
+export function capBreakerTableFor(
+  ds: Dataset,
+  body: BuildBody,
+  attrs?: AttributeVector
+): CapBreakerTable | null {
+  const tables = capBreakerTablesFor(ds, body);
+  if (tables.length === 0) return null;
+  if (!attrs) return tables[0] ?? null;
+
+  let best: { table: CapBreakerTable; matches: number } | null = null;
+  for (const table of tables) {
+    const matches = matchingRows(table, attrs).length;
+    if (!best || matches > best.matches) best = { table, matches };
+  }
+  return best?.table ?? null;
+}
+
+/** The attributes where a build sits exactly where the table was sampled. */
+export function matchingRows(table: CapBreakerTable, attrs: AttributeVector): string[] {
+  return Object.keys(table.attributes).filter((id) => {
+    const sampled = table.sampledAt[id];
+    return sampled !== undefined && attrs[id] === sampled;
+  });
 }
 
 /**
@@ -139,11 +178,12 @@ export function capsWithBreakers(
   ds: Dataset,
   caps: AttributeVector,
   body: BuildBody,
-  plan: Record<string, number>
+  plan: Record<string, number>,
+  attrs?: AttributeVector
 ): AttributeVector {
   const cb = ds.capBreakers;
   if (!cb.enabled) return caps;
-  const table = capBreakerTableFor(ds, body);
+  const table = capBreakerTableFor(ds, body, attrs);
   if (!table) return caps;
 
   const out = { ...caps };

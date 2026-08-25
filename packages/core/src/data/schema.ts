@@ -216,7 +216,10 @@ export const capsSchema = z.object({
         z.object({
           label: z.string().default(''),
           verification,
-          caps: z.record(z.string(), z.number()),
+          /** Proven ceilings: a cap breaker ladder that ended in a locked slot. */
+          caps: z.record(z.string(), z.number()).default({}),
+          /** Proven lower bounds: a ladder that ran out of slots before locking. */
+          capFloors: z.record(z.string(), z.number()).default({}),
         })
       )
       .default({}),
@@ -430,7 +433,16 @@ export const capBreakersSchema = z.object({
         z.string(),
         z.object({
           label: z.string().default(''),
+          /** The name the real builder gave this build, when it is known. */
+          buildName: z.string().default(''),
+          /** `POSITION|height|weight|wingspan` this build was made on. */
+          body: z.string(),
           verification,
+          /**
+           * The allocation the ladder was read at. Gains are relative to it, so
+           * a row only applies to a build sitting on the same rating.
+           */
+          sampledAt: z.record(z.string(), z.number()).default({}),
           attributes: z.record(z.string(), capBreakerRow),
         })
       )

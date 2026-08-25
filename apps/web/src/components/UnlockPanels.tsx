@@ -208,7 +208,8 @@ export function TakeoverPanel({ build }: { build: BuildEvaluation }) {
 export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: BuildEvaluation }) {
   const cb = dataset.capBreakers;
   const used = build.capBreakerPlan.reduce((a, r) => a + r.breakersUsed, 0);
-  const table = capBreakerTableFor(dataset, build.body);
+  const table = capBreakerTableFor(dataset, build.body, build.attributes);
+  const status = build.capBreakerStatus;
 
   if (!cb.enabled) {
     return (
@@ -218,20 +219,20 @@ export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: B
     );
   }
 
-  // A body nobody has transcribed gets no plan at all: gains run from +1 to +7
-  // between attributes on the one frame we have, so there is nothing safe to
-  // extrapolate. Say that plainly instead of showing an empty list.
-  if (!table) {
+  // A ladder is measured from what the sampled player allocated, so it applies
+  // to a *build*, not a frame. Both "no table here" and "table sampled
+  // elsewhere" mean the same thing to the reader: nothing is being guessed.
+  if (!table || status.kind === 'allocation-mismatch') {
     return (
       <Panel title="Cap breakers" right={<VerificationChip verification={cb.verification} />}>
         <Empty>
-          No cap breaker table for this body yet. Each slot is worth a different amount on every
-          attribute — +7 Steal but +1 Close Shot on the one build that has been read off the NBA 2K HQ
-          app — so nothing is extrapolated to bodies that have not been transcribed.
+          {status.kind === 'allocation-mismatch'
+            ? `A table exists for this frame (${status.tableLabel}) but its ladder was measured from a different allocation, and every gain is relative to where you sit. Nothing is extrapolated.`
+            : 'No cap breaker table has been read off this frame yet. Each slot is worth a different amount on every attribute — +13 Post Control against +1 Close Shot on the builds we have — so nothing is extrapolated.'}
         </Empty>
         <div className="row-note" style={{ marginTop: 10 }}>
-          {Object.keys(cb.gainTables.entries).length} body
-          {Object.keys(cb.gainTables.entries).length === 1 ? '' : ' types'} transcribed so far.
+          {Object.keys(cb.gainTables.entries).length} build
+          {Object.keys(cb.gainTables.entries).length === 1 ? '' : 's'} transcribed so far.
         </div>
       </Panel>
     );
@@ -254,13 +255,13 @@ export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: B
     >
       <div className="row-note" style={{ marginBottom: 10 }}>
         {cb.slotsPerAttribute} slots per attribute · {poolNote} · ceiling {cb.absoluteCeiling}.
-        {table.label ? ` Table: ${table.label}.` : ''}
+        {table.label ? ` Ladder read from: ${table.label}.` : ''}
       </div>
 
       {build.capBreakerPlan.length === 0 ? (
         <Empty>
-          Nothing to place: no attribute is sitting at its cap with an unlocked slot and a threshold
-          within reach.
+          Nothing to place: no attribute with an unlocked slot has a threshold within reach of what
+          its ladder can add.
         </Empty>
       ) : (
         <div className="row-list">
@@ -299,7 +300,8 @@ export function CapBreakerPanel({ dataset, build }: { dataset: Dataset; build: B
 
       {locked.length > 0 && (
         <div className="row-note" style={{ marginTop: 10 }}>
-          No cap breaker can raise {locked.join(', ')} on this frame — every slot is locked.
+          No cap breaker can raise {locked.join(', ')} on this build — every slot is locked, which is
+          the builder saying this frame is already at its ceiling there.
         </div>
       )}
 

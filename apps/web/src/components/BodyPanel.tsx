@@ -133,6 +133,8 @@ function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }
   const inGameName = dataset.officialBuildNames?.entries[key];
 
   if (exact) {
+    const proven = Object.keys(exact.caps).length;
+    const floors = Object.keys(exact.capFloors).length;
     return (
       <>
         {inGameName && (
@@ -142,8 +144,16 @@ function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }
           </div>
         )}
         <div className="row-note severity-info" style={{ marginTop: 10 }}>
-          ✅ <strong>Exact caps.</strong> This frame was transcribed from the real builder. Every cap
-          below is what the game gives you.
+          ✅ <strong>{proven} caps proven</strong> from the real builder — a cap breaker ladder that
+          runs into a locked slot has hit this frame's ceiling.
+          {floors > 0 && (
+            <>
+              {' '}
+              Another {floors} are known only as <em>lower bounds</em> (the ladder ran out of slots
+              before locking), so those still come from the model, raised to at least what the builder
+              was seen to reach.
+            </>
+          )}
         </div>
       </>
     );
@@ -151,10 +161,10 @@ function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }
 
   return (
     <div className="row-note" style={{ marginTop: 10 }}>
-      ⚠️ <strong>Modelled caps.</strong> No real cap table for this frame, so the caps come from the
-      dataset&rsquo;s linear model.
+      ⚠️ <strong>Modelled caps.</strong> No build has been transcribed on this frame, so the caps come
+      from the dataset&rsquo;s linear model.
       {accuracy
-        ? ` Scored against the one frame that does have real caps, that model is off by ${accuracy.meanAbsoluteError} points on average and reads high on ${accuracy.biasedHighOn} of ${accuracy.attributesCompared} attributes — so this build will look more affordable than it is.`
+        ? ` Scored against the ${accuracy.attributesCompared} caps proven on other frames, that model is off by ${accuracy.meanAbsoluteError} points on average and reads high on ${accuracy.biasedHighOn} of them — so this build will look more affordable than it is.`
         : ' The magnitudes are invented.'}
     </div>
   );
