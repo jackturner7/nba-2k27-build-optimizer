@@ -1020,13 +1020,25 @@ select {
   display: inline-block;
 }
 
+/* Above-the-fold disclaimer. Small and low-contrast so it reads as a label
+   rather than a warning, but present without scrolling. */
+.app-header .unofficial {
+  margin-left: 12px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* Legal footer. Deliberately quiet — present and readable, never competing with
    the builder for attention. */
 .site-footer {
   margin: 32px auto 24px;
   padding: 18px 20px 0;
   max-width: 900px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
   color: var(--text-faint);
   font-size: 12px;
   line-height: 1.6;
