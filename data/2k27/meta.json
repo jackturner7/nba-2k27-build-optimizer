@@ -1,0 +1,247 @@
+{
+  "$schema": "../schema/meta.schema.json",
+  "datasetId": "2k27",
+  "gameTitle": "NBA 2K27",
+  "datasetVersion": "0.8.0-caps-confirmed",
+  "schemaVersion": 2,
+  "lastUpdated": "2026-08-26",
+  "provenance": {
+    "status": "partial",
+    "headline": "MECHANICS ARE OFFICIAL, BADGES CORROBORATED, AND 35 ATTRIBUTE CAPS ARE PROVEN BY TWO INDEPENDENT ROUTES THAT AGREE. The build-point budget is now known to be the WRONG SHAPE: 2K27 asks you to fill to 99 Overall.",
+    "explanation": [
+      "OFFICIAL (from https://nba.2k.com/2k27/features/myplayer-builder/):",
+      "  - 53 badges (matches this dataset exactly), across six disciplines.",
+      "  - 20 badge slots per build, all available immediately; TOKENS are what you must earn to fill them.",
+      "  - Badge tokens are earned by PLAYING — discipline meters, Team Practice drills, Gatorade workouts —",
+      "    NOT by attribute allocation. Reassignable, but in-game tokens stay locked to their discipline.",
+      "  - Badge token cost VARIES BY SIZE AND POSITION: 'taller players may see a different number of",
+      "    tokens required than shorter ones for the same Badge'.",
+      "  - LEGEND badges cannot be obtained at build creation. They are reached through Synergy.",
+      "  - SYNERGY: 16 slots, twelve +1 and four +2. A Fused badge also refunds its badge tokens.",
+      "  - 5 Takeover slots; 24 Takeover Abilities of which 19 are unlockable; 15 Takeover Perks.",
+      "  - Cap Breaker preview unlocks once the build reaches 99 OVR in the Builder.",
+      "  - Builder paths: Create Your Own, Community Builds, and 40 Signature Blueprints.",
+      "",
+      "READ OFF THE REAL BUILDER (NBA 2K HQ app) — three builds:",
+      "  - PF 6'11\"/210/6'11\" (BUCKET CHASER), SG 6'8\"/190/6'8\" (2-WAY PLAYMAKING CREATOR) and",
+      "    SG 6'5\"/200/6'8\" (2-WAY OFF-SCREEN SHOOTER), with their full Cap Breaker tables.",
+      "  - 35 attribute caps PROVEN, by two independent routes that AGREE where they overlap:",
+      "      'builder-max' — the slider screen prints 'current / MAX' beside each attribute;",
+      "      'ladder-lock' — a cap breaker ladder ending in a LOCKED slot has reached the ceiling.",
+      "    Three-Point on the 6'5\" frame is 93 by both. That agreement is what licenses the ladder rule",
+      "    everywhere else. A ladder that spends all five slots without locking gives a lower bound only.",
+      "  - The derived caps are coherent across frames: Three-Point 93/92/91 and Perimeter Defense 96/87/77",
+      "    fall with height, Block 67/75/>=90 rises, Steal runs 99/84/67.",
+      "  - The linear model, scored against those 35: 6.3 mean absolute error, high on 24 of 35.",
+      "  - THE BUDGET MECHANIC: the builder shows an OVR meter and 'Fill to a 99 Overall to Continue'. There",
+      "    is no point pool. The real constraint is OVR(attributes) = 99, and the cost of a point is that",
+      "    attribute's weight in the per-position OVR formula. Those weights are NOT published, so the app",
+      "    still uses an invented point pool of the same shape. See budget.json -> actualMechanic.",
+      "  - The builder also shows a token count per discipline AT BUILD CREATION that tracks the allocation",
+      "    (19 Shooting / 5 Playmaking on the 6'5\" build). This tensions with 2K's 'tokens are earned by",
+      "    playing'; both may hold. Recorded in badge-tokens.json -> observedAtBuildCreation, not acted on.",
+      "",
+      "SOURCED + CORROBORATED:",
+      "  - All 53 badges' requirements, AND/OR logic and HEIGHT RANGES from NBA 2K Lab, cross-checked",
+      "    against a second independent chart: 211 of 212 tiers agree. Run: npm run data:crosscheck",
+      "  - Badge TOKEN COSTS for 42 of 53 badges, from the 2K27 badge cost charts. Note these are a",
+      "    SINGLE-BODY SNAPSHOT — 2K says cost varies by size, so they are only exact at one height.",
+      "  - Animation and takeover thresholds from a community 'best value thresholds' sheet.",
+      "",
+      "NOT SOURCED (assume wrong): attribute CAP magnitudes on any frame with no transcribed build, the",
+      "per-position OVR WEIGHTS that are the real budget, per-point COST CURVES, the size of the token pool",
+      "at any progression level, the per-discipline slot split, the height/position token cost adjustment,",
+      "and HOW MANY cap breakers a player may claim (the per-slot GAINS are verified; the budget is not).",
+      "",
+      "KNOWN GAPS: 15 of the 19 unlockable Takeover Abilities have no known requirements and are absent.",
+      "Token costs for the 11 Rebounding/Physicals badges are inferred from the pattern of the other 42."
+    ],
+    "howToReplace": "See docs/DATA.md. Replace values in place and set each record's verification.status with a source. Nothing in the UI or engine hard-codes these numbers.",
+    "verificationLevels": {
+      "verified": "Confirmed against the shipped NBA 2K27 builder or an official 2K source. Safe to trust.",
+      "community-verified": "Taken from the supplied NBA 2K27 badge charts / community threshold sheets. Trust with care; re-check against the NBA 2K HQ app.",
+      "estimated": "Derived or interpolated from partially known data, or read off a degraded source image. Directionally useful, numerically approximate.",
+      "unverified": "Placeholder. Shaped correctly, numerically meaningless.",
+      "deprecated": "Known to be wrong / no longer applies. Retained for history, ignored by the engine."
+    }
+  },
+  "defaultVerification": {
+    "status": "unverified",
+    "source": null,
+    "notes": "No source recorded for this record.",
+    "lastReviewed": "2026-08-25"
+  },
+  "uiWarnings": {
+    "globalBanner": "Mechanics and badge data are sourced. 35 attribute caps across three frames are PROVEN from the NBA 2K HQ app — by the slider screen's max and by cap-breaker lock-out, which agree where they overlap — plus lower bounds on the rest; other frames use a model measured 6.3 points off and biased high. The BUILD POINT BUDGET is the weakest part left: 2K27 actually constrains you to fill to 99 Overall, and the OVR weights are unknown, so treat every 'costs N points' figure as a ranking, not a quantity.",
+    "showPerRecordBadges": true
+  },
+  "changelog": [
+    {
+      "version": "0.8.0-caps-confirmed",
+      "date": "2026-08-26",
+      "changes": [
+        "CONFIRMED THE CAP DERIVATION. The builder's attribute slider screen prints 'current / MAX' beside each attribute, which is a cap read directly. On the 6'5\" frame it says Three-Point 93/93 — exactly what 0.7.0 derived from that attribute's cap breaker ladder locking at 93. Two independent routes, same number. Every other slider figure is consistent too: Mid-Range max 96 against a derived floor of >=95, Free Throw 99 against >=95, Pass Accuracy 99 against >=75, Ball Handle 95 against >=75. No contradictions.",
+        "Added those five direct readings as exact caps, taking the proven total from 31 to 35, and added capEvidence recording which route proved each one.",
+        "Model accuracy re-scored against the larger set: 6.3 mean absolute error over 35 caps, high on 24.",
+        "THE BUILD POINT BUDGET IS THE WRONG SHAPE, and now demonstrably so. 2K27's builder has no point pool — it shows an Overall meter and 'Fill to a 99 Overall to Continue'. The real constraint is OVR(attributes) = 99, so the cost of an attribute point is its weight in the per-position OVR formula. Those weights are not published anywhere supplied, so the invented pool stays as a same-shaped stand-in, with the real mechanic recorded in budget.json -> actualMechanic. Consequence for readers: every 'costs N points' figure in the app is ORDINAL, not cardinal.",
+        "Recorded that the builder shows a badge-token count per discipline AT BUILD CREATION which tracks the allocation (19 Shooting, 5 Playmaking on the 6'5\" build). This tensions with 2K's official 'tokens are earned by playing'; a build may start with attribute-derived tokens and earn more later. The current linear-by-investment model fits both counts exactly at freeBelow 64 / pointsPerToken 3 — but that is two parameters on two observations, so nothing was changed. The other four discipline counts from the same build would be a real test.",
+        "Added 2K's published build-name vocabulary (45 names). It is explicitly partial: two observed names are absent from it entirely, and a third appears only with a '2-Way' prefix the app did not show."
+      ]
+    },
+    {
+      "version": "0.7.0-caps-corrected",
+      "date": "2026-08-25",
+      "changes": [
+        "CORRECTION, and the reason for the version bump. 0.6.0 published 21 numbers as verified caps for PF|83|210|83. They were not caps — they were what that player ALLOCATED. The builder's Cap Breaker page labels its first column 'Original Cap', and I read that as the frame's ceiling. It is the build's current rating.",
+        "Two more builds made the error unmissable. Ball Handle reads 70 on a 6'5\" guard, 86 on a 6'8\" guard and 75 on a 6'11\" big; Pass Accuracy reads 65 / 87 / 77; Speed With Ball 73 / 80 / 68. No body-cap model makes a 6'5\" guard the worst ball handler of the three. Those columns track the ARCHETYPE — the 6'8\" is a Playmaking Creator, the 6'5\" an Off-Screen Shooter who never dribbles.",
+        "WHAT ACTUALLY EXPOSES A CAP is the padlock. A cap breaker ladder that ends in a LOCKED slot has run into the frame's ceiling, so that row's New Cap IS the cap. A ladder that spends all five slots without locking merely ran out of slots and gives a lower bound. caps.json now carries `caps` (31 proven) and `capFloors` (32 lower bounds) derived that way.",
+        "The derived caps are coherent across frames in a way the raw columns never were: Three-Point 93 / 92 / 91 and Perimeter Defense 96 / 87 / 77 fall with height, Block 67 / 75 / >=90 rises with it, Steal runs 99 / 84 / 67. That coherence is the evidence the derivation is right.",
+        "computeCaps now lifts a modelled cap to any proven floor, so the app can never claim a ceiling the builder was observed to exceed. That silently fixed 8 attributes.",
+        "Model accuracy re-measured against the corrected caps: 6.6 mean absolute error over 31 proven caps, high on 24. The earlier 12.9 figure was measured against the wrong numbers and is withdrawn. Still not refit.",
+        "Cap breaker tables are now keyed by BUILD, not by body, and carry `body` plus `sampledAt` (the allocation the ladder was measured from). The planner applies a row only where the build's rating equals sampledAt, and reports 'allocation-mismatch' rather than extrapolating.",
+        "Dropped the 'only place breakers on attributes already at their cap' rule, which was an artefact of the wrong model. Post Control 31 -> 77 on the 6'5\" build is a breaker ladder starting nowhere near a ceiling.",
+        "The loader now cross-checks the two derivations against each other in both directions: sampledAt + slots must equal newCap, a locked row's newCap must match caps.json's exact cap, and an unlocked row's newCap must match its floor. These are the guards that would have caught the original misreading.",
+        "Added the two new official build names, and pointed Two-Way Shot Creator at the 6'8\" frame and Lockdown Defender at the 6'5\" frame, so three presets now plan against proven ceilings."
+      ]
+    },
+    {
+      "version": "0.6.0-first-real-caps",
+      "date": "2026-08-25",
+      "changes": [
+        "FIRST VERIFIED ATTRIBUTE CAPS. All 21 caps for a 6'11\" / 210 lb / 6'11\" PF, read off the NBA 2K HQ app's builder, are in caps.json -> overrides.entries under PF|83|210|83. Every other body still uses the invented linear model.",
+        "Scored the linear cap model against those caps for the first time: mean absolute error 12.9 points, biased HIGH on 19 of 21 attributes, and wrong in SIGN on shooting for a slender big (it predicts 86/84 mid-range/three where the builder gives 94/91). Recorded in caps.json -> capModel.measuredAccuracy. The model was deliberately NOT refit — four coefficients per attribute fitted to one body would look calibrated without being calibrated.",
+        "REWROTE THE CAP BREAKER MODEL, which was wrong in kind rather than degree. It assumed four breakers each worth a flat +1, capped at two per attribute. The builder actually gives every attribute FIVE slots, each worth a different per-attribute amount (+7 on Steal's first slot, +1 on Close Shot's), with gains diminishing down the row and whole attributes locked out entirely.",
+        "cap-breakers.json is now a per-body gain table keyed like the cap overrides, with null for a locked slot and a published newCap per row. `totalAvailable`, `maxPerAttribute` and `raisePerBreaker` are gone.",
+        "A body with no transcribed table now gets NO cap breaker plan rather than a guessed one, and the UI says so.",
+        "The one thing the screenshots do not settle is how many breakers a player may claim. Recorded as an explicit unknown with two documented readings; the app defaults to the conservative 'shared pool of 5' rather than the reading that would hand this frame +112 attribute points.",
+        "planCapBreakers now allocates RUNS of slots, not one slot at a time. Pass Accuracy's slots are +2 each and no single one crosses a threshold, but three together cross four of them; the old one-slot-lookahead greedy saw zero gain and left every breaker unplaced.",
+        "The loader now cross-checks the two transcriptions against each other: original cap + slot gains must equal the published newCap, and an unlocked slot may not follow a locked one.",
+        "Recorded BUCKET CHASER, the first confirmed official 2K27 build name, in archetypes.json -> officialBuildNames.",
+        "Retargeted the Stretch Big preset onto the transcribed frame, so at least one preset plans against real ceilings. Its soft targets were rebuilt from thresholds that are actually reachable there — the old ones (Block 84, Defensive Rebound 87) sat above the real caps of 70 and 80."
+      ]
+    },
+    {
+      "version": "0.5.0-official-mechanics",
+      "date": "2026-08-25",
+      "changes": [
+        "Corrected the badge token model against 2K's official page: tokens are earned by PLAYING, not derived from attribute allocation. The old linear-by-investment default was simply the wrong model; default is now a flat per-discipline pool you set to your own progress.",
+        "Re-added the LEGEND badge tier. 2K states it exists but cannot be obtained at build creation — it is reached only through Synergy, so it carries no attribute requirement row.",
+        "Replaced the invented badge-boost numbers with the official Synergy system: 16 slots, twelve +1 and four +2 (was 2 and 1).",
+        "Modelled that a Fused badge refunds the tokens spent equipping it.",
+        "Takeover slots corrected from primary/secondary to the official 5; recorded that 24 abilities exist and 19 are unlockable, of which only 4 have known requirements here.",
+        "Added Hydration Hero, officially named, with no published attribute requirement.",
+        "Added a costByBody model: 2K says badge token cost varies with size and position, so the chart costs are now explicitly a single-body snapshot with an adjustment hook, defaulted to zero.",
+        "Confirmed against 2K: 53 badges, 20 badge slots, six disciplines, and the 99-OVR cap breaker preview."
+      ]
+    },
+    {
+      "version": "0.4.0-badges-corroborated",
+      "date": "2026-08-25",
+      "changes": [
+        "Added data/2k27/sources/ for independently-produced sources, and a cross-check that diffs the shipped dataset against each one.",
+        "Transcribed the @jpforthreee badge requirements chart as a second source: 211 of 212 tiers and height gates agree with the NBA 2K Lab import.",
+        "The one disagreement (Smooth Operator max height 6'11\" vs unrestricted) is recorded as a known conflict, shown in the UI, and left unresolved rather than silently decided.",
+        "npm run data:crosscheck exits non-zero on any disagreement not recorded with a note, so a conflict can be accepted but not ignored."
+      ]
+    },
+    {
+      "version": "0.3.0-badges-sourced",
+      "date": "2026-08-25",
+      "changes": [
+        "Imported all 53 badges from NBA 2K Lab: requirements, AND/OR logic and per-badge HEIGHT RANGES.",
+        "Added the missing Rebounding badges (Boxout Boss, Breaker, Crasher, Possession Closer, Sync Snatcher) and Physicals badges (Brick Wall, Bruiser, Flash, Pogo Stick, Slippery Off-Ball, Work Horse).",
+        "Removed Rebound Chaser, which I had reconstructed from a single line of the best-value sheet and which does not exist on 2K Lab.",
+        "Resolved all four rows previously flagged as unreadable from the chart images: Post Fade Phenom Bronze Mid-Range is 60 (not 83, so the ladder is monotonic after all); Pick Dodger, Wall Up and Post Lockdown all had wrong tier values.",
+        "Mini Marksman gained its real attribute requirements (Mid-Range or Three-Point 60/79/94/99) — the chart image showed only the height gate.",
+        "Badge height gating is now modelled: 25 of 53 badges are height-restricted, so height locks badges out entirely rather than just moving caps.",
+        "Corrected the builder height range to 5'9\"-7'4\", read off 2K Lab's height columns.",
+        "Added a documented fallback price for badges with no sourced token cost, flagged as inferred everywhere it is used.",
+        "Added scripts/import-2klab.mjs so the badge data can be re-imported when 2K Lab updates."
+      ]
+    },
+    {
+      "version": "0.2.0-partial",
+      "date": "2026-08-25",
+      "changes": [
+        "Replaced all badge data with sourced NBA 2K27 requirements and badge token costs (Shooting, Playmaking, Defense, Finishing).",
+        "Removed Stamina: not a 2K27 builder attribute, raised in-game at the Gatorade gym.",
+        "Removed Acceleration, added Agility, which is what 2K27 defensive badges actually require.",
+        "Split Rebounding out of Defense into its own discipline (2K27 has six badge disciplines).",
+        "Dropped the Legend badge tier: 2K27 charts show Bronze/Silver/Gold/Hall of Fame only.",
+        "Added badge-tokens.json for the new token + slot economy.",
+        "Added support for 'any of' badge requirements, which 2K27 uses heavily.",
+        "Corrected the sign of the weight and wingspan effect on Perimeter Defense and Driving Dunk caps.",
+        "Rewrote animations and takeovers to only what the best-value threshold sheet names."
+      ]
+    },
+    {
+      "version": "0.1.0-placeholder",
+      "date": "2026-08-25",
+      "changes": [
+        "Initial scaffold with fully invented placeholder data."
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "attributes.json",
+      "describes": "Attribute definitions, six disciplines, min/max, cost curve binding."
+    },
+    {
+      "file": "cost-curves.json",
+      "describes": "Per-point upgrade cost curves referenced by attributes. UNSOURCED."
+    },
+    {
+      "file": "positions.json",
+      "describes": "Positions and their body-setting envelopes. UNSOURCED."
+    },
+    {
+      "file": "body.json",
+      "describes": "Height / weight / wingspan legal ranges. UNSOURCED."
+    },
+    {
+      "file": "caps.json",
+      "describes": "How body settings translate into per-attribute maximums. One body's caps are VERIFIED from the real builder; every other body uses a linear model whose error is measured in capModel.measuredAccuracy."
+    },
+    {
+      "file": "budget.json",
+      "describes": "Total build point budget. UNSOURCED."
+    },
+    {
+      "file": "badges.json",
+      "describes": "Badges, tiers, requirements, height ranges and token costs. Requirements SOURCED from 2K Lab; token costs sourced for 42 of 53."
+    },
+    {
+      "file": "badge-tokens.json",
+      "describes": "Badge token economy: per-discipline pools and badge slots. Mechanic sourced, quantities not."
+    },
+    {
+      "file": "animations.json",
+      "describes": "Animation packages and their requirements. SOURCED but incomplete."
+    },
+    {
+      "file": "takeovers.json",
+      "describes": "Takeovers and their unlock requirements. SOURCED but likely incomplete."
+    },
+    {
+      "file": "cap-breakers.json",
+      "describes": "Cap breaker gain tables, keyed by body: five slots per attribute, per-attribute variable gains, locked slots. VERIFIED for one body. How many breakers a player may claim is NOT sourced."
+    },
+    {
+      "file": "badge-boosts.json",
+      "describes": "Maximum +1 / +2 badge level boost rules. UNSOURCED."
+    },
+    {
+      "file": "dependencies.json",
+      "describes": "Declared attribute interaction rules. Modelling choices, not game rules."
+    },
+    {
+      "file": "archetypes.json",
+      "describes": "Named build archetypes plus officialBuildNames, the in-game names observed for specific bodies. Threshold values sourced; archetype names are community convention."
+    },
+    {
+      "file": "sources/*.json",
+      "describes": "Independently-produced sources the dataset is cross-checked against. Not loaded by the app."
+    }
+  ]
+}

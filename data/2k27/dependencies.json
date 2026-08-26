@@ -1,0 +1,67 @@
+{
+  "$comment": [
+    "Declared relationships between attributes.",
+    "",
+    "2K does not expose formal attribute dependencies in the builder. These are MODELLING CHOICES that",
+    "encode practical couplings real builds have, and every one is labelled as such. Set `enabled` to",
+    "false on any you disagree with — nothing else in the app depends on them existing.",
+    "",
+    "  hard-min   : target must be at least `min`, or the build is INVALID.",
+    "  soft-link  : the score treats `target` as effectively min(target, source*ratio + offset).",
+    "  diminishing: value from `target` above `threshold` is scaled by `factor` unless `source` >= `sourceMin`.",
+    "",
+    "Updated 2026-08-25: the Acceleration-based perimeter defense rule now keys off AGILITY, which is",
+    "the 2K27 attribute the defensive badges actually require (Ankle Braces, Pick Dodger, Seatbelt).",
+    "The Stamina rule was removed with the attribute."
+  ],
+
+  "dependencies": [
+    {
+      "id": "swb_needs_handle",
+      "kind": "soft-link",
+      "source": "ball_handle",
+      "target": "speed_with_ball",
+      "ratio": 1.0,
+      "offset": 8,
+      "enabled": true,
+      "note": "Speed With Ball beyond roughly Ball Handle + 8 delivers little in practice.",
+      "verification": { "status": "unverified", "notes": "Community heuristic, not an in-game rule." }
+    },
+    {
+      "id": "dunk_needs_vertical",
+      "kind": "diminishing",
+      "source": "vertical",
+      "target": "driving_dunk",
+      "threshold": 87,
+      "sourceMin": 75,
+      "factor": 0.6,
+      "enabled": true,
+      "note": "Driving Dunk past the contact dunk threshold needs Vertical 75 to actually get the packages.",
+      "verification": { "status": "estimated", "source": "Thresholds taken from the best-value sheet (Driving Dunk 87 / Vertical 75 for contact dunks); the discount factor is a modelling choice." }
+    },
+    {
+      "id": "block_needs_vertical",
+      "kind": "diminishing",
+      "source": "vertical",
+      "target": "block",
+      "threshold": 84,
+      "sourceMin": 65,
+      "factor": 0.7,
+      "enabled": true,
+      "note": "Block ratings past Silver Paint Patroller need the vertical to actually contest.",
+      "verification": { "status": "unverified", "notes": "Modelling choice." }
+    },
+    {
+      "id": "perimeter_needs_agility",
+      "kind": "diminishing",
+      "source": "agility",
+      "target": "perimeter_defense",
+      "threshold": 85,
+      "sourceMin": 77,
+      "factor": 0.75,
+      "enabled": true,
+      "note": "Elite Perimeter Defense without the Agility that Seatbelt / Pick Dodger / Ankle Braces require cannot stay in front.",
+      "verification": { "status": "estimated", "source": "Agility thresholds taken from the 2K27 defense badge chart; the discount factor is a modelling choice." }
+    }
+  ]
+}

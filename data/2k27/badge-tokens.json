@@ -1,0 +1,229 @@
+{
+  "$comment": [
+    "NBA 2K27 BADGE TOKENS AND SLOTS.",
+    "",
+    "SOURCED from 2K's official MyPLAYER Builder page:",
+    "  - Every build starts with 20 Badge slots across six disciplines: Shooting, Finishing, Playmaking,",
+    "    Defense, Rebounding, Physicals. All 20 are available immediately; you must earn TOKENS to fill them.",
+    "  - Meeting a badge's attribute requirement puts it in your INVENTORY. Spending tokens equips it.",
+    "  - Tokens are earned by PLAYING — the six discipline progression meters, Team Practice drills and",
+    "    Gatorade workouts — NOT by how you allocate attributes at build creation.",
+    "  - Tokens can be reassigned at any time, but tokens earned in-game stay locked to their discipline.",
+    "  - Bonus Slots and Bonus Tokens from Build Specialization, Seasons and Crews are discipline-agnostic.",
+    "  - Rebirth immediately unlocks a percentage of your default tokens.",
+    "  - TOKEN COST VARIES BY BODY: 'you can see in real time how your selected size and position affect",
+    "    which Badges you qualify for and how many tokens each Badge will cost. Taller players may see a",
+    "    different number of tokens required than shorter ones for the same Badge.'",
+    "",
+    "THIS CHANGES THE DEFAULT MODEL. An earlier version derived tokens from attribute investment. That is",
+    "wrong: tokens are a progression resource, so how many you have is a fact about YOUR ACCOUNT, not about",
+    "the build. The default is now a flat per-discipline pool you set to match your own progress, and the",
+    "UI exposes it. `linear-by-investment` is retained only as a fallback for planning in the abstract.",
+    "",
+    "STILL NOT SOURCED: the size of the token pool at any progression level, the per-discipline slot split,",
+    "the height/position cost adjustment, and whether upgrading a tier pays the difference or the full price."
+  ],
+  "enabled": true,
+  "verification": {
+    "status": "verified",
+    "source": "2K official MyPLAYER Builder page, 2026-08-25",
+    "notes": "The mechanic, the 20 slots, the six disciplines, how tokens are earned and that cost varies by size/position are all official. Every QUANTITY below is not."
+  },
+  "disciplines": [
+    "shooting",
+    "finishing",
+    "playmaking",
+    "defense",
+    "rebounding",
+    "physicals"
+  ],
+  "upgradeCostMode": {
+    "value": "absolute",
+    "options": [
+      "absolute",
+      "incremental"
+    ],
+    "verification": {
+      "status": "unverified",
+      "notes": "'absolute' = equipping Gold costs the full Gold price. 'incremental' = you pay Gold minus what you already paid for Silver. The charts show a per-tier price but not which of these it means. 'absolute' is the more conservative reading."
+    }
+  },
+  "slots": {
+    "total": 20,
+    "byDiscipline": {
+      "shooting": 4,
+      "finishing": 4,
+      "playmaking": 3,
+      "defense": 4,
+      "rebounding": 2,
+      "physicals": 3
+    },
+    "verification": {
+      "status": "verified",
+      "source": "2K official: 'Every single build starts with 20 Badge slots distributed across six specific disciplines'.",
+      "notes": "The TOTAL of 20 is official. The per-discipline SPLIT below is invented — 2K does not publish it. Bonus Slots earned through Build Specialization, Seasons and Crews are not modelled."
+    }
+  },
+  "tokenGrants": {
+    "mode": "flat",
+    "$comment": [
+      "mode 'flat' (default): use `flatByDiscipline`. Correct in KIND — tokens are earned by playing, so the",
+      "  size of your pool is a property of your account, not of the build. Set it to what you actually have.",
+      "mode 'table': exact ratings that grant tokens. Retained in case 2K27 also grants some from attributes.",
+      "mode 'linear-by-investment': derive tokens from attribute spend. Known to be the WRONG model for 2K27;",
+      "  kept only for planning an abstract 'fully progressed in what I invested in' build.",
+      "mode 'manual': treat as unlimited unless manualTokens says otherwise."
+    ],
+    "verification": {
+      "status": "estimated",
+      "source": "2K official for the mechanic; the numbers are invented.",
+      "notes": "flatByDiscipline is set so that badge SLOTS bind rather than tokens, matching '20 badge slots' being the headline constraint. Replace with your real counts."
+    },
+    "flatByDiscipline": {
+      "shooting": 18,
+      "finishing": 18,
+      "playmaking": 14,
+      "defense": 18,
+      "rebounding": 9,
+      "physicals": 13
+    },
+    "progressionPresets": {
+      "$comment": "Rough multipliers on flatByDiscipline for the UI. Tokens are earned over time, so a fresh build has far fewer than a maxed account.",
+      "new": 0.0,
+      "early": 0.35,
+      "established": 0.7,
+      "maxed": 1.0
+    },
+    "freeBelow": 50,
+    "pointsPerToken": 5,
+    "maxPerDiscipline": 30,
+    "table": {}
+  },
+  "manualTokens": {
+    "$comment": "Set any of these to a number to override the computed token pool for that discipline. null = compute it. The UI exposes these as inputs so you can type your real in-game values.",
+    "shooting": null,
+    "finishing": null,
+    "playmaking": null,
+    "defense": null,
+    "rebounding": null,
+    "physicals": null
+  },
+  "rules": {
+    "capBreakersGrantTokens": false,
+    "tokensReassignable": true,
+    "inGameTokensLockedToDiscipline": true,
+    "bonusTokensAnyDiscipline": true,
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "'You can reassign Tokens at any time, but Tokens earned through in-game events remain locked to their respective discipline.' Cap breakers not granting tokens is from 2K27 builder coverage."
+    }
+  },
+  "fallbackTokenCost": {
+    "$comment": [
+      "What to charge for a badge tier whose real token cost is unknown.",
+      "",
+      "WHY THIS EXISTS: the Rebounding and Physicals badge cost charts were never supplied, so 11 of the",
+      "53 badges have no sourced token cost. Without a fallback those badges can never be equipped, which",
+      "silently cripples every big-man and athleticism build — a worse failure than an approximate price.",
+      "",
+      "WHY THIS SHAPE: all 42 badges whose costs ARE known fall into exactly three ladders and nothing",
+      "else: 1/3/4/5 (15 badges), 2/4/5/6 (10 badges) and 3/5/6/7 (17 badges). The middle ladder is used",
+      "here. That is an inference from a very consistent pattern, NOT a sourced value, and every badge",
+      "priced this way is flagged `tokenCostInferred` and called out in the UI.",
+      "",
+      "Set `enabled` to false to go back to refusing to price them, which is the strictly honest option."
+    ],
+    "enabled": true,
+    "verification": {
+      "status": "estimated",
+      "source": "Inferred from the cost ladders of the 42 badges with sourced token costs.",
+      "notes": "Replace with real costs from the Rebounding and Physicals badge cost charts and this fallback stops being used."
+    },
+    "byLevel": {
+      "bronze": 2,
+      "silver": 4,
+      "gold": 5,
+      "hof": 6
+    }
+  },
+  "costByBody": {
+    "$comment": [
+      "2K states outright that badge token cost depends on your size and position: a taller player may pay a",
+      "different number of tokens for the same badge. The token costs in badges.json were read off charts",
+      "that do not say which body they were captured at, so they are a SINGLE-BODY SNAPSHOT.",
+      "",
+      "`perInchHeight` adjusts a badge tier's cost by that many tokens per inch away from `referenceHeight`,",
+      "rounded and clamped to >= 1. It is 0 by default, i.e. 'no adjustment known' — NOT 'no adjustment",
+      "exists'. Set it once the direction and size are known, or fill `overrides` with exact costs."
+    ],
+    "enabled": true,
+    "verification": {
+      "status": "unverified",
+      "source": "2K official confirms cost VARIES by size and position; the magnitude and direction are not published.",
+      "notes": "perInchHeight is 0 so the app currently uses the chart costs unchanged. This is a known gap, surfaced in the UI."
+    },
+    "referenceHeightInches": null,
+    "perInchHeight": 0,
+    "minCost": 1,
+    "overrides": {}
+  },
+  "observedAtBuildCreation": {
+    "$comment": [
+      "THIS PARTLY CONTRADICTS THE MODEL ABOVE, AND THE CONTRADICTION IS RECORDED RATHER THAN RESOLVED.",
+      "",
+      "2K's official page says badge tokens are earned by PLAYING, which is why the default mode is a flat",
+      "per-discipline pool you set to your own progress. But the builder itself shows a number beside each",
+      "discipline heading AT BUILD CREATION, before any game has been played, and it clearly tracks the",
+      "allocation: the 6'5\" Off-Screen Shooter reads 19 on SHOOTING (Mid-Range 90 / Three 93 / Free Throw",
+      "71) and 5 on PLAYMAKING (Pass 65 / Ball Handle 70 / Speed With Ball 73).",
+      "",
+      "Both can be true — a build may START with tokens derived from its attributes and EARN more by",
+      "playing. That would make 'linear-by-investment' the right model for the starting pool and the flat",
+      "pool the right model for the earned one.",
+      "",
+      "WHY NOTHING WAS CHANGED: the current linear-by-investment model does fit both numbers exactly, at",
+      "freeBelow 64 / pointsPerToken 3. That is two parameters fitted to two observations with zero degrees",
+      "of freedom, so it is a coincidence until it survives a test. The other four discipline counts from",
+      "this same build would be that test — four more equations against the same two parameters.",
+      "",
+      "Until then the default stays `flat` and this block is an observation, not a calibration."
+    ],
+    "verification": {
+      "status": "verified",
+      "source": "NBA 2K HQ app MyPLAYER builder attribute screen, screenshot supplied 2026-08-26.",
+      "notes": "The two counts are read directly off the builder. What they MEAN, and the formula behind them, are not established."
+    },
+    "samples": [
+      {
+        "body": "SG|77|200|80",
+        "build": "2-WAY OFF-SCREEN SHOOTER",
+        "counts": {
+          "shooting": 19,
+          "playmaking": 5
+        },
+        "missing": [
+          "finishing",
+          "defense",
+          "rebounding",
+          "physicals"
+        ],
+        "attributesAtSample": {
+          "mid_range": 90,
+          "three_point": 93,
+          "free_throw": 71,
+          "pass_accuracy": 65,
+          "ball_handle": 70,
+          "speed_with_ball": 73
+        }
+      }
+    ],
+    "candidateFit": {
+      "$comment": "The only (freeBelow, pointsPerToken) pair reproducing both counts. NOT adopted — see above.",
+      "mode": "linear-by-investment",
+      "freeBelow": 64,
+      "pointsPerToken": 3,
+      "degreesOfFreedom": 0
+    }
+  }
+}

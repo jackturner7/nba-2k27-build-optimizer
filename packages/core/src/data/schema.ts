@@ -1,0 +1,601 @@
+import { z } from 'zod';
+
+/**
+ * Validation schemas for the JSON dataset files.
+ *
+ * Every dataset file is validated on load. A malformed file fails loudly rather
+ * than silently producing a wrong build — the whole point of this app is that
+ * the numbers are replaceable, so bad replacements must be caught.
+ */
+
+const verification = z
+  .object({
+    status: z
+      .enum(['verified', 'community-verified', 'estimated', 'unverified', 'deprecated'])
+      .default('unverified'),
+    source: z.string().nullish(),
+    notes: z.string().nullish(),
+    lastReviewed: z.string().nullish(),
+  })
+  .default({ status: 'unverified' });
+
+const singleRequirement = z.object({
+  attribute: z.string(),
+  min: z.number().int(),
+});
+
+/**
+ * A requirement clause: either a single attribute minimum, or an "any of" set
+ * where satisfying one branch is enough. 2K27 uses the latter constantly
+ * ("65 Mid-Range Shot or 65 Three-Point Shot").
+ */
+const attributeRequirement = z.union([
+  singleRequirement,
+  z.object({ anyOf: z.array(singleRequirement).min(1) }),
+]);
+
+const bodyRequirement = z.object({
+  minHeightInches: z.number().optional(),
+  maxHeightInches: z.number().optional(),
+  minWeightPounds: z.number().optional(),
+  maxWeightPounds: z.number().optional(),
+  minWingspanInches: z.number().optional(),
+  maxWingspanInches: z.number().optional(),
+});
+
+export const metaSchema = z.object({
+  datasetId: z.string(),
+  gameTitle: z.string(),
+  datasetVersion: z.string(),
+  schemaVersion: z.number().int(),
+  lastUpdated: z.string(),
+  provenance: z.object({
+    status: z.string(),
+    headline: z.string(),
+    explanation: z.array(z.string()),
+    howToReplace: z.string(),
+    verificationLevels: z.record(z.string(), z.string()),
+  }),
+  defaultVerification: verification,
+  uiWarnings: z.object({
+    globalBanner: z.string(),
+    showPerRecordBadges: z.boolean(),
+  }),
+  files: z.array(z.object({ file: z.string(), describes: z.string() })),
+});
+
+export const attributesSchema = z.object({
+  ratingFloor: z.number().int(),
+  ratingCeiling: z.number().int(),
+  categories: z.array(z.object({ id: z.string(), name: z.string(), color: z.string() })),
+  attributes: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      short: z.string(),
+      category: z.string(),
+      costCurve: z.string(),
+      verification,
+    })
+  ),
+  priorityGroups: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      attributes: z.array(z.string()),
+      supporting: z.array(z.string()).default([]),
+    })
+  ),
+});
+
+export const costCurvesSchema = z.object({
+  curves: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      verification,
+      ranges: z.array(
+        z.object({
+          from: z.number().int(),
+          to: z.number().int(),
+          costPerPoint: z.number().nonnegative(),
+        })
+      ),
+    })
+  ),
+});
+
+export const positionsSchema = z.object({
+  positions: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      heightInchesMin: z.number().int(),
+      heightInchesMax: z.number().int(),
+      secondaryPositions: z.array(z.string()).default([]),
+      verification,
+    })
+  ),
+});
+
+export const bodySchema = z.object({
+  heightInchesMin: z.number().int(),
+  heightInchesMax: z.number().int(),
+  weightModel: z.object({
+    kind: z.string(),
+    verification,
+    referenceHeightInches: z.number(),
+    minWeightAtReference: z.number(),
+    maxWeightAtReference: z.number(),
+    minWeightPerInch: z.number(),
+    maxWeightPerInch: z.number(),
+    absoluteMin: z.number(),
+    absoluteMax: z.number(),
+  }),
+  wingspanModel: z.object({
+    kind: z.string(),
+    verification,
+    minOffsetInches: z.number(),
+    maxOffsetInches: z.number(),
+    absoluteMinInches: z.number(),
+    absoluteMaxInches: z.number(),
+  }),
+  interactions: z.object({
+    verification,
+    rules: z
+      .array(
+        z.object({
+          id: z.string(),
+          when: bodyRequirement,
+          clamp: z.object({
+            maxWingspanInches: z.number().optional(),
+            minWingspanInches: z.number().optional(),
+            maxWeightPounds: z.number().optional(),
+            minWeightPounds: z.number().optional(),
+          }),
+          note: z.string().optional(),
+          verification: verification.optional(),
+        })
+      )
+      .default([]),
+  }),
+  overrides: z.object({
+    entries: z
+      .record(
+        z.string(),
+        z.object({
+          weightMin: z.number().optional(),
+          weightMax: z.number().optional(),
+          wingspanMin: z.number().optional(),
+          wingspanMax: z.number().optional(),
+        })
+      )
+      .default({}),
+  }),
+});
+
+export const capsSchema = z.object({
+  capModel: z.object({
+    kind: z.string(),
+    verification,
+    /** How badly the model misses, scored against the exact tables in `overrides`. */
+    measuredAccuracy: z
+      .object({
+        measuredAt: z.string(),
+        againstBody: z.string(),
+        meanAbsoluteError: z.number(),
+        worstAttribute: z.object({ attribute: z.string(), error: z.number() }),
+        biasedHighOn: z.number(),
+        attributesCompared: z.number(),
+      })
+      .optional(),
+    referenceBody: z.object({
+      position: z.string(),
+      heightInches: z.number(),
+      weightPounds: z.number(),
+      wingspanInches: z.number(),
+    }),
+  }),
+  attributeCaps: z.array(
+    z.object({
+      attribute: z.string(),
+      baseCap: z.number(),
+      perInchHeight: z.number(),
+      perPoundWeight: z.number(),
+      perInchWingspan: z.number(),
+      positionAdjust: z.record(z.string(), z.number()).optional(),
+      hardMin: z.number(),
+      hardMax: z.number(),
+      verification,
+    })
+  ),
+  overrides: z.object({
+    entries: z
+      .record(
+        z.string(),
+        z.object({
+          label: z.string().default(''),
+          verification,
+          /** Proven ceilings — see capEvidence for which route proved each. */
+          caps: z.record(z.string(), z.number()).default({}),
+          /** Proven lower bounds: a ladder that ran out of slots before locking. */
+          capFloors: z.record(z.string(), z.number()).default({}),
+          /** How each exact cap was established: 'ladder-lock', 'builder-max', or both. */
+          capEvidence: z.record(z.string(), z.string()).default({}),
+        })
+      )
+      .default({}),
+  }),
+});
+
+export const budgetSchema = z.object({
+  enabled: z.boolean(),
+  verification,
+  /**
+   * The real 2K27 constraint: raise attributes until OVR hits 99. Recorded so
+   * the shape of the constraint is not lost, but the engine cannot use it until
+   * the per-position OVR weights are known.
+   */
+  actualMechanic: z
+    .object({
+      kind: z.string(),
+      targetOverall: z.number(),
+      uiText: z.string().default(''),
+      verification,
+      positionWeights: z.object({ entries: z.record(z.string(), z.record(z.string(), z.number())).default({}) }),
+    })
+    .optional(),
+  referenceBody: z.object({
+    heightInches: z.number(),
+    weightPounds: z.number(),
+    wingspanInches: z.number(),
+  }),
+  base: z.number(),
+  perInchHeight: z.number(),
+  perPoundWeight: z.number(),
+  perInchWingspan: z.number(),
+  positionAdjust: z.record(z.string(), z.number()).default({}),
+  minimum: z.number(),
+});
+
+export const badgesSchema = z.object({
+  levels: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      order: z.number().int(),
+      scoreWeight: z.number(),
+      /** 2K27's Legend tier exists but cannot be reached at build creation. */
+      obtainableAtBuildCreation: z.boolean().default(true),
+      note: z.string().optional(),
+    })
+  ),
+  globalRules: z.object({
+    maxLegendBadges: z.number().int().nullable(),
+    maxBadgesPerCategory: z.number().int().nullable(),
+    legendRequiresSynergy: z.boolean().default(false),
+    verification,
+  }),
+  badges: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      category: z.string(),
+      impact: z.number().min(0).max(5),
+      description: z.string().default(''),
+      restrictions: bodyRequirement
+        .extend({ positions: z.array(z.string()).optional(), note: z.string().optional() })
+        .optional(),
+      verification,
+      incompleteTiers: z.boolean().optional(),
+      tiers: z.array(
+        z.object({
+          level: z.string(),
+          tokenCost: z.number().int().nonnegative().nullable().default(null),
+          requires: z.array(attributeRequirement),
+        })
+      ),
+    })
+  ),
+});
+
+export const badgeTokensSchema = z.object({
+  /**
+   * Per-discipline token counts read off the real builder at build creation.
+   * These tension against 2K's "tokens are earned by playing" statement, so they
+   * are recorded as observations rather than folded into the model.
+   */
+  observedAtBuildCreation: z
+    .object({
+      verification,
+      samples: z.array(
+        z.object({
+          body: z.string(),
+          build: z.string().default(''),
+          counts: z.record(z.string(), z.number()),
+          missing: z.array(z.string()).default([]),
+          attributesAtSample: z.record(z.string(), z.number()).default({}),
+        })
+      ),
+      candidateFit: z.record(z.string(), z.unknown()).optional(),
+    })
+    .optional(),
+  enabled: z.boolean(),
+  verification,
+  disciplines: z.array(z.string()),
+  upgradeCostMode: z.object({
+    value: z.enum(['absolute', 'incremental']),
+    options: z.array(z.string()).default([]),
+    verification,
+  }),
+  slots: z.object({
+    total: z.number().int().nonnegative(),
+    byDiscipline: z.record(z.string(), z.number().int().nonnegative()),
+    verification,
+  }),
+  costByBody: z
+    .object({
+      enabled: z.boolean().default(false),
+      verification,
+      referenceHeightInches: z.number().nullable().default(null),
+      perInchHeight: z.number().default(0),
+      minCost: z.number().int().positive().default(1),
+      overrides: z.record(z.string(), z.number().int().nonnegative()).default({}),
+    })
+    .default({ enabled: false, referenceHeightInches: null, perInchHeight: 0, minCost: 1, overrides: {}, verification: { status: 'unverified' } }),
+  tokenGrants: z.object({
+    mode: z.enum(['flat', 'linear-by-investment', 'table', 'manual']),
+    flatByDiscipline: z.record(z.string(), z.number().nonnegative()).default({}),
+    progressionPresets: z.record(z.string(), z.number()).default({}),
+    verification,
+    freeBelow: z.number().default(0),
+    pointsPerToken: z.number().positive().default(1),
+    maxPerDiscipline: z.number().int().nonnegative().default(99),
+    table: z
+      .record(
+        z.string(),
+        z.array(z.object({ attribute: z.string(), rating: z.number().int(), tokens: z.number().int() }))
+      )
+      .default({}),
+  }),
+  manualTokens: z.record(z.string(), z.number().nullable()).default({}),
+  fallbackTokenCost: z
+    .object({
+      enabled: z.boolean().default(false),
+      verification,
+      byLevel: z.record(z.string(), z.number().int().nonnegative()).default({}),
+    })
+    .default({ enabled: false, byLevel: {}, verification: { status: 'unverified' } }),
+  rules: z.object({
+    capBreakersGrantTokens: z.boolean().default(false),
+    tokensReassignable: z.boolean().optional(),
+    inGameTokensLockedToDiscipline: z.boolean().optional(),
+    bonusTokensAnyDiscipline: z.boolean().optional(),
+    unspentTokensCarryOver: z.boolean().nullable().default(null),
+    canRefundTokens: z.boolean().nullable().default(null),
+    verification: verification.optional(),
+  }),
+});
+
+export const animationsSchema = z.object({
+  categories: z.array(z.object({ id: z.string(), name: z.string(), description: z.string().default('') })),
+  animations: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      category: z.string(),
+      impact: z.number().min(0).max(5),
+      requires: z.array(attributeRequirement),
+      bodyRequires: bodyRequirement.optional(),
+      notes: z.string().optional(),
+      verification,
+    })
+  ),
+});
+
+export const takeoversSchema = z.object({
+  slots: z.object({ total: z.number().int().nonnegative(), verification }),
+  abilities: z
+    .object({
+      totalInGame: z.number().int().nonnegative(),
+      unlockable: z.number().int().nonnegative(),
+      documentedHere: z.number().int().nonnegative(),
+      verification,
+    })
+    .optional(),
+  perks: z
+    .object({
+      modelled: z.boolean(),
+      total: z.number().int().nonnegative(),
+      kinds: z.array(z.string()).default([]),
+      verification,
+    })
+    .optional(),
+  takeovers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().default(''),
+      impact: z.number().min(0).max(5),
+      verification,
+      tiers: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          requires: z.array(attributeRequirement),
+        })
+      ),
+    })
+  ),
+});
+
+/**
+ * One attribute's cap breaker row: five slots, each either a point gain or
+ * `null` for a slot the builder has locked out on this body.
+ */
+const capBreakerRow = z.object({
+  slots: z.array(z.number().int().positive().nullable()),
+  newCap: z.number().int(),
+});
+
+export const capBreakersSchema = z.object({
+  verification,
+  enabled: z.boolean(),
+  slotsPerAttribute: z.number().int().nonnegative(),
+  costsBuildPoints: z.boolean(),
+  absoluteCeiling: z.number().int(),
+  rules: z
+    .object({
+      visibleOnlyAt99Overall: z.boolean().default(true),
+      grantsBadgeTokens: z.boolean().default(false),
+      verification: verification.optional(),
+      note: z.string().optional(),
+    })
+    .default({ visibleOnlyAt99Overall: true, grantsBadgeTokens: false }),
+  allocation: z.object({
+    mode: z.enum(['shared-pool', 'per-attribute']),
+    poolSize: z.number().int().nonnegative(),
+    verification,
+  }),
+  eligibility: z.object({
+    mode: z.enum(['all', 'all-except', 'only']),
+    excludedAttributes: z.array(z.string()).default([]),
+    note: z.string().optional(),
+  }),
+  includedAttributes: z.array(z.string()).default([]),
+  gainTables: z.object({
+    entries: z
+      .record(
+        z.string(),
+        z.object({
+          label: z.string().default(''),
+          /** The name the real builder gave this build, when it is known. */
+          buildName: z.string().default(''),
+          /** `POSITION|height|weight|wingspan` this build was made on. */
+          body: z.string(),
+          verification,
+          /**
+           * The allocation the ladder was read at. Gains are relative to it, so
+           * a row only applies to a build sitting on the same rating.
+           */
+          sampledAt: z.record(z.string(), z.number()).default({}),
+          attributes: z.record(z.string(), capBreakerRow),
+        })
+      )
+      .default({}),
+  }),
+});
+
+const slotCount = z.object({
+  slots: z.number().int().nonnegative(),
+  levelsGained: z.number().int(),
+  note: z.string().optional(),
+});
+
+/** The Synergy system: 12 x +1 and 4 x +2 slots, and the only route to Legend. */
+export const badgeBoostsSchema = z.object({
+  verification,
+  enabled: z.boolean(),
+  totalSlots: z.number().int().nonnegative().default(0),
+  plusOne: slotCount,
+  plusTwo: slotCount,
+  availableSlots: z
+    .object({
+      plusOne: z.number().int().nonnegative(),
+      plusTwo: z.number().int().nonnegative(),
+      verification: verification.optional(),
+    })
+    .optional(),
+  rules: z.object({
+    canStackOnSameBadge: z.boolean(),
+    canBoostToLegend: z.boolean(),
+    legendOnlyViaSynergy: z.boolean().default(false),
+    fuseRefundsTokens: z.boolean().default(false),
+    requiresBadgeAlreadyUnlocked: z.boolean(),
+    minimumLevelToBoost: z.string(),
+    eligibleCategories: z.array(z.string()).default([]),
+    excludedBadges: z.array(z.string()).default([]),
+    verification: verification.optional(),
+  }),
+  reaction: z.object({ modelled: z.boolean() }).optional(),
+});
+
+export const dependenciesSchema = z.object({
+  dependencies: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(['hard-min', 'soft-link', 'diminishing']),
+      source: z.string(),
+      target: z.string(),
+      enabled: z.boolean().default(true),
+      note: z.string().optional(),
+      verification,
+      ratio: z.number().optional(),
+      offset: z.number().optional(),
+      min: z.number().optional(),
+      threshold: z.number().optional(),
+      sourceMin: z.number().optional(),
+      factor: z.number().optional(),
+    })
+  ),
+});
+
+export const archetypesSchema = z.object({
+  /**
+   * Build names observed in the real 2K27 builder, keyed by body. 2K27 names a
+   * build for you rather than offering an archetype list, so these are the only
+   * confirmed names — the archetypes below use community naming.
+   */
+  officialBuildNames: z
+    .object({
+      verification,
+      entries: z.record(z.string(), z.string()).default({}),
+      /** 2K's published build-name vocabulary. Partial — see the file's notes. */
+      knownNames: z
+        .object({
+          verification,
+          count: z.number().int(),
+          names: z.array(z.string()),
+          observedButNotListed: z.array(z.string()).default([]),
+        })
+        .optional(),
+    })
+    .optional(),
+  archetypes: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      summary: z.string().default(''),
+      position: z.string(),
+      suggestedBody: z.object({
+        heightInches: z.number(),
+        weightPounds: z.number(),
+        wingspanInches: z.number(),
+      }),
+      priorities: z.record(z.string(), z.number()),
+      constraints: z.object({
+        minimums: z.record(z.string(), z.number()).default({}),
+        softTargets: z.record(z.string(), z.number()).default({}),
+      }),
+      verification,
+    })
+  ),
+});
+
+export interface RawDatasetFiles {
+  meta: unknown;
+  badgeTokens: unknown;
+  attributes: unknown;
+  costCurves: unknown;
+  positions: unknown;
+  body: unknown;
+  caps: unknown;
+  budget: unknown;
+  badges: unknown;
+  animations: unknown;
+  takeovers: unknown;
+  capBreakers: unknown;
+  badgeBoosts: unknown;
+  dependencies: unknown;
+  archetypes: unknown;
+}

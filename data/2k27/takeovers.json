@@ -1,0 +1,169 @@
+{
+  "$comment": [
+    "NBA 2K27 TAKEOVER ABILITIES.",
+    "",
+    "SOURCED from 2K's official MyPLAYER Builder page:",
+    "  - Every MyPLAYER starts with FIVE Takeover slots, preloaded with standard attribute boosts.",
+    "  - There are 24 Takeover Abilities in total; 19 of them are UNLOCKABLE by meeting attribute",
+    "    requirements as you upgrade the build. They are organised across the five disciplines.",
+    "  - 'Hydration Hero' is special: it can go in ANY of the five slots and prevents Adrenaline and",
+    "    Stamina drain. (Which also confirms Stamina is a gameplay stat, not a builder attribute.)",
+    "  - Progression is passive as you play. 21 rewards along the way, including 15 Takeover Perks;",
+    "    one Perk per discipline, of three kinds: Accelerator, Longevity, Overdrive.",
+    "",
+    "KNOWN GAP: only FOUR of the 19 unlockable abilities have known attribute requirements \u2014 the ones",
+    "the community 'best value attribute thresholds' sheet happens to name. The other 15 are missing",
+    "entirely rather than guessed. Until they are added, the optimizer under-values attributes whose",
+    "only payoff is a takeover it cannot see.",
+    "",
+    "Takeover Perks are not modelled: they are earned by playing, not chosen at build creation."
+  ],
+  "slots": {
+    "total": 5,
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "'Each MyPLAYER in 2K27 starts with five default Takeover slots.' Slots are not split by discipline; Hydration Hero can occupy any of them."
+    }
+  },
+  "takeovers": [
+    {
+      "id": "air_space",
+      "name": "Air Space",
+      "impact": 5,
+      "description": "Boosts above-the-rim finishing.",
+      "verification": {
+        "status": "community-verified",
+        "source": "Best value attribute thresholds sheet: 'Driving Dunk 87 -> Contact Dunks, Silver Posterizer, Air Space Takeover' and 'Vertical 75 -> Air Space Takeover, Pro Contact Dunks, Silver Posterizer'."
+      },
+      "tiers": [
+        {
+          "id": "unlock",
+          "name": "Unlocked",
+          "requires": [
+            {
+              "attribute": "driving_dunk",
+              "min": 87
+            },
+            {
+              "attribute": "vertical",
+              "min": 75
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dish_master",
+      "name": "Dish Master",
+      "impact": 4,
+      "description": "Boosts passing and teammate shot quality off the pass.",
+      "verification": {
+        "status": "community-verified",
+        "source": "Best value attribute thresholds sheet: 'Pass Accuracy 80 -> Dish Master Takeover'."
+      },
+      "tiers": [
+        {
+          "id": "unlock",
+          "name": "Unlocked",
+          "requires": [
+            {
+              "attribute": "pass_accuracy",
+              "min": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rim_guardian",
+      "name": "Rim Guardian",
+      "impact": 5,
+      "description": "Boosts interior defense and shot blocking.",
+      "verification": {
+        "status": "community-verified",
+        "source": "Best value attribute thresholds sheet: 'Interior Defense 80 -> Bronze Wall Up + Rim Guardian Takeover' and 'Block 80 -> Needed for Rim Guardian Takeover'."
+      },
+      "tiers": [
+        {
+          "id": "unlock",
+          "name": "Unlocked",
+          "requires": [
+            {
+              "attribute": "interior_defense",
+              "min": 80
+            },
+            {
+              "attribute": "block",
+              "min": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rebounding",
+      "name": "Rebounding",
+      "impact": 4,
+      "description": "Boosts rebounding.",
+      "verification": {
+        "status": "community-verified",
+        "source": "Best value attribute thresholds sheet: 'Offensive Rebound 82 -> Silver Rebounding Badges + Rebounding Takeover'."
+      },
+      "tiers": [
+        {
+          "id": "unlock",
+          "name": "Unlocked",
+          "requires": [
+            {
+              "attribute": "offensive_rebound",
+              "min": 82
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hydration_hero",
+      "name": "Hydration Hero",
+      "impact": 3,
+      "description": "Prevents Adrenaline and Stamina drain while active. Can be assigned to any of the five slots.",
+      "verification": {
+        "status": "verified",
+        "source": "2K official MyPLAYER Builder page",
+        "notes": "Officially named, with no attribute requirement published. Recorded with an empty requirement list so it shows as always available rather than being silently omitted."
+      },
+      "tiers": [
+        {
+          "id": "unlock",
+          "name": "Unlocked",
+          "requires": []
+        }
+      ]
+    }
+  ],
+  "abilities": {
+    "totalInGame": 24,
+    "unlockable": 19,
+    "documentedHere": 4,
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "24 total / 19 unlockable is official. Only the abilities listed below have known attribute requirements; the rest are absent from this dataset, not absent from the game."
+    }
+  },
+  "perks": {
+    "$comment": "15 Takeover Perks, one equippable per discipline, of three kinds. Earned by playing, so not a build-creation decision and not modelled by the optimizer.",
+    "modelled": false,
+    "total": 15,
+    "kinds": [
+      "Accelerator",
+      "Longevity",
+      "Overdrive"
+    ],
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page"
+    }
+  }
+}

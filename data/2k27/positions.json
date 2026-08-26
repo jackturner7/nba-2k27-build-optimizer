@@ -1,0 +1,81 @@
+{
+  "$comment": "Positions and their height envelopes. The OVERALL builder range of 5'9\"-7'4\" (69-88 inches) is sourced from NBA 2K Lab's badge height columns, which span exactly that. The per-position SPLIT below is still unverified \u2014 2K27 may not restrict height by position at all.",
+  "positions": [
+    {
+      "id": "PG",
+      "name": "Point Guard",
+      "heightInchesMin": 69,
+      "heightInchesMax": 78,
+      "secondaryPositions": [
+        "SG",
+        "SF"
+      ],
+      "verification": {
+        "status": "estimated",
+        "source": "Overall 5'9\"-7'4\" builder range from NBA 2K Lab badge height columns.",
+        "notes": "The per-position split is a modelling choice, not sourced."
+      }
+    },
+    {
+      "id": "SG",
+      "name": "Shooting Guard",
+      "heightInchesMin": 71,
+      "heightInchesMax": 81,
+      "secondaryPositions": [
+        "PG",
+        "SF"
+      ],
+      "verification": {
+        "status": "estimated",
+        "source": "Overall 5'9\"-7'4\" builder range from NBA 2K Lab badge height columns.",
+        "notes": "The per-position split is a modelling choice, not sourced."
+      }
+    },
+    {
+      "id": "SF",
+      "name": "Small Forward",
+      "heightInchesMin": 74,
+      "heightInchesMax": 84,
+      "secondaryPositions": [
+        "SG",
+        "PF"
+      ],
+      "verification": {
+        "status": "estimated",
+        "source": "Overall 5'9\"-7'4\" builder range from NBA 2K Lab badge height columns.",
+        "notes": "The per-position split is a modelling choice, not sourced."
+      }
+    },
+    {
+      "id": "PF",
+      "name": "Power Forward",
+      "heightInchesMin": 77,
+      "heightInchesMax": 87,
+      "secondaryPositions": [
+        "SF",
+        "C"
+      ],
+      "verification": {
+        "status": "estimated",
+        "source": "Overall 5'9\"-7'4\" builder range from NBA 2K Lab badge height columns.",
+        "notes": "The per-position split is a modelling choice, not sourced."
+      }
+    },
+    {
+      "id": "C",
+      "name": "Center",
+      "heightInchesMin": 79,
+      "heightInchesMax": 88,
+      "secondaryPositions": [
+        "PF"
+      ],
+      "verification": {
+        "status": "estimated",
+        "source": "Overall 5'9\"-7'4\" builder range from NBA 2K Lab badge height columns.",
+        "notes": "The per-position split is a modelling choice, not sourced."
+      }
+    }
+  ],
+  "builderHeightInchesMin": 69,
+  "builderHeightInchesMax": 88
+}

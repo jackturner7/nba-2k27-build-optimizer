@@ -1,0 +1,828 @@
+{
+  "$comment": [
+    "NBA 2K27 CAP BREAKERS.",
+    "",
+    "READ THIS BEFORE ADDING DATA — the column headings in the app are misleading, and misreading them",
+    "put wrong 'verified' caps in this dataset once already (see meta.json 0.7.0).",
+    "",
+    "The Cap Breaker page shows, per attribute: an 'Original Cap', five slots, and a 'New Cap'.",
+    "",
+    "  - 'Original Cap' is NOT the body's ceiling. It is what THIS PLAYER ALLOCATED to that attribute.",
+    "    Three transcribed builds prove it: Ball Handle reads 70 on a 6'5\" guard, 86 on a 6'8\" guard and",
+    "    75 on a 6'11\" big. No body-cap model makes a 6'5\" guard the worst ball handler of the three. It",
+    "    tracks the ARCHETYPE instead — the 6'8\" is a Playmaking Creator, the 6'5\" an Off-Screen Shooter",
+    "    who never dribbles. Same story for Pass Accuracy (65 / 87 / 77) and Speed With Ball (73 / 80 / 68).",
+    "",
+    "  - Each of the five slots is worth a DIFFERENT, PER-ATTRIBUTE amount, and gains diminish down the",
+    "    row. Post Control on the 6'5\" build runs +13 / +11 / +9 / +7 / +6.",
+    "",
+    "  - A LOCKED slot (null here, a padlock in the app) means the ladder has run into the body's real",
+    "    ceiling. So a row that ends in a lock tells you the CAP EXACTLY — its New Cap is the cap. A row",
+    "    that spends all five slots without locking merely ran out of slots, and its New Cap is only a",
+    "    lower bound. This is the only way the app exposes true caps, and caps.json is derived from it.",
+    "",
+    "  - 'MAX' appears instead of a number when the ladder reaches 99. Recorded here as newCap 99.",
+    "",
+    "BECAUSE THE LADDER IS RELATIVE TO THE ALLOCATION, a gain table belongs to a BUILD, not to a body.",
+    "Two players on the same frame with different allocations see different ladders. Entries are therefore",
+    "keyed by build, carry `body` and `sampledAt`, and the planner applies a row only when the build's",
+    "current rating matches `sampledAt`. Anything else would be extrapolation.",
+    "",
+    "HOW TO ADD A BUILD: open it in the NBA 2K HQ app, go to Cap Breakers, and transcribe each row as",
+    "`\"<attribute_id>\": { \"slots\": [s1..s5], \"newCap\": N }`, null for a padlock, plus the Original Cap",
+    "column into `sampledAt`. The loader checks sampledAt + slots === newCap, rejects an unlocked slot",
+    "after a locked one, and cross-checks every locked row against the derived cap in caps.json."
+  ],
+  "verification": {
+    "status": "verified",
+    "source": "NBA 2K HQ app MyPLAYER builder Cap Breaker page (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+    "notes": "The five-slot structure, the per-attribute variable gains, the diminishing pattern, the locked slots and the fact that a lock marks the body's true ceiling are all read directly off the app across three builds. What is NOT known is how many breakers a player may actually apply — see `allocation`."
+  },
+  "rules": {
+    "visibleOnlyAt99Overall": true,
+    "grantsBadgeTokens": false,
+    "verification": {
+      "status": "community-verified",
+      "source": "2K27 builder coverage: cap breaker amounts are not viewable until 99 overall, and applying them does not provide additional badge tokens."
+    },
+    "note": "grantsBadgeTokens=false is why the optimizer treats cap breakers as a pure post-build overlay: a breaker can push an attribute over a badge threshold but cannot pay for the badge."
+  },
+  "enabled": true,
+  "slotsPerAttribute": 5,
+  "costsBuildPoints": false,
+  "absoluteCeiling": 99,
+  "allocation": {
+    "$comment": [
+      "THE ONE THING THE SCREENSHOTS DO NOT SETTLE. The app shows five slots on every attribute row and a",
+      "New Cap that assumes all five are filled. Two readings fit that display equally well:",
+      "",
+      "  'shared-pool'   — you earn a limited number of breakers and choose where they go.",
+      "  'per-attribute' — every attribute's five slots fill independently, so New Cap is reachable everywhere.",
+      "",
+      "'per-attribute' would hand the 6'5\" build over +250 attribute points for free, which is a very large",
+      "claim to make on the strength of a display that is equally consistent with scarcity. The default is",
+      "'shared-pool': it can under-promise, never over-promise. Switch `mode` if the generous reading is right.",
+      "",
+      "`poolSize` is a guess and is the single least-supported number in this file."
+    ],
+    "mode": "shared-pool",
+    "poolSize": 5,
+    "verification": {
+      "status": "unverified",
+      "notes": "Neither the mode nor the pool size is sourced. The GAIN TABLE is verified; how many of those gains you may claim is not."
+    }
+  },
+  "eligibility": {
+    "mode": "all-except",
+    "excludedAttributes": [],
+    "note": "mode may be 'all', 'all-except' (uses excludedAttributes) or 'only' (uses includedAttributes). Per-attribute lock-out is expressed by null slots in the gain table, not here."
+  },
+  "includedAttributes": [],
+  "gainTables": {
+    "$comment": [
+      "Keyed by BUILD, not by body — the ladder depends on what the player allocated (see the file header).",
+      "Each entry carries `body` (`<POSITION>|<height>|<weight>|<wingspan>`) and `sampledAt` (the allocation).",
+      "",
+      "The planner matches on `body` first, then applies only those rows whose `sampledAt` equals the build's",
+      "current rating. A body with no entry, or an allocation nothing was sampled at, gets NO plan rather than",
+      "a guess: gains run from +1 to +13 across attributes on a single build."
+    ],
+    "entries": {
+      "bucket_chaser": {
+        "label": "Bucket Chaser — 6'11\" / 210 lb / 6'11\" PF",
+        "buildName": "BUCKET CHASER",
+        "body": "PF|83|210|83",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "All 21 rows transcribed. sampledAt is the allocation the ladder was read at; the gains are relative to it."
+        },
+        "sampledAt": {
+          "close_shot": 90,
+          "driving_layup": 85,
+          "driving_dunk": 80,
+          "standing_dunk": 65,
+          "post_control": 86,
+          "mid_range": 94,
+          "three_point": 91,
+          "free_throw": 71,
+          "pass_accuracy": 77,
+          "ball_handle": 75,
+          "speed_with_ball": 68,
+          "interior_defense": 70,
+          "perimeter_defense": 71,
+          "steal": 60,
+          "block": 70,
+          "offensive_rebound": 70,
+          "defensive_rebound": 80,
+          "speed": 79,
+          "agility": 73,
+          "strength": 79,
+          "vertical": 75
+        },
+        "attributes": {
+          "close_shot": {
+            "slots": [
+              1,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 92
+          },
+          "driving_layup": {
+            "slots": [
+              2,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 88
+          },
+          "driving_dunk": {
+            "slots": [
+              1,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 82
+          },
+          "standing_dunk": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 70
+          },
+          "post_control": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 91
+          },
+          "mid_range": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 94
+          },
+          "three_point": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 91
+          },
+          "free_throw": {
+            "slots": [
+              6,
+              5,
+              5,
+              4,
+              2
+            ],
+            "newCap": 93
+          },
+          "pass_accuracy": {
+            "slots": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "newCap": 87
+          },
+          "ball_handle": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 75
+          },
+          "speed_with_ball": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 68
+          },
+          "interior_defense": {
+            "slots": [
+              4,
+              4,
+              3,
+              3,
+              2
+            ],
+            "newCap": 86
+          },
+          "perimeter_defense": {
+            "slots": [
+              5,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 77
+          },
+          "steal": {
+            "slots": [
+              7,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 67
+          },
+          "block": {
+            "slots": [
+              6,
+              5,
+              4,
+              3,
+              2
+            ],
+            "newCap": 90
+          },
+          "offensive_rebound": {
+            "slots": [
+              3,
+              2,
+              2,
+              1,
+              null
+            ],
+            "newCap": 78
+          },
+          "defensive_rebound": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 80
+          },
+          "speed": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 79
+          },
+          "agility": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 73
+          },
+          "strength": {
+            "slots": [
+              1,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 80
+          },
+          "vertical": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 80
+          }
+        }
+      },
+      "playmaking_creator": {
+        "label": "2-Way Playmaking Creator — 6'8\" / 190 lb / 6'8\" SG",
+        "buildName": "2-WAY PLAYMAKING CREATOR",
+        "body": "SG|80|190|80",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "All 21 rows transcribed. sampledAt is the allocation the ladder was read at; the gains are relative to it."
+        },
+        "sampledAt": {
+          "close_shot": 78,
+          "driving_layup": 71,
+          "driving_dunk": 59,
+          "standing_dunk": 40,
+          "post_control": 51,
+          "mid_range": 93,
+          "three_point": 91,
+          "free_throw": 69,
+          "pass_accuracy": 87,
+          "ball_handle": 86,
+          "speed_with_ball": 80,
+          "interior_defense": 60,
+          "perimeter_defense": 85,
+          "steal": 83,
+          "block": 73,
+          "offensive_rebound": 70,
+          "defensive_rebound": 55,
+          "speed": 87,
+          "agility": 83,
+          "strength": 50,
+          "vertical": 75
+        },
+        "attributes": {
+          "close_shot": {
+            "slots": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "newCap": 88
+          },
+          "driving_layup": {
+            "slots": [
+              2,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 77
+          },
+          "driving_dunk": {
+            "slots": [
+              8,
+              7,
+              5,
+              4,
+              4
+            ],
+            "newCap": 87
+          },
+          "standing_dunk": {
+            "slots": [
+              12,
+              9,
+              8,
+              6,
+              6
+            ],
+            "newCap": 81
+          },
+          "post_control": {
+            "slots": [
+              3,
+              3,
+              2,
+              2,
+              2
+            ],
+            "newCap": 63
+          },
+          "mid_range": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              null
+            ],
+            "newCap": 97
+          },
+          "three_point": {
+            "slots": [
+              1,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 92
+          },
+          "free_throw": {
+            "slots": [
+              6,
+              5,
+              4,
+              4,
+              4
+            ],
+            "newCap": 92
+          },
+          "pass_accuracy": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 92
+          },
+          "ball_handle": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 86
+          },
+          "speed_with_ball": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 80
+          },
+          "interior_defense": {
+            "slots": [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "newCap": 75
+          },
+          "perimeter_defense": {
+            "slots": [
+              1,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 87
+          },
+          "steal": {
+            "slots": [
+              1,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 84
+          },
+          "block": {
+            "slots": [
+              2,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 75
+          },
+          "offensive_rebound": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 70
+          },
+          "defensive_rebound": {
+            "slots": [
+              4,
+              4,
+              4,
+              4,
+              3
+            ],
+            "newCap": 74
+          },
+          "speed": {
+            "slots": [
+              1,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 88
+          },
+          "agility": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 88
+          },
+          "strength": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 55
+          },
+          "vertical": {
+            "slots": [
+              3,
+              2,
+              2,
+              2,
+              2
+            ],
+            "newCap": 86
+          }
+        }
+      },
+      "off_screen_shooter": {
+        "label": "2-Way Off-Screen Shooter — 6'5\" / 200 lb / 6'8\" SG",
+        "buildName": "2-WAY OFF-SCREEN SHOOTER",
+        "body": "SG|77|200|80",
+        "verification": {
+          "status": "verified",
+          "source": "NBA 2K HQ app MyPLAYER builder (https://apps.apple.com/app/id6745190566), screenshots supplied 2026-08-25.",
+          "notes": "All 21 rows transcribed. sampledAt is the allocation the ladder was read at; the gains are relative to it."
+        },
+        "sampledAt": {
+          "close_shot": 77,
+          "driving_layup": 57,
+          "driving_dunk": 59,
+          "standing_dunk": 40,
+          "post_control": 31,
+          "mid_range": 90,
+          "three_point": 93,
+          "free_throw": 71,
+          "pass_accuracy": 65,
+          "ball_handle": 70,
+          "speed_with_ball": 73,
+          "interior_defense": 61,
+          "perimeter_defense": 94,
+          "steal": 94,
+          "block": 67,
+          "offensive_rebound": 36,
+          "defensive_rebound": 54,
+          "speed": 88,
+          "agility": 87,
+          "strength": 71,
+          "vertical": 75
+        },
+        "attributes": {
+          "close_shot": {
+            "slots": [
+              3,
+              3,
+              3,
+              2,
+              2
+            ],
+            "newCap": 90
+          },
+          "driving_layup": {
+            "slots": [
+              3,
+              3,
+              2,
+              2,
+              2
+            ],
+            "newCap": 69
+          },
+          "driving_dunk": {
+            "slots": [
+              8,
+              8,
+              6,
+              5,
+              4
+            ],
+            "newCap": 90
+          },
+          "standing_dunk": {
+            "slots": [
+              13,
+              10,
+              5,
+              null,
+              null
+            ],
+            "newCap": 68
+          },
+          "post_control": {
+            "slots": [
+              13,
+              11,
+              9,
+              7,
+              6
+            ],
+            "newCap": 77
+          },
+          "mid_range": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 95
+          },
+          "three_point": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 93
+          },
+          "free_throw": {
+            "slots": [
+              6,
+              6,
+              5,
+              4,
+              3
+            ],
+            "newCap": 95
+          },
+          "pass_accuracy": {
+            "slots": [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "newCap": 75
+          },
+          "ball_handle": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 75
+          },
+          "speed_with_ball": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 78
+          },
+          "interior_defense": {
+            "slots": [
+              7,
+              6,
+              4,
+              null,
+              null
+            ],
+            "newCap": 78
+          },
+          "perimeter_defense": {
+            "slots": [
+              1,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 96
+          },
+          "steal": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 99
+          },
+          "block": {
+            "slots": [
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "newCap": 67
+          },
+          "offensive_rebound": {
+            "slots": [
+              13,
+              11,
+              9,
+              2,
+              null
+            ],
+            "newCap": 71
+          },
+          "defensive_rebound": {
+            "slots": [
+              7,
+              7,
+              5,
+              1,
+              null
+            ],
+            "newCap": 74
+          },
+          "speed": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 93
+          },
+          "agility": {
+            "slots": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "newCap": 92
+          },
+          "strength": {
+            "slots": [
+              4,
+              1,
+              null,
+              null,
+              null
+            ],
+            "newCap": 76
+          },
+          "vertical": {
+            "slots": [
+              3,
+              3,
+              3,
+              2,
+              2
+            ],
+            "newCap": 88
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$comment": [
+    "NBA 2K27 animation requirements.",
+    "",
+    "SOURCE: the community 'best value attribute thresholds' sheet supplied by the repo owner",
+    "(2026-08-25), which names specific animation unlocks at specific ratings. Everything here traces",
+    "back to a line on that sheet; entries that go beyond it have been removed rather than invented.",
+    "",
+    "This file is far less complete than badges.json — the sheet only lists the thresholds a creator",
+    "considered 'best value', not the full animation requirement table. Expect gaps.",
+    "",
+    "`requires` uses the same clause format as badges.json: a list of AND clauses, each either",
+    "{ attribute, min } or { anyOf: [...] }."
+  ],
+
+  "categories": [
+    { "id": "dribble_style", "name": "Dribble Style", "description": "Base ball-handling movement set." },
+    { "id": "signature_moves", "name": "Signature Dribble Moves", "description": "Size-up and combo move packages." },
+    { "id": "layup_package", "name": "Layup Package", "description": "Driving layup animation set." },
+    { "id": "dunk_package", "name": "Dunk Package", "description": "Driving and standing dunk sets, including contact dunks." },
+    { "id": "jumpshot", "name": "Jump Shot Release", "description": "Shooting release, affecting speed and timing window." },
+    { "id": "motion_style", "name": "Motion Style", "description": "Movement and defensive footwork styles." }
+  ],
+
+  "animations": [
+    {
+      "id": "dribble_normal", "name": "Normal Dribble Style", "category": "dribble_style", "impact": 2,
+      "requires": [{ "attribute": "speed_with_ball", "min": 40 }],
+      "notes": "Sheet: 'Speed With Ball 40 -> Normal Dribble Style (good minimum for bigs)'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "dribble_bigs_lockdowns", "name": "Good Dribble Animations (bigs / lockdowns)", "category": "dribble_style", "impact": 3,
+      "requires": [{ "attribute": "ball_handle", "min": 71 }],
+      "notes": "Sheet: 'Ball Handle 71 -> Good dribble animations for bigs and lockdowns + decent signature moves'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "dribble_harden", "name": "James Harden Dribble Style", "category": "dribble_style", "impact": 5,
+      "requires": [{ "attribute": "speed_with_ball", "min": 75 }],
+      "notes": "Sheet: 'Speed With Ball 75 -> Silver Lightning Launch + James Harden Dribble Style'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "signature_extra", "name": "Extra Signature Dribble Animations", "category": "signature_moves", "impact": 4,
+      "requires": [{ "attribute": "ball_handle", "min": 81 }],
+      "notes": "Sheet: 'Ball Handle 81 -> Silver Handles For Days + extra animations'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+
+    {
+      "id": "layup_best", "name": "Best Layup Packages (Duren / Jokic / Trae)", "category": "layup_package", "impact": 4,
+      "requires": [{ "attribute": "driving_layup", "min": 80 }],
+      "notes": "Sheet: 'Driving Layup 80 -> Best layup animations (Jalen Duren, Jokic, Trae Young + more)'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+
+    {
+      "id": "standing_dunk_minimum", "name": "Standing Dunk Animations (minimum)", "category": "dunk_package", "impact": 2,
+      "requires": [{ "attribute": "standing_dunk", "min": 45 }],
+      "notes": "Sheet: 'Standing Dunk 45 -> Minimum standing dunk animations'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "standing_contact_pro", "name": "Pro Standing Contact Dunks", "category": "dunk_package", "impact": 5,
+      "requires": [{ "attribute": "standing_dunk", "min": 81 }],
+      "notes": "Sheet: 'Standing Dunk 81 -> Pro Standing Contact Dunks + Silver Rise Up'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "contact_dunks", "name": "Contact Dunks", "category": "dunk_package", "impact": 5,
+      "requires": [{ "attribute": "driving_dunk", "min": 87 }],
+      "notes": "Sheet: 'Driving Dunk 87 -> Contact Dunks, Silver Posterizer, Air Space Takeover'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    },
+    {
+      "id": "contact_dunks_pro", "name": "Pro Contact Dunks", "category": "dunk_package", "impact": 5,
+      "requires": [{ "attribute": "driving_dunk", "min": 87 }, { "attribute": "vertical", "min": 75 }],
+      "notes": "Sheet: 'Vertical 75 -> Air Space Takeover, Pro Contact Dunks, Silver Posterizer'. The Driving Dunk half is inferred from the Driving Dunk 87 contact dunk line.",
+      "verification": { "status": "estimated", "source": "Best value attribute thresholds sheet", "notes": "Vertical 75 is sourced; pairing it with Driving Dunk 87 is an inference." }
+    },
+
+    {
+      "id": "jumpshot_key_releases", "name": "Key Jumpshot Releases", "category": "jumpshot", "impact": 5,
+      "requires": [{ "attribute": "three_point", "min": 80 }],
+      "notes": "Sheet: 'Three-Point 80-85 -> Key jumpshots and badges unlocked'. The lower bound of that range is used.",
+      "verification": { "status": "estimated", "source": "Best value attribute thresholds sheet", "notes": "Sheet gives a range (80-85) rather than a single rating; 80 recorded. Individual release requirements are not known." }
+    },
+
+    {
+      "id": "motion_styles_extra", "name": "Extra Motion Styles", "category": "motion_style", "impact": 3,
+      "requires": [{ "attribute": "agility", "min": 80 }],
+      "notes": "Sheet: 'Agility 80 -> Upgrades Silver Seatbelt to Gold + extra motion styles'.",
+      "verification": { "status": "community-verified", "source": "Best value attribute thresholds sheet" }
+    }
+  ]
+}

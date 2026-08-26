@@ -1,0 +1,75 @@
+{
+  "$comment": [
+    "THE SYNERGY SYSTEM \u2014 NBA 2K27's replacement for badge boosts.",
+    "",
+    "SOURCED from 2K's official MyPLAYER Builder page (https://nba.2k.com/2k27/features/myplayer-builder/):",
+    "  - 16 total Synergy slots: TWELVE give +1, FOUR give +2.",
+    "  - Synergy is what lets a badge reach LEGEND tier. Legend cannot be obtained at build creation.",
+    "  - Synergy has two halves. A FUSE badge gets a permanent +1/+2 for the whole game. A REACTION",
+    "    badge is paired to a Fuse badge and gets the same boost once the Fuse badge has triggered a",
+    "    set number of times in that game.",
+    "  - Putting a badge in a Fuse slot REFUNDS the badge tokens you would have spent equipping it.",
+    "    That is a real optimizer interaction: a Fused badge is free, so Synergy effectively buys both",
+    "    a tier and slot budget back.",
+    "  - Synergy is earned from Season rewards, Build Specialization, Crew progression and REP. Season",
+    "    Synergy expires at season end; the rest is permanent and account-wide.",
+    "  - Slots are interchangeable across disciplines, EXCEPT Build Specialization slots, which are",
+    "    locked to their own discipline.",
+    "",
+    "NOT SOURCED: how many of the 16 slots a given player actually has unlocked (it depends entirely on",
+    "their REP/Season/Crew progress), and the Fuse->Reaction trigger counts. `availableSlots` below is",
+    "what the optimizer plans against and should be set to what you actually own."
+  ],
+  "verification": {
+    "status": "verified",
+    "source": "2K official MyPLAYER Builder page, 2026-08-25",
+    "notes": "Slot counts and mechanics are official. How many slots a specific player owns is not."
+  },
+  "enabled": true,
+  "totalSlots": 16,
+  "plusOne": {
+    "slots": 12,
+    "levelsGained": 1,
+    "note": "Twelve +1 Synergy slots (official)."
+  },
+  "plusTwo": {
+    "slots": 4,
+    "levelsGained": 2,
+    "note": "Four +2 Synergy slots (official)."
+  },
+  "availableSlots": {
+    "$comment": "How many slots THIS player has unlocked. Synergy is earned, so a new account has none. Set to totalSlots to plan the end-state build. The UI exposes these.",
+    "plusOne": 12,
+    "plusTwo": 4,
+    "verification": {
+      "status": "unverified",
+      "notes": "Depends on your REP/Season/Crew progress; not a game constant."
+    }
+  },
+  "rules": {
+    "canStackOnSameBadge": false,
+    "canBoostToLegend": true,
+    "legendOnlyViaSynergy": true,
+    "fuseRefundsTokens": true,
+    "requiresBadgeAlreadyUnlocked": true,
+    "minimumLevelToBoost": "bronze",
+    "eligibleCategories": [
+      "shooting",
+      "finishing",
+      "playmaking",
+      "defense",
+      "rebounding",
+      "physicals"
+    ],
+    "excludedBadges": [],
+    "verification": {
+      "status": "verified",
+      "source": "2K official MyPLAYER Builder page",
+      "notes": "fuseRefundsTokens and legendOnlyViaSynergy are stated outright. canStackOnSameBadge is an assumption \u2014 2K does not say whether a badge can take both a +1 and a +2."
+    }
+  },
+  "reaction": {
+    "$comment": "Reaction badges mirror their Fuse partner's boost after the Fuse badge triggers enough times in-game. Not modelled in the optimizer: it is an in-game runtime condition, not a build-creation decision. Recorded so it is not mistaken for something the app forgot.",
+    "modelled": false
+  }
+}
