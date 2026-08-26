@@ -71,6 +71,71 @@ npm run build:static          # apps/web/dist, ready for any static host
 BASE_PATH=/my-repo/ npm run build:static   # for a subpath
 ```
 
+## Static (Cloudflare Pages)
+
+Worth doing for one reason: **the URL has no username in it.** A GitHub Pages
+project site is always `https://<owner>.github.io/<repo>/` — the host is derived
+from the account name and there is no setting that changes it. Cloudflare serves
+at `https://<project>.pages.dev/`, where you choose `<project>`.
+
+The two can run side by side from the same branch. Nothing in the app knows
+which host it is on.
+
+### Setup
+
+Cloudflare's Git integration builds the repo itself, so there is no API token
+and no workflow file. In the Cloudflare dashboard: **Workers & Pages → Create →
+Pages → Connect to Git**, pick the repo, then set exactly three fields:
+
+| Field | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `npm run build:static:checked` |
+| Build output directory | `apps/web/dist` |
+
+Leave the framework preset on *None* and the root directory empty. The project
+name you choose on that screen **is** the subdomain, so `2k27-build-optimizer`
+gives `https://2k27-build-optimizer.pages.dev/`. It has to be globally unique
+across Cloudflare, so a common name may already be taken.
+
+`BASE_PATH` is deliberately not set: Cloudflare serves from the root, and the
+Vite config already defaults `base` to `/`. Setting it would break every asset.
+
+`.node-version` in the repo root pins the build to Node 22. Without it
+Cloudflare picks its own default, which has been old enough to fail the build.
+
+### Why the build command is not just `build:static`
+
+`build:static:checked` runs `data:validate`, `data:crosscheck` and the tests
+first, then builds — the same gate `pages.yml` applies as separate steps and the
+Dockerfile applies in its own build. **The dataset is the product**, so a
+malformed cap table or an undocumented source conflict has to fail the deploy on
+every path out of this repo, not just the one that happens to be a workflow.
+
+### The two files in `apps/web/public/`
+
+`_redirects` and `_headers` are read by Cloudflare (and Netlify) and ignored by
+GitHub Pages.
+
+- `_redirects` sends unmatched paths to `index.html` with a 200. Static hosts
+  serve files rather than routes, so without it a refresh on a deep link 404s.
+  Real files still take precedence, so `/assets/*` is unaffected. GitHub Pages
+  gets the same behaviour from the `404.html` copy in `pages.yml`.
+- `_headers` caches `/assets/*` forever and `index.html` never. Vite fingerprints
+  asset filenames, so a changed file is a changed URL — but only if the entry
+  point that references them is re-fetched. Caching `index.html` would ship a
+  deploy nobody is told to download.
+
+There is no `wrangler.toml` on purpose. It would pin the project name, and a
+mismatch between that name and the one you type in the dashboard fails the build
+with an error that does not say so. Two dashboard fields are less to go wrong.
+
+### Which one is canonical
+
+Pick one and let the other be a mirror, or turn the other off — two live copies
+of the same tool is mostly a way to confuse yourself about which one you last
+deployed. Nothing in the repo assumes either.
+
 ## Container
 
 The container mode is **one container**: an Express process that serves the JSON API

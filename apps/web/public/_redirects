@@ -1,0 +1,9 @@
+# Cloudflare Pages / Netlify SPA fallback.
+#
+# A static host serves files, not routes, so a refresh on a deep link would 404
+# without this. Real files still win — this rule only applies when nothing on
+# disk matches, so /assets/* is unaffected.
+#
+# GitHub Pages ignores this file; that deploy uses a copy of index.html at
+# 404.html instead (see .github/workflows/pages.yml).
+/*  /index.html  200

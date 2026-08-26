@@ -1,0 +1,24 @@
+# Cloudflare Pages / Netlify response headers. Mirrors what the Express server
+# sets in container mode, so the two deployments cache identically.
+#
+# GitHub Pages ignores this file — it has no per-path header configuration.
+
+# Vite fingerprints every asset filename, so a changed file is a changed URL and
+# these can be cached forever. This is the whole point of the hashed names.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The entry point must not be cached, or a deploy ships new assets that nobody
+# is told to fetch.
+/index.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+# The dataset is compiled into the bundle in static mode, so there is nothing
+# here to protect but the page itself. No API, no auth, no third-party scripts.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
