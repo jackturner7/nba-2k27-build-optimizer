@@ -27,6 +27,7 @@
     "build:static:checked": "npm run data:validate && npm run data:crosscheck && npm test && npm run build:static"
   },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "wrangler": "^4.126.0"
   }
 }

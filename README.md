@@ -140,8 +140,8 @@ entry has no node builtins, so `optimize()` runs unchanged in a browser.
 **Static** (what the Pages workflow deploys, and the better fit): the optimizer
 is compiled into the bundle and runs in a Web Worker, so there is no backend at
 all. Free to host, nothing to keep alive, and no shared CPU to saturate. Pages
-needs enabling once by hand; Cloudflare Pages is set up too, and is the option
-that gets the account name out of the URL — see
+needs enabling once by hand; Cloudflare is set up too — both Workers and Pages,
+and either gets the account name out of the URL — see
 [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ```bash

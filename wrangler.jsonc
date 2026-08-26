@@ -1,0 +1,28 @@
+{
+  // Cloudflare Workers with static assets.
+  //
+  // Cloudflare's dashboard now routes "connect a repo" into Workers Builds
+  // rather than Pages, and that path deploys with `npx wrangler deploy`, which
+  // needs this file. Without it the build stage goes green and the deploy stage
+  // fails, which reads like a build problem and is not one.
+  //
+  // There is no `main` here on purpose: with `assets` and no script, this is an
+  // assets-only Worker. No server code runs, so it behaves exactly like the
+  // GitHub Pages deploy — the optimizer is compiled into the bundle and runs in
+  // a Web Worker in the visitor's browser.
+  "name": "nba-2k27-build-optimizer",
+  "compatibility_date": "2026-08-01",
+
+  "assets": {
+    // Produced by `npm run build:static:checked`. The plain `npm run build`
+    // output will NOT work here: it omits VITE_STATIC, so the app ships
+    // expecting an API to call and every search 404s.
+    "directory": "./apps/web/dist",
+
+    // Serves index.html with a 200 for any path that is not a real file, so a
+    // refresh on a deep link works. This is the Workers equivalent of the
+    // `_redirects` rule Pages reads; both are kept because either host may be
+    // the one serving.
+    "not_found_handling": "single-page-application"
+  }
+}

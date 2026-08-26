@@ -71,21 +71,60 @@ npm run build:static          # apps/web/dist, ready for any static host
 BASE_PATH=/my-repo/ npm run build:static   # for a subpath
 ```
 
-## Static (Cloudflare Pages)
+## Static (Cloudflare)
 
 Worth doing for one reason: **the URL has no username in it.** A GitHub Pages
 project site is always `https://<owner>.github.io/<repo>/` — the host is derived
-from the account name and there is no setting that changes it. Cloudflare serves
-at `https://<project>.pages.dev/`, where you choose `<project>`.
+from the account name and there is no setting that changes it.
 
-The two can run side by side from the same branch. Nothing in the app knows
-which host it is on.
+Cloudflare has **two** products that will serve this, and the dashboard does not
+make it obvious which one you are creating:
 
-### Setup
+| | Workers (static assets) | Pages |
+| --- | --- | --- |
+| What "connect a repo" gives you now | this | you have to find the Pages tab |
+| Deploy step | `npx wrangler deploy` | uploads the output directory |
+| Needs `wrangler.jsonc` | **yes** | no |
+| Reads `_redirects` / `_headers` | no | yes |
+| URL | `<worker>.<account-subdomain>.workers.dev` | `<project>.pages.dev` |
 
-Cloudflare's Git integration builds the repo itself, so there is no API token
-and no workflow file. In the Cloudflare dashboard: **Workers & Pages → Create →
-Pages → Connect to Git**, pick the repo, then set exactly three fields:
+Both are supported here. The repo carries config for each, because they cost
+nothing when unused and the failure mode of guessing wrong is bad: **the build
+stage goes green and the deploy stage fails**, which reads like a build problem
+and is not one.
+
+### Workers (what the dashboard gives you by default)
+
+`wrangler.jsonc` in the repo root is what makes `npx wrangler deploy` work. It
+declares an **assets-only Worker** — `assets` with no `main`, so no server code
+runs and the deployment behaves exactly like the GitHub Pages one.
+
+In the dashboard, the only field that needs changing from its default is the
+build command:
+
+| Field | Value |
+| --- | --- |
+| Build command | `npm run build:static:checked` |
+| Deploy command | `npx wrangler deploy` (the default — leave it) |
+| Root directory | `/` (the default — leave it) |
+
+The default build command is `npm run build`, and it is **wrong here**: it omits
+`VITE_STATIC`, so the app ships expecting an API to call and every search 404s
+against a host that has no backend. It builds cleanly, so nothing fails — you
+just get a broken page.
+
+The output directory is not a dashboard field on this path; `wrangler.jsonc`
+names it (`./apps/web/dist`).
+
+**The URL includes your account's `workers.dev` subdomain**, which is not the
+same as the worker name and may well be your username. It is set per account
+under **Workers & Pages → Subdomain** and can be changed there.
+
+### Pages
+
+Gives `https://<project>.pages.dev/` with no account name anywhere, which is the
+better URL if that is what you are after. **Workers & Pages → Create →** the
+**Pages** tab **→ Connect to Git**, then three fields:
 
 | Field | Value |
 | --- | --- |
@@ -93,10 +132,15 @@ Pages → Connect to Git**, pick the repo, then set exactly three fields:
 | Build command | `npm run build:static:checked` |
 | Build output directory | `apps/web/dist` |
 
-Leave the framework preset on *None* and the root directory empty. The project
-name you choose on that screen **is** the subdomain, so `2k27-build-optimizer`
-gives `https://2k27-build-optimizer.pages.dev/`. It has to be globally unique
-across Cloudflare, so a common name may already be taken.
+Framework preset *None*, root directory empty. The project name you type **is**
+the subdomain, and it is globally unique across Cloudflare, so a plausible name
+may be taken.
+
+Pages ignores `wrangler.jsonc` as written here — a Workers config is not a Pages
+config. If a Pages build ever complains about it, the fix is to give Pages its
+own `pages_build_output_dir`, not to delete this one.
+
+### Common to both
 
 `BASE_PATH` is deliberately not set: Cloudflare serves from the root, and the
 Vite config already defaults `base` to `/`. Setting it would break every asset.
@@ -114,21 +158,30 @@ every path out of this repo, not just the one that happens to be a workflow.
 
 ### The two files in `apps/web/public/`
 
-`_redirects` and `_headers` are read by Cloudflare (and Netlify) and ignored by
-GitHub Pages.
+`_redirects` and `_headers` are read by **Cloudflare Pages** (and Netlify) and
+ignored by GitHub Pages and by Workers.
 
 - `_redirects` sends unmatched paths to `index.html` with a 200. Static hosts
   serve files rather than routes, so without it a refresh on a deep link 404s.
-  Real files still take precedence, so `/assets/*` is unaffected. GitHub Pages
-  gets the same behaviour from the `404.html` copy in `pages.yml`.
+  Real files still take precedence, so `/assets/*` is unaffected.
 - `_headers` caches `/assets/*` forever and `index.html` never. Vite fingerprints
   asset filenames, so a changed file is a changed URL — but only if the entry
   point that references them is re-fetched. Caching `index.html` would ship a
   deploy nobody is told to download.
 
-There is no `wrangler.toml` on purpose. It would pin the project name, and a
-mismatch between that name and the one you type in the dashboard fails the build
-with an error that does not say so. Two dashboard fields are less to go wrong.
+Each host gets the SPA-fallback behaviour its own way, which is why it is
+configured three times and not once:
+
+| host | mechanism |
+| --- | --- |
+| GitHub Pages | `404.html`, a copy of `index.html` made in `pages.yml` |
+| Cloudflare Pages | `_redirects` |
+| Cloudflare Workers | `assets.not_found_handling` in `wrangler.jsonc` |
+
+Only GitHub Pages returns a 404 *status* while doing it; the other two return
+200. That difference is cosmetic for this app — it has no client-side router, so
+there are no deep links to land on — but it is the reason not to treat the three
+as interchangeable.
 
 ### Which one is canonical
 
