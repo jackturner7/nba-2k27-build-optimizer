@@ -23,13 +23,46 @@ stays supported for anyone who wants an API to call from elsewhere.
 
 `.github/workflows/pages.yml` deploys on every push to `main`. It runs
 `data:validate`, `data:crosscheck` and the tests first, so a malformed dataset
-fails the deploy rather than shipping. `actions/configure-pages` is set to
-`enablement: true`, so it switches Pages on itself the first time it runs — no
-manual setup.
+fails the deploy rather than shipping.
 
-The site lands at `https://<owner>.github.io/<repo>/`. `index.html` is copied to
-`404.html` because Pages serves files rather than routes, and without it a
-refresh on a deep link would 404.
+### One-time setup: enable Pages by hand
+
+**Settings → Pages → Build and deployment → Source: GitHub Actions.**
+
+The workflow passes `enablement: true` to `actions/configure-pages`, which is
+*supposed* to turn Pages on by itself. It does not work with the workflow's
+default `GITHUB_TOKEN`: creating a Pages site is an admin-scoped operation, and
+the first run fails with
+
+```
+Get Pages site failed.    Error: Not Found
+Create Pages site failed. Error: Resource not accessible by integration
+```
+
+That is the failure to expect if you skip this step, and it happens *after* the
+build succeeds, so a green validate/test/build is not evidence Pages is on. The
+flag is kept because it is harmless once enabled and correct for anyone using a
+PAT with admin scope.
+
+**If the repository is private**, Pages also requires a paid plan (Pro, Team or
+Enterprise). On a free account, either make the repository public or use another
+static host — the build output is a plain directory, so Netlify, Cloudflare
+Pages, S3 or any other will serve it unchanged.
+
+### Where it lands
+
+`https://<owner>.github.io/<repo>/`. `index.html` is copied to `404.html`
+because Pages serves files rather than routes, and without it a refresh on a
+deep link would 404.
+
+### A trap when merging via an API token
+
+Pushes made with a GitHub App or `GITHUB_TOKEN` **do not trigger workflows** —
+GitHub suppresses them to prevent recursion. Merge a PR that way and neither CI
+nor this deploy fires, with no error anywhere; the runs simply do not exist.
+That is why the workflow also declares `workflow_dispatch`: trigger it manually
+from the Actions tab, or with `gh workflow run pages.yml --ref main`. Merging
+through the GitHub UI triggers it normally.
 
 To build it yourself:
 

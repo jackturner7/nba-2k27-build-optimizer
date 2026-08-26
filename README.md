@@ -139,7 +139,8 @@ entry has no node builtins, so `optimize()` runs unchanged in a browser.
 
 **Static** (what the Pages workflow deploys, and the better fit): the optimizer
 is compiled into the bundle and runs in a Web Worker, so there is no backend at
-all. Free to host, nothing to keep alive, and no shared CPU to saturate.
+all. Free to host, nothing to keep alive, and no shared CPU to saturate. Pages
+needs enabling once by hand — see [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ```bash
 npm run build:static   # apps/web/dist — drop on any static host

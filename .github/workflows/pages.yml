@@ -48,11 +48,39 @@ jobs:
 
       - name: Configure Pages
         id: pages
+        # `enablement: true` only works when the token may create a Pages site,
+        # which the default GITHUB_TOKEN may not — that is an admin-scoped
+        # operation. Kept because it is harmless once Pages is on, and correct
+        # for anyone running this with an admin-scoped PAT.
+        continue-on-error: true
         uses: actions/configure-pages@v5
         with:
-          # Turns Pages on if it has never been enabled, so there is no manual
-          # setup step before the first deploy.
           enablement: true
+
+      # Without this the run dies on "Resource not accessible by integration",
+      # which says nothing about what to do next. Fail with the fix instead.
+      - name: Explain a Pages-not-enabled failure
+        if: steps.pages.outcome == 'failure'
+        run: |
+          cat >&2 <<'MSG'
+          ============================================================
+          GitHub Pages is not enabled for this repository, and this
+          workflow's token is not allowed to enable it.
+
+          Fix it once, by hand:
+            Settings -> Pages -> Build and deployment
+            Source: GitHub Actions
+
+          Then re-run this workflow.
+
+          If the repository is PRIVATE, Pages additionally requires a
+          paid plan (Pro / Team / Enterprise). On a free account, make
+          the repository public, or host the static build elsewhere:
+          `npm run build:static` emits a plain directory that Netlify,
+          Cloudflare Pages or S3 will serve unchanged.
+          ============================================================
+          MSG
+          exit 1
 
       - name: Build static site
         # A project site is served from /<repo>/, so assets need that prefix.
