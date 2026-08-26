@@ -87,6 +87,8 @@ make it obvious which one you are creating:
 | Needs `wrangler.jsonc` | **yes** | no |
 | Reads `_redirects` / `_headers` | no | yes |
 | URL | `<worker>.<account-subdomain>.workers.dev` | `<project>.pages.dev` |
+| Account name in the URL | yes, the middle label | no |
+| Address enabled by default | **no** | yes |
 
 Both are supported here. The repo carries config for each, because they cost
 nothing when unused and the failure mode of guessing wrong is bad: **the build
@@ -116,9 +118,23 @@ just get a broken page.
 The output directory is not a dashboard field on this path; `wrangler.jsonc`
 names it (`./apps/web/dist`).
 
-**The URL includes your account's `workers.dev` subdomain**, which is not the
-same as the worker name and may well be your username. It is set per account
-under **Workers & Pages → Subdomain** and can be changed there.
+#### Two things about the URL that bite after a green build
+
+**`workers.dev` is off by default.** The Worker's Overview tab shows the address
+with a **Disabled** badge next to it, and a successful deploy does not turn it
+on. Until you enable it there, the deploy is live and unreachable.
+
+**The address is `<worker>.<account-subdomain>.workers.dev`, and the middle
+label is account-level, not per-project.** Cloudflare seeds it from the account
+— frequently the username or the local part of the signup email. So a Worker
+called `nba-2k27-build-optimizer` on an account seeded `jackturner710` serves at
+`nba-2k27-build-optimizer.jackturner710.workers.dev`.
+
+**If the point of moving off GitHub Pages was to get an account name out of the
+URL, this route does not achieve it** — it relocates the name to the middle and
+makes the URL longer. Changing it means changing the account subdomain, which
+rewrites the address of *every* Worker on the account. Use Pages instead: a
+`pages.dev` address has no account-derived label at all.
 
 ### Pages
 
