@@ -194,8 +194,12 @@ export interface CapModel {
 /**
  * Caps derived from the real builder for one specific body.
  *
- * `caps` are proven ceilings — the attribute's cap breaker ladder ran into a
- * locked slot, which is the builder saying "this is as high as this frame goes".
+ * `caps` are proven ceilings, established by either of two routes — the
+ * attribute's cap breaker ladder ran into a locked slot, or the slider screen
+ * printed the maximum outright. Where both apply they agree exactly, which is
+ * what validates the ladder rule. `capEvidence` records which route each came
+ * from.
+ *
  * `capFloors` are proven lower bounds — the ladder spent all five slots without
  * locking, so it ran out of slots rather than reaching the ceiling.
  */
@@ -204,6 +208,7 @@ export interface CapOverrideEntry {
   verification: Verification;
   caps: Partial<Record<AttributeId, number>>;
   capFloors: Partial<Record<AttributeId, number>>;
+  capEvidence: Partial<Record<AttributeId, string>>;
 }
 
 export interface CapsData {
@@ -216,6 +221,20 @@ export interface CapsData {
 export interface BudgetData {
   enabled: boolean;
   verification: Verification;
+  /**
+   * The constraint the real builder imposes: raise attributes until Overall
+   * reaches 99. This is a weighted-sum equality, not the flat point pool the
+   * fields below model — but the OVR weights that would make it computable are
+   * not published, so the pool stands in. Every "costs N points" figure in the
+   * app is therefore ordinal, not cardinal.
+   */
+  actualMechanic?: {
+    kind: string;
+    targetOverall: number;
+    uiText: string;
+    verification: Verification;
+    positionWeights: { entries: Record<string, Record<string, number>> };
+  };
   referenceBody: { heightInches: number; weightPounds: number; wingspanInches: number };
   base: number;
   perInchHeight: number;
@@ -549,7 +568,18 @@ export interface Dataset {
    * 2K27 names a build for you, so these are the only confirmed 2K27 names —
    * `archetypes` above use community naming.
    */
-  officialBuildNames?: { verification: Verification; entries: Record<string, string> };
+  officialBuildNames?: {
+    verification: Verification;
+    /** Body key -> the name the builder gave a build observed on it. */
+    entries: Record<string, string>;
+    /** 2K's published name vocabulary. Explicitly partial, and unmapped to bodies. */
+    knownNames?: {
+      verification: Verification;
+      count: number;
+      names: string[];
+      observedButNotListed: string[];
+    };
+  };
 }
 
 // ---------------------------------------------------------------------------

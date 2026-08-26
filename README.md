@@ -22,13 +22,20 @@ builder's restrictions — not simply the highest one.
 >
 > **Read off the real builder** (NBA 2K HQ app): three builds — *Bucket Chaser*
 > (PF 6'11"), *2-Way Playmaking Creator* (SG 6'8") and *2-Way Off-Screen Shooter*
-> (SG 6'5") — with their full **cap breaker tables**. Those yield **31 proven
-> attribute caps** and 32 lower bounds. The trick is that the builder never shows
-> you a cap directly: its "Original Cap" column is what the *player allocated*.
-> What exposes a ceiling is the **padlock** — a cap breaker ladder that ends in a
-> locked slot has run into the cap. Scored against those 31, the linear model is
-> **6.6 points off** and reads high on 24 of them; it was not refit, so every
-> other frame still carries that error and the UI says so per frame.
+> (SG 6'5") — with their full **cap breaker tables**. Those yield **35 proven
+> attribute caps** and 28 lower bounds, established two independent ways that
+> **agree where they overlap**: the slider screen's `current / MAX` figure, and a
+> cap breaker ladder ending in a padlock (which means it hit the ceiling). The
+> builder's "Original Cap" column is *not* a cap — it is what the player
+> allocated. Scored against those 35, the linear model is **6.3 points off** and
+> reads high on 24 of them; it was not refit, so every other frame carries that
+> error and the UI says so per frame.
+>
+> **The build budget is the wrong shape, and we know it.** 2K27 has no point
+> pool — the builder says *"Fill to a 99 Overall to Continue"*, so the real cost
+> of an attribute point is its weight in the per-position OVR formula. Those
+> weights are unpublished, so an invented pool stands in. **Every "costs N points"
+> figure in this app is ordinal, not cardinal.**
 >
 > **Still invented:** attribute **cap magnitudes on untranscribed frames**, **cost
 > curves**, the **build point budget**, the badge **token-earning formula**, the
@@ -183,12 +190,14 @@ file changes the app's behaviour with no code change.
 
 ## Known limitations
 
-- **Caps are proven on three frames, and only partly even there.** 31 attribute
-  caps are derived from real cap breaker ladders; 32 more are known only as lower
-  bounds; every other frame uses a linear model measured 6.6 points off and
-  biased high. This is still the most valuable thing left to replace — the
-  derivation is documented in [`docs/DATA.md`](docs/DATA.md), and it is *not* a
-  matter of copying the attribute page.
+- **Caps are proven on three frames, and only partly even there.** 35 attribute
+  caps are proven; 28 more are known only as lower bounds; every other frame uses
+  a linear model measured 6.3 points off and biased high. The derivation is
+  documented in [`docs/DATA.md`](docs/DATA.md), and it is *not* a matter of
+  copying the attribute page.
+- **The budget is modelled as a point pool; the game uses a 99-OVR target.** The
+  per-position OVR weights are unpublished, so point costs are a ranking rather
+  than a quantity. This is now the weakest part of the dataset.
 - **How many cap breakers you get is unknown.** The per-slot *gains* are read
   straight off the builder and are exact. The app assumes a shared pool of five
   across all attributes, which is the conservative of the two readings the

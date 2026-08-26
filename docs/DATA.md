@@ -54,22 +54,34 @@ Three builds, with their full cap breaker tables:
 | SG 6'8" / 190 lb / 6'8" | 2-Way Playmaking Creator |
 | SG 6'5" / 200 lb / 6'8" | 2-Way Off-Screen Shooter |
 
-**How caps are derived from these, because it is not obvious.** The builder's
-attribute page shows what a player *allocated*, not what the frame allows — and
-the Cap Breaker page's first column, labelled "Original Cap", is the same
-number. What actually exposes a ceiling is the **padlock**: a cap breaker ladder
-that ends in a locked slot has run into the cap, so that row's New Cap *is* the
-cap. A ladder that spends all five slots without locking merely ran out of
-slots, and gives only a lower bound.
+**How caps are derived, because it is not obvious.** The builder's attribute
+page shows what a player *allocated*, not what the frame allows — and the Cap
+Breaker page's first column, labelled "Original Cap", is the same number. Two
+things do expose a real ceiling:
 
-That yields **31 proven caps** (`caps`) and **32 lower bounds** (`capFloors`).
-The proven ones are coherent across the three frames in a way the raw columns
-never were — Three-Point 93 / 92 / 91 and Perimeter Defense 96 / 87 / 77 fall
-with height, Block 67 / 75 / ≥90 rises, Steal runs 99 / 84 / 67. That coherence
-is the evidence the derivation is right.
+| route | what it is |
+| --- | --- |
+| `builder-max` | The attribute **slider screen** prints `current / MAX` beside each attribute. Direct. |
+| `ladder-lock` | A cap breaker ladder ending in a **locked slot** has run into the cap, so that row's New Cap *is* the cap. |
 
-Scored against those 31, the linear model has a mean absolute error of **6.6
-points** and reads high on **24 of 31**. On 8 further attributes it claimed a
+A ladder that spends all five slots *without* locking merely ran out of slots,
+and gives only a lower bound.
+
+**The two routes agree where they overlap**, which is what licenses the second
+one. On the 6'5" frame the slider screen reads Three-Point **93 / 93**, and that
+attribute's cap breaker ladder is locked at **93**. The other four slider maxima
+are all consistent with their ladder-derived floors — Mid-Range max 96 vs ≥95,
+Free Throw 99 vs ≥95, Pass Accuracy 99 vs ≥75, Ball Handle 95 vs ≥75 — with no
+contradictions.
+
+That yields **35 proven caps** (`caps`) and **28 lower bounds** (`capFloors`),
+with `capEvidence` recording which route proved each. The proven ones are
+coherent across frames in a way the raw columns never were — Three-Point
+93 / 92 / 91 and Perimeter Defense 96 / 87 / 77 fall with height, Block
+67 / 75 / ≥90 rises, Steal runs 99 / 84 / 67.
+
+Scored against those 35, the linear model has a mean absolute error of **6.3
+points** and reads high on **24 of 35**. On 7 further attributes it claimed a
 ceiling *below* a proven floor; `computeCaps` now lifts a modelled cap to any
 floor, so that class of error is gone.
 
@@ -81,12 +93,31 @@ attribute to three bodies produces something that looks calibrated and is not.
 > 6'5" guard, 86 on a 6'8" guard and 75 on a 6'11" big — those columns track the
 > *archetype*, not the body.
 
+### The budget is the wrong shape, and we know it
+
+2K27's builder has **no point pool**. It shows an Overall meter and *"Fill to a
+99 Overall to Continue"*. The real constraint is `OVR(attributes) = 99`, so the
+cost of a point in an attribute is that attribute's **weight in the per-position
+OVR formula**.
+
+The app still uses an invented flat point pool. That is the same *shape* of
+constraint — spend a scarce resource across attributes — which is why the
+optimizer's knapsack still works, but the exchange rates are fiction.
+
+> **Consequence for anyone reading a build:** every "costs N points" figure in
+> this app is **ordinal, not cardinal**. The ranking of which upgrades are cheap
+> is roughly right; the absolute numbers are not.
+
+Fill in `budget.json` → `actualMechanic.positionWeights` and the invented pool
+can be deleted outright. Nothing supplied so far publishes those weights.
+
 ### Not sourced (assume wrong)
 
 - **Attribute caps on any frame with no transcribed build.** Only directions are
-  known, not magnitudes, and the magnitudes measure ~6.6 points off where they
+  known, not magnitudes, and the magnitudes measure ~6.3 points off where they
   can be checked.
-- **Cost curves and the build point budget.**
+- **The per-position OVR weights**, which are the real budget.
+- **Cost curves**, and the point-pool budget standing in for the OVR target.
 - **The badge token earning formula** and the per-discipline slot split.
 - **How many cap breakers a player may claim**, and **badge boost slot counts**.
   The per-slot cap breaker *gains* are verified; the *budget* for them is not.
