@@ -388,6 +388,19 @@ export default function App() {
           <CrossCheckPanel reports={payload.crossChecks} />
         </div>
       </div>
+
+      <footer className="site-footer">
+        <p>
+          Unofficial fan-made tool. Not affiliated with, endorsed by, or sponsored by 2K, Visual
+          Concepts, Take-Two Interactive or the NBA. <em>NBA 2K27</em> and <em>MyPLAYER</em> are
+          trademarks of their respective owners. No game assets or code are redistributed here.
+        </p>
+        <p>
+          Attribute thresholds come from community sources and from builds read off the NBA 2K HQ
+          app; several values are still estimates, and each is labelled in the app. Verify anything
+          you are about to spend VC on against the in-game builder.
+        </p>
+      </footer>
     </div>
   );
 }

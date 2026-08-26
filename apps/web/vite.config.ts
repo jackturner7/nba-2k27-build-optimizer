@@ -4,7 +4,13 @@ import { defineConfig } from 'vite';
 
 const API_TARGET = process.env.API_TARGET ?? 'http://localhost:4000';
 
+// GitHub Pages serves a project site from /<repo>/, so assets need that prefix.
+// Any other static host (or the API deployment) serves from the root, so the
+// default stays '/' and BASE_PATH is set only for Pages.
+const BASE_PATH = process.env.BASE_PATH ?? '/';
+
 export default defineConfig({
+  base: BASE_PATH,
   plugins: [react()],
   resolve: {
     alias: {
@@ -22,5 +28,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // The dataset is inlined into the bundle in static mode, which pushes the
+    // main chunk past Vite's default warning. That is the intended trade: one
+    // slightly larger download buys an app with no backend to run.
+    chunkSizeWarningLimit: 900,
   },
 });

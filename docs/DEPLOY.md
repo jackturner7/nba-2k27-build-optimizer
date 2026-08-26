@@ -1,6 +1,46 @@
 # Deploying
 
-The whole app is **one container**: an Express process that serves the JSON API
+There are **two deployment modes**, and the app supports both from one codebase.
+
+| | static | container |
+| --- | --- | --- |
+| Where the search runs | the visitor's browser, in a Web Worker | your server |
+| Hosting | any static host — GitHub Pages, Netlify, S3 | any container host |
+| Cost / ops | free, nothing to run | a process to keep alive |
+| Saturation risk | none — a slow search costs only its own tab | shared CPU, hence the rate limiting and queue below |
+| Updating data | rebuild | rebuild, or mount a volume and hit `/reload` |
+
+They run **the same engine**. The core package's public entry has no node
+builtins, so `optimize()` in the browser is not a reduced version of the server
+one — it is the same code, gated by the same dataset.
+
+**Static is the better fit for this app** and is what the Pages workflow
+deploys. It is a read-only calculator with no accounts, no persistence and no
+secrets; there is no reason to put a server in the path. The container mode
+stays supported for anyone who wants an API to call from elsewhere.
+
+## Static (GitHub Pages)
+
+`.github/workflows/pages.yml` deploys on every push to `main`. It runs
+`data:validate`, `data:crosscheck` and the tests first, so a malformed dataset
+fails the deploy rather than shipping. `actions/configure-pages` is set to
+`enablement: true`, so it switches Pages on itself the first time it runs — no
+manual setup.
+
+The site lands at `https://<owner>.github.io/<repo>/`. `index.html` is copied to
+`404.html` because Pages serves files rather than routes, and without it a
+refresh on a deep link would 404.
+
+To build it yourself:
+
+```bash
+npm run build:static          # apps/web/dist, ready for any static host
+BASE_PATH=/my-repo/ npm run build:static   # for a subpath
+```
+
+## Container
+
+The container mode is **one container**: an Express process that serves the JSON API
 and the built React UI from the same port. There is no database, no cache, and
 no external service — the dataset is JSON files baked into the image.
 
@@ -144,14 +184,17 @@ what you do not want exposed anonymously on the internet.
 
 ---
 
-## Before you make it public
+## Positioning
 
-One thing here is a judgement call rather than a task, and it is not mine to
-make: **positioning**. "NBA 2K27" and "MyPLAYER" are 2K trademarks. This is an
-unofficial fan tool that reads community data; it does not redistribute game
-assets or code. Most such tools carry a visible disclaimer naming the trademark
-owner and disclaiming affiliation. There is no such notice in the UI right now.
-Decide whether you want one before the URL is public, not after.
+The UI carries a footer disclaiming affiliation with 2K, Visual Concepts,
+Take-Two and the NBA, naming *NBA 2K27* and *MyPLAYER* as trademarks of their
+owners, and noting that no game assets or code are redistributed. It also tells
+visitors that several values are estimates and to check anything they are about
+to spend VC on against the in-game builder.
 
-The dataset banner already tells users which numbers are sourced and which are
-invented, which is the other half of not misleading anyone.
+That is the standard shape for a fan tool and it is deliberately quiet. Edit or
+remove it in `apps/web/src/App.tsx` (`.site-footer`) if you want different
+wording — but do that as a decision, not by accident.
+
+The dataset banner covers the other half of not misleading anyone: which numbers
+are sourced, which are invented, and that point costs are ordinal.

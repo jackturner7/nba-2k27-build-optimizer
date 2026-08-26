@@ -134,8 +134,18 @@ npm run build && npm start    # API serves the built UI on :4000
 
 ## Deploying
 
-The whole app is one container — Express serving the JSON API and the built UI
-from the same port. No database, no cache, no external service.
+Two modes, one codebase, **the same engine in both** — the core package's public
+entry has no node builtins, so `optimize()` runs unchanged in a browser.
+
+**Static** (what the Pages workflow deploys, and the better fit): the optimizer
+is compiled into the bundle and runs in a Web Worker, so there is no backend at
+all. Free to host, nothing to keep alive, and no shared CPU to saturate.
+
+```bash
+npm run build:static   # apps/web/dist — drop on any static host
+```
+
+**Container**, if you want an API to call from elsewhere:
 
 ```bash
 docker build -t 2k27-optimizer .

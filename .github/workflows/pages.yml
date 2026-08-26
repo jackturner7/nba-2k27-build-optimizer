@@ -1,0 +1,79 @@
+name: Deploy to GitHub Pages
+
+# The app has no backend in this mode: the engine's public entry has no node
+# builtins, so the optimizer is compiled into the bundle and runs in a Web
+# Worker. That makes a static host sufficient, and Pages needs no account,
+# token or card beyond the repository itself.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let a newer one wait rather than cancelling a
+# release that is already mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The dataset is compiled into the bundle here, so it gets the same gate
+      # the container build applies: a malformed cap table or an undocumented
+      # source conflict must fail the deploy, not ship.
+      - name: Validate dataset
+        run: npm run data:validate
+
+      - name: Cross-check dataset against independent sources
+        run: npm run data:crosscheck
+
+      - name: Test
+        run: npm test
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          # Turns Pages on if it has never been enabled, so there is no manual
+          # setup step before the first deploy.
+          enablement: true
+
+      - name: Build static site
+        # A project site is served from /<repo>/, so assets need that prefix.
+        run: BASE_PATH="${{ steps.pages.outputs.base_path }}/" npm run build:static
+
+      # Pages serves files, not routes: a deep link would 404 on refresh without
+      # this, because there is no server to fall back to index.html. Copying it
+      # to 404.html makes Pages serve the SPA for any unknown path.
+      - name: Add SPA fallback
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
