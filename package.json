@@ -22,7 +22,8 @@
     "typecheck": "tsc -b packages/core apps/api apps/web",
     "data:validate": "npm run data:validate -w @2k27/core",
     "data:report": "npm run data:report -w @2k27/core",
-    "data:crosscheck": "npm run data:crosscheck -w @2k27/core"
+    "data:crosscheck": "npm run data:crosscheck -w @2k27/core",
+    "build:static": "npm run build -w @2k27/core && npm run build:static -w @2k27/web"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

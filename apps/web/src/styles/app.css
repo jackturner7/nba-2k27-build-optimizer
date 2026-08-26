@@ -1019,3 +1019,18 @@ select {
   border-radius: 2px;
   display: inline-block;
 }
+
+/* Legal footer. Deliberately quiet — present and readable, never competing with
+   the builder for attention. */
+.site-footer {
+  margin: 32px auto 24px;
+  padding: 18px 20px 0;
+  max-width: 900px;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+.site-footer p { margin: 0 0 8px; }
+.site-footer em { font-style: italic; }
