@@ -2,12 +2,12 @@
   "$schema": "../schema/meta.schema.json",
   "datasetId": "2k27",
   "gameTitle": "NBA 2K27",
-  "datasetVersion": "0.7.0-caps-corrected",
+  "datasetVersion": "0.8.0-caps-confirmed",
   "schemaVersion": 2,
-  "lastUpdated": "2026-08-25",
+  "lastUpdated": "2026-08-26",
   "provenance": {
     "status": "partial",
-    "headline": "MECHANICS ARE OFFICIAL AND BADGES ARE CORROBORATED. Three builds now give PROVEN caps for 31 attribute/frame pairs. A previous release published one player's ALLOCATION as caps — that is corrected here.",
+    "headline": "MECHANICS ARE OFFICIAL, BADGES CORROBORATED, AND 35 ATTRIBUTE CAPS ARE PROVEN BY TWO INDEPENDENT ROUTES THAT AGREE. The build-point budget is now known to be the WRONG SHAPE: 2K27 asks you to fill to 99 Overall.",
     "explanation": [
       "OFFICIAL (from https://nba.2k.com/2k27/features/myplayer-builder/):",
       "  - 53 badges (matches this dataset exactly), across six disciplines.",
@@ -25,12 +25,21 @@
       "READ OFF THE REAL BUILDER (NBA 2K HQ app) — three builds:",
       "  - PF 6'11\"/210/6'11\" (BUCKET CHASER), SG 6'8\"/190/6'8\" (2-WAY PLAYMAKING CREATOR) and",
       "    SG 6'5\"/200/6'8\" (2-WAY OFF-SCREEN SHOOTER), with their full Cap Breaker tables.",
-      "  - 31 attribute caps PROVEN. The Cap Breaker page is what exposes a ceiling: a ladder that ends in a",
-      "    LOCKED slot has run into the frame's cap, so its New Cap IS the cap. A ladder that spends all five",
-      "    slots without locking only gives a lower bound, and those 32 are stored as capFloors.",
-      "  - The derived caps are coherent across the three frames in a way the raw columns were not:",
-      "    Three-Point 93/92/91 and Perimeter Defense 96/87/77 fall with height, Block 67/75/>=90 rises.",
-      "  - The linear model, scored against those 31: 6.6 mean absolute error, high on 24 of 31.",
+      "  - 35 attribute caps PROVEN, by two independent routes that AGREE where they overlap:",
+      "      'builder-max' — the slider screen prints 'current / MAX' beside each attribute;",
+      "      'ladder-lock' — a cap breaker ladder ending in a LOCKED slot has reached the ceiling.",
+      "    Three-Point on the 6'5\" frame is 93 by both. That agreement is what licenses the ladder rule",
+      "    everywhere else. A ladder that spends all five slots without locking gives a lower bound only.",
+      "  - The derived caps are coherent across frames: Three-Point 93/92/91 and Perimeter Defense 96/87/77",
+      "    fall with height, Block 67/75/>=90 rises, Steal runs 99/84/67.",
+      "  - The linear model, scored against those 35: 6.3 mean absolute error, high on 24 of 35.",
+      "  - THE BUDGET MECHANIC: the builder shows an OVR meter and 'Fill to a 99 Overall to Continue'. There",
+      "    is no point pool. The real constraint is OVR(attributes) = 99, and the cost of a point is that",
+      "    attribute's weight in the per-position OVR formula. Those weights are NOT published, so the app",
+      "    still uses an invented point pool of the same shape. See budget.json -> actualMechanic.",
+      "  - The builder also shows a token count per discipline AT BUILD CREATION that tracks the allocation",
+      "    (19 Shooting / 5 Playmaking on the 6'5\" build). This tensions with 2K's 'tokens are earned by",
+      "    playing'; both may hold. Recorded in badge-tokens.json -> observedAtBuildCreation, not acted on.",
       "",
       "SOURCED + CORROBORATED:",
       "  - All 53 badges' requirements, AND/OR logic and HEIGHT RANGES from NBA 2K Lab, cross-checked",
@@ -39,10 +48,10 @@
       "    SINGLE-BODY SNAPSHOT — 2K says cost varies by size, so they are only exact at one height.",
       "  - Animation and takeover thresholds from a community 'best value thresholds' sheet.",
       "",
-      "NOT SOURCED (assume wrong): attribute CAP magnitudes on any frame with no transcribed build,",
-      "per-point COST CURVES, the BUILD POINT BUDGET, the size of the token pool at any progression level,",
-      "the per-discipline slot split, the height/position token cost adjustment, and HOW MANY cap breakers",
-      "a player may claim (the per-slot GAINS are verified; the budget for them is not).",
+      "NOT SOURCED (assume wrong): attribute CAP magnitudes on any frame with no transcribed build, the",
+      "per-position OVR WEIGHTS that are the real budget, per-point COST CURVES, the size of the token pool",
+      "at any progression level, the per-discipline slot split, the height/position token cost adjustment,",
+      "and HOW MANY cap breakers a player may claim (the per-slot GAINS are verified; the budget is not).",
       "",
       "KNOWN GAPS: 15 of the 19 unlockable Takeover Abilities have no known requirements and are absent.",
       "Token costs for the 11 Rebounding/Physicals badges are inferred from the pattern of the other 42."
@@ -63,10 +72,22 @@
     "lastReviewed": "2026-08-25"
   },
   "uiWarnings": {
-    "globalBanner": "Mechanics and badge data are sourced — 2K's official builder page plus two independent badge charts. Three builds read off the NBA 2K HQ app give 31 PROVEN attribute caps across three frames, plus lower bounds on the rest; every other frame uses a model measured 6.6 points off and biased high. COST CURVES and the BUILD POINT BUDGET are still placeholders.",
+    "globalBanner": "Mechanics and badge data are sourced. 35 attribute caps across three frames are PROVEN from the NBA 2K HQ app — by the slider screen's max and by cap-breaker lock-out, which agree where they overlap — plus lower bounds on the rest; other frames use a model measured 6.3 points off and biased high. The BUILD POINT BUDGET is the weakest part left: 2K27 actually constrains you to fill to 99 Overall, and the OVR weights are unknown, so treat every 'costs N points' figure as a ranking, not a quantity.",
     "showPerRecordBadges": true
   },
   "changelog": [
+    {
+      "version": "0.8.0-caps-confirmed",
+      "date": "2026-08-26",
+      "changes": [
+        "CONFIRMED THE CAP DERIVATION. The builder's attribute slider screen prints 'current / MAX' beside each attribute, which is a cap read directly. On the 6'5\" frame it says Three-Point 93/93 — exactly what 0.7.0 derived from that attribute's cap breaker ladder locking at 93. Two independent routes, same number. Every other slider figure is consistent too: Mid-Range max 96 against a derived floor of >=95, Free Throw 99 against >=95, Pass Accuracy 99 against >=75, Ball Handle 95 against >=75. No contradictions.",
+        "Added those five direct readings as exact caps, taking the proven total from 31 to 35, and added capEvidence recording which route proved each one.",
+        "Model accuracy re-scored against the larger set: 6.3 mean absolute error over 35 caps, high on 24.",
+        "THE BUILD POINT BUDGET IS THE WRONG SHAPE, and now demonstrably so. 2K27's builder has no point pool — it shows an Overall meter and 'Fill to a 99 Overall to Continue'. The real constraint is OVR(attributes) = 99, so the cost of an attribute point is its weight in the per-position OVR formula. Those weights are not published anywhere supplied, so the invented pool stays as a same-shaped stand-in, with the real mechanic recorded in budget.json -> actualMechanic. Consequence for readers: every 'costs N points' figure in the app is ORDINAL, not cardinal.",
+        "Recorded that the builder shows a badge-token count per discipline AT BUILD CREATION which tracks the allocation (19 Shooting, 5 Playmaking on the 6'5\" build). This tensions with 2K's official 'tokens are earned by playing'; a build may start with attribute-derived tokens and earn more later. The current linear-by-investment model fits both counts exactly at freeBelow 64 / pointsPerToken 3 — but that is two parameters on two observations, so nothing was changed. The other four discipline counts from the same build would be a real test.",
+        "Added 2K's published build-name vocabulary (45 names). It is explicitly partial: two observed names are absent from it entirely, and a third appears only with a '2-Way' prefix the app did not show."
+      ]
+    },
     {
       "version": "0.7.0-caps-corrected",
       "date": "2026-08-25",

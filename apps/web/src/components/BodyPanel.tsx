@@ -104,8 +104,15 @@ export function BodyPanel({
       />
 
       <div className="summary-grid" style={{ marginTop: 4 }}>
-        <div className="summary-cell">
-          <div className="k">Build points</div>
+        <div
+          className="summary-cell"
+          title={
+            dataset.budget.actualMechanic
+              ? `The real builder has no point pool — it asks you to ${dataset.budget.actualMechanic.uiText.toLowerCase()}. This number stands in for that, and its scale is invented.`
+              : undefined
+          }
+        >
+          <div className="k">Build points{dataset.budget.actualMechanic ? ' (stand-in)' : ''}</div>
           <div className="v">{Number.isFinite(budget) ? budget : '∞'}</div>
         </div>
         <div className="summary-cell">
@@ -135,6 +142,7 @@ function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }
   if (exact) {
     const proven = Object.keys(exact.caps).length;
     const floors = Object.keys(exact.capFloors).length;
+    const direct = Object.values(exact.capEvidence).filter((e) => (e ?? '').includes('builder-max')).length;
     return (
       <>
         {inGameName && (
@@ -144,8 +152,10 @@ function CapsProvenance({ dataset, body }: { dataset: Dataset; body: BuildBody }
           </div>
         )}
         <div className="row-note severity-info" style={{ marginTop: 10 }}>
-          ✅ <strong>{proven} caps proven</strong> from the real builder — a cap breaker ladder that
-          runs into a locked slot has hit this frame's ceiling.
+          ✅ <strong>{proven} caps proven</strong> from the real builder
+          {direct > 0
+            ? ` — ${direct} read straight off the slider screen's maximum, the rest from a cap breaker ladder running into a locked slot.`
+            : " — a cap breaker ladder that runs into a locked slot has hit this frame's ceiling."}
           {floors > 0 && (
             <>
               {' '}

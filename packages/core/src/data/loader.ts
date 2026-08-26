@@ -272,8 +272,8 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
     }
     for (const [id, floor] of Object.entries(entry.capFloors)) {
       const exact = entry.caps[id];
-      if (exact !== undefined) {
-        err('caps.json', `Cap override "${key}" gives "${id}" both an exact cap (${exact}) and a floor (${floor}); it can only be one.`);
+      if (exact !== undefined && floor !== undefined && floor > exact) {
+        err('caps.json', `Cap override "${key}" gives "${id}" a floor of ${floor} above its exact cap of ${exact}.`);
       }
     }
     const covered = new Set([...Object.keys(entry.caps), ...Object.keys(entry.capFloors)]);
@@ -323,20 +323,30 @@ export function checkReferentialIntegrity(ds: Dataset): DataIssue[] {
       }
 
       // A ladder that ends in a lock has reached the frame's ceiling, which is
-      // exactly how the caps in caps.json were derived. They must agree.
+      // one of the two routes the caps in caps.json were derived by. Where the
+      // slider screen also printed a maximum they must agree — that agreement is
+      // what validates the ladder rule in the first place.
       const locked = row.slots.some((s) => s === null);
-      const derived = entry?.caps[id];
-      if (locked && entry && derived !== row.newCap) {
+      const exact = entry?.caps[id];
+      if (locked && entry && exact !== row.newCap) {
         err(
           'cap-breakers.json',
-          `Gain table "${key}" row "${id}" locks at ${row.newCap}, so that is the cap for ${table.body} — but caps.json ${derived === undefined ? 'does not record it as an exact cap' : `says ${derived}`}.`
+          `Gain table "${key}" row "${id}" locks at ${row.newCap}, so that is the cap for ${table.body} — but caps.json ${exact === undefined ? 'does not record it as an exact cap' : `says ${exact}`}.`
         );
       }
-      if (!locked && entry && entry.capFloors[id] !== row.newCap) {
-        err(
-          'cap-breakers.json',
-          `Gain table "${key}" row "${id}" never locks, so ${row.newCap} is only a floor for ${table.body} — but caps.json ${entry.capFloors[id] === undefined ? 'does not record it as a floor' : `says ${entry.capFloors[id]}`}.`
-        );
+      // A ladder that never locks ran out of slots, so its newCap is a lower
+      // bound — unless the slider screen gave the real maximum, which supersedes it.
+      if (!locked && entry) {
+        if (exact !== undefined) {
+          if (row.newCap > exact) {
+            err('cap-breakers.json', `Gain table "${key}" row "${id}" reaches ${row.newCap}, above the cap of ${exact} recorded for ${table.body}.`);
+          }
+        } else if (entry.capFloors[id] !== row.newCap) {
+          err(
+            'cap-breakers.json',
+            `Gain table "${key}" row "${id}" never locks, so ${row.newCap} is only a floor for ${table.body} — but caps.json ${entry.capFloors[id] === undefined ? 'does not record it as a floor' : `says ${entry.capFloors[id]}`}.`
+          );
+        }
       }
     }
   }

@@ -403,28 +403,52 @@ describe('evaluation report', () => {
     expect(errors.some((e) => e.message.includes('does not add up'))).toBe(true);
   });
 
-  it('derives every exact cap from a ladder that locks, and every floor from one that does not', () => {
-    // This is the invariant the 0.7.0 correction turned on: a locked slot means
-    // the ladder hit the frame's ceiling, so its newCap IS the cap; a ladder that
-    // spends all five slots without locking only proves a lower bound.
+  it('derives caps by two independent routes that agree where they overlap', () => {
+    // Route 1, the ladder lock: a cap breaker slot that padlocks means the
+    // ladder hit the frame's ceiling, so its newCap IS the cap.
+    // Route 2, the builder max: the slider screen prints "current / MAX".
+    // Three-Point on the 6'5" frame is 93 by both, which is what licenses
+    // route 1 everywhere else. A ladder that never locks only proves a floor,
+    // unless route 2 supplied the real cap for that attribute.
     let exact = 0;
     let floors = 0;
+    let corroborated = 0;
     for (const table of Object.values(ds.capBreakers.gainTables.entries)) {
       const entry = ds.caps.overrides[table.body];
       expect(entry).toBeDefined();
       for (const [id, row] of Object.entries(table.attributes)) {
+        const cap = entry!.caps[id];
         if (row.slots.some((s) => s === null)) {
-          expect(entry!.caps[id]).toBe(row.newCap);
+          expect(cap).toBe(row.newCap);
           exact++;
+          if ((entry!.capEvidence[id] ?? '').includes('builder-max')) corroborated++;
+        } else if (cap !== undefined) {
+          // The builder printed the max outright; the ladder just ran out of slots.
+          expect(row.newCap).toBeLessThanOrEqual(cap);
         } else {
           expect(entry!.capFloors[id]).toBe(row.newCap);
-          expect(entry!.caps[id]).toBeUndefined();
           floors++;
         }
       }
     }
     expect(exact).toBeGreaterThan(20);
     expect(floors).toBeGreaterThan(20);
+    // At least one attribute must be proven both ways, or route 1 is unvalidated.
+    expect(corroborated).toBeGreaterThan(0);
+  });
+
+  it('records the real budget mechanic even though it cannot use it yet', () => {
+    // 2K27 has no point pool: the builder says "Fill to a 99 Overall to
+    // Continue". The engine still runs an invented pool of the same shape, so
+    // the real mechanic must at least be recorded, and the pool must still be
+    // labelled unverified so no reader mistakes its numbers for facts.
+    const actual = ds.budget.actualMechanic;
+    expect(actual).toBeDefined();
+    expect(actual!.kind).toBe('overall-target');
+    expect(actual!.targetOverall).toBe(99);
+    expect(ds.budget.verification.status).toBe('unverified');
+    // The moment these weights are filled in, the invented pool can go.
+    expect(Object.keys(actual!.positionWeights.entries).length).toBe(0);
   });
 
   it('never reports a cap below a rating the builder was seen to reach', () => {

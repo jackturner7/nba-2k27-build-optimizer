@@ -1,38 +1,71 @@
 {
   "$comment": [
-    "PLACEHOLDER DATA — see meta.json.",
-    "NBA 2K does not display a 'total build points' number in the builder UI; the constraint is",
-    "expressed through per-attribute caps and escalating upgrade costs. This app models the spend",
-    "budget explicitly because an optimizer needs one. If 2K27 turns out to have no shared budget at",
-    "all, set `enabled` to false and the engine will optimize against caps alone.",
+    "THE BUDGET MECHANIC IS NOW KNOWN; ITS NUMBERS ARE NOT.",
+    "",
+    "The 2K27 builder does not give you a pool of points to spend. It shows an OVERALL meter and the",
+    "instruction 'Fill to a 99 Overall to Continue'. You raise attributes, each raise moves your OVR,",
+    "and the build is finished when OVR reaches 99. (Screenshot: NBA 2K HQ app builder, 2026-08-26.)",
+    "",
+    "So the real constraint is OVR(attributes) = 99 under the per-attribute caps, and the 'cost' of a",
+    "point in an attribute is that attribute's WEIGHT IN THE OVERALL FORMULA for your position. That is",
+    "a budget — a weighted-sum equality constraint — but it is not the one this file models.",
+    "",
+    "WHAT THIS FILE STILL DOES: a flat point pool priced by cost-curves.json. It is the same SHAPE of",
+    "constraint (spend a scarce resource across attributes) which is why the optimizer's knapsack still",
+    "works, but the exchange rates are invented and the target is a made-up 2900 rather than 99 OVR.",
+    "",
+    "TO FIX IT PROPERLY you need the per-position OVR weights. Nothing in the supplied sources publishes",
+    "them. Until then, treat every 'costs N points' figure in this app as ORDINAL, not cardinal: the",
+    "ranking of which upgrades are cheap is roughly right, the absolute numbers are not.",
     "",
     "budget = base + perInchHeight*(h-ref) + perPoundWeight*(w-ref) + perInchWingspan*(ws-ref) + positionAdjust"
   ],
-
   "enabled": true,
-  "verification": { "status": "unverified", "notes": "The entire budget concept and every number here is invented." },
-
+  "verification": {
+    "status": "unverified",
+    "source": "The 99-OVR mechanic is confirmed from the NBA 2K HQ app builder (2026-08-26); the point-pool model below is not.",
+    "notes": "The MECHANIC is sourced and is an OVR target, not a point pool. Every NUMBER in this file is invented, and the model is known to be the wrong shape."
+  },
   "referenceBody": {
     "heightInches": 78,
     "weightPounds": 215,
     "wingspanInches": 80
   },
-
   "base": 2900,
   "perInchHeight": 0,
   "perPoundWeight": 0,
   "perInchWingspan": 0,
-  "positionAdjust": { "PG": 0, "SG": 0, "SF": 0, "PF": 0, "C": 0 },
+  "positionAdjust": {
+    "PG": 0,
+    "SG": 0,
+    "SF": 0,
+    "PF": 0,
+    "C": 0
+  },
   "minimum": 200,
-
   "notes": [
     "Body modifiers are all zero on purpose: in the NBA 2K series body settings move CAPS, not the",
     "spending pool. They are exposed here anyway so you can model a budget effect if 2K27 has one.",
     "",
     "`base` is calibrated against the invented cost curves in cost-curves.json so that a plausible",
-    "full build — four or five elite attributes plus a functional spread everywhere else — is exactly",
-    "affordable. It is a joint fiction with those curves: changing one without the other will make",
-    "builds look either impossibly stacked or absurdly bare. Recalibrate both together against real",
-    "2K27 numbers."
-  ]
+    "full build is exactly affordable. It is a joint fiction with those curves: changing one without",
+    "the other will make builds look either impossibly stacked or absurdly bare.",
+    "",
+    "Both become obsolete the moment `actualMechanic.positionWeights` is filled in."
+  ],
+  "actualMechanic": {
+    "$comment": "Recorded so the shape of the real constraint is not lost, even though the engine cannot yet use it.",
+    "kind": "overall-target",
+    "targetOverall": 99,
+    "uiText": "Fill to a 99 Overall to Continue",
+    "verification": {
+      "status": "verified",
+      "source": "NBA 2K HQ app MyPLAYER builder attribute screen, screenshot supplied 2026-08-26.",
+      "notes": "The OVR meter and the 'Fill to a 99 Overall to Continue' instruction are read directly off the builder. The per-position OVR weights that would make this computable are NOT known."
+    },
+    "positionWeights": {
+      "$comment": "attribute id -> weight in the OVR formula, per position. Empty: not known. Fill this in and the optimizer can drop the invented point pool entirely.",
+      "entries": {}
+    }
+  }
 }

@@ -42,6 +42,22 @@ export function DataBanner({
         </div>
       </div>
 
+      {dataset.budget.actualMechanic && (
+        <div className="banner">
+          <span className="icon">📏</span>
+          <div style={{ flex: 1 }}>
+            <strong>Point costs are a ranking, not a quantity.</strong>
+            <p>
+              The real 2K27 builder has no point pool — it asks you to{' '}
+              <em>{dataset.budget.actualMechanic.uiText}</em>, so an attribute point really costs its
+              weight in the per-position Overall formula. Those weights are unpublished, so this app
+              substitutes an invented pool of the same shape. Trust which upgrades it calls cheap;
+              do not trust the numbers next to them.
+            </p>
+          </div>
+        </div>
+      )}
+
       {errors.length > 0 && (
         <div className="banner error">
           <span className="icon">⛔</span>

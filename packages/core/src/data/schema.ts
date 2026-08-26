@@ -216,10 +216,12 @@ export const capsSchema = z.object({
         z.object({
           label: z.string().default(''),
           verification,
-          /** Proven ceilings: a cap breaker ladder that ended in a locked slot. */
+          /** Proven ceilings — see capEvidence for which route proved each. */
           caps: z.record(z.string(), z.number()).default({}),
           /** Proven lower bounds: a ladder that ran out of slots before locking. */
           capFloors: z.record(z.string(), z.number()).default({}),
+          /** How each exact cap was established: 'ladder-lock', 'builder-max', or both. */
+          capEvidence: z.record(z.string(), z.string()).default({}),
         })
       )
       .default({}),
@@ -229,6 +231,20 @@ export const capsSchema = z.object({
 export const budgetSchema = z.object({
   enabled: z.boolean(),
   verification,
+  /**
+   * The real 2K27 constraint: raise attributes until OVR hits 99. Recorded so
+   * the shape of the constraint is not lost, but the engine cannot use it until
+   * the per-position OVR weights are known.
+   */
+  actualMechanic: z
+    .object({
+      kind: z.string(),
+      targetOverall: z.number(),
+      uiText: z.string().default(''),
+      verification,
+      positionWeights: z.object({ entries: z.record(z.string(), z.record(z.string(), z.number())).default({}) }),
+    })
+    .optional(),
   referenceBody: z.object({
     heightInches: z.number(),
     weightPounds: z.number(),
@@ -284,6 +300,26 @@ export const badgesSchema = z.object({
 });
 
 export const badgeTokensSchema = z.object({
+  /**
+   * Per-discipline token counts read off the real builder at build creation.
+   * These tension against 2K's "tokens are earned by playing" statement, so they
+   * are recorded as observations rather than folded into the model.
+   */
+  observedAtBuildCreation: z
+    .object({
+      verification,
+      samples: z.array(
+        z.object({
+          body: z.string(),
+          build: z.string().default(''),
+          counts: z.record(z.string(), z.number()),
+          missing: z.array(z.string()).default([]),
+          attributesAtSample: z.record(z.string(), z.number()).default({}),
+        })
+      ),
+      candidateFit: z.record(z.string(), z.unknown()).optional(),
+    })
+    .optional(),
   enabled: z.boolean(),
   verification,
   disciplines: z.array(z.string()),
@@ -514,6 +550,15 @@ export const archetypesSchema = z.object({
     .object({
       verification,
       entries: z.record(z.string(), z.string()).default({}),
+      /** 2K's published build-name vocabulary. Partial — see the file's notes. */
+      knownNames: z
+        .object({
+          verification,
+          count: z.number().int(),
+          names: z.array(z.string()),
+          observedButNotListed: z.array(z.string()).default([]),
+        })
+        .optional(),
     })
     .optional(),
   archetypes: z.array(
