@@ -132,6 +132,27 @@ For a single-process production build:
 npm run build && npm start    # API serves the built UI on :4000
 ```
 
+## Deploying
+
+The whole app is one container — Express serving the JSON API and the built UI
+from the same port. No database, no cache, no external service.
+
+```bash
+docker build -t 2k27-optimizer .
+docker run -p 8080:8080 2k27-optimizer
+```
+
+The image build runs `data:validate`, `data:crosscheck`, `typecheck`, `test` and
+`build` before it will produce anything, so a malformed cap table fails the build
+rather than shipping an app that optimizes against nonsense. CI runs the same
+checks and then smoke-tests the built server and the image.
+
+Everything is optional environment variables, and the app defends itself against
+the one thing that can hurt it — a burst of searches, which are synchronous CPU
+work — with per-IP rate limiting plus a bounded queue that refuses rather than
+queues. See [`docs/DEPLOY.md`](docs/DEPLOY.md), including why event-loop lag
+turned out to be the wrong signal for that and queue depth is the right one.
+
 ### Working on the data
 
 ```bash

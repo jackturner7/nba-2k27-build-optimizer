@@ -1,0 +1,45 @@
+# Example host config. The Dockerfile is the deployable unit and works on any
+# container platform; this is one worked example so there is something concrete
+# to copy. `fly launch --no-deploy` will rewrite app/region to your own.
+
+app = "nba-2k27-build-optimizer"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  # The process is stateless, so capacity is horizontal. Node runs JavaScript on
+  # one thread whatever the machine size, so two small machines beat one large.
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    # The app refuses past MAX_QUEUE_DEPTH itself; these are the outer bounds at
+    # which Fly starts another machine rather than piling onto this one.
+    soft_limit = 8
+    hard_limit = 20
+
+  [[http_service.checks]]
+    path = "/api/health"
+    interval = "15s"
+    # Generous on purpose: an in-flight search is uninterruptible CPU and can
+    # delay a response by its own duration. That is saturation, not a fault.
+    timeout = "3s"
+    grace_period = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Matches the server's own 10s shutdown backstop, so in-flight requests finish.
+kill_signal = "SIGTERM"
+kill_timeout = "15s"

@@ -1,0 +1,14 @@
+# Build inputs come from the repo; everything below is either regenerated in the
+# image, irrelevant to it, or must never be baked into it.
+node_modules
+**/node_modules
+**/dist
+.git
+.github
+*.log
+.env
+.env.*
+.DS_Store
+docs
+README.md
+*.md

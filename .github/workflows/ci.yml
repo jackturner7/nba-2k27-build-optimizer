@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A newer push to the same branch makes the older run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The dataset is the product, so it is checked before the code that reads
+      # it. `data:crosscheck` fails on any disagreement between sources that is
+      # not recorded with a note — a conflict may be accepted, never ignored.
+      - name: Validate dataset
+        run: npm run data:validate
+
+      - name: Cross-check dataset against independent sources
+        run: npm run data:crosscheck
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Proves the thing that actually gets deployed starts, serves the UI, and
+      # reports healthy — the failure a green unit-test run will not catch.
+      - name: Smoke-test the production server
+        run: |
+          NODE_ENV=production PORT=4999 node apps/api/dist/server.js &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -sf localhost:4999/api/health >/dev/null && break
+            sleep 1
+          done
+          curl -sf localhost:4999/api/health | tee /dev/stderr | grep -q '"ok":true'
+          curl -sf localhost:4999/ | grep -qi '<div id="root"'
+          curl -sf -X POST -H 'Content-Type: application/json' \
+            -d '{"body":{"position":"SG","heightInches":80,"weightPounds":190,"wingspanInches":80},"priorities":{"three_point_shooting":90}}' \
+            localhost:4999/api/datasets/2k27/optimize | grep -q '"builds"'
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: nba-2k27-build-optimizer:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run it and check health
+        run: |
+          docker run -d --name app -p 8080:8080 nba-2k27-build-optimizer:ci
+          for i in $(seq 1 30); do
+            curl -sf localhost:8080/api/health >/dev/null && break
+            sleep 1
+          done
+          curl -sf localhost:8080/api/health | grep -q '"ok":true'
+          docker logs app
+          docker rm -f app

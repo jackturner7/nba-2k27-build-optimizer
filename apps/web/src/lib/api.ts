@@ -62,6 +62,17 @@ export function reloadDataset(id: string): Promise<{ reloaded: boolean; errors: 
   return request(`/datasets/${id}/reload`, { method: 'POST' });
 }
 
+export interface HealthReport {
+  ok: boolean;
+  /** False in production unless a RELOAD_TOKEN is configured server-side. */
+  reloadEnabled: boolean;
+  load: { pending: number; peakPending: number; admittedTotal: number; shedTotal: number; eventLoopLagMs: number };
+}
+
+export function fetchHealth(): Promise<HealthReport> {
+  return request('/health');
+}
+
 export function runOptimize(id: string, body: OptimizeRequest): Promise<OptimizeResult> {
   return request<OptimizeResult>(`/datasets/${id}/optimize`, {
     method: 'POST',
