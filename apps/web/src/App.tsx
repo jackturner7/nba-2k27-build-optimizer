@@ -195,6 +195,11 @@ export default function App() {
       <header className="app-header">
         <h1>NBA 2K27 MyPLAYER Build Optimizer</h1>
         <span className="sub">threshold-aware allocation</span>
+        {/* The full notice is in the footer; this is the above-the-fold version,
+            so nobody has to scroll to learn the tool is unofficial. */}
+        <span className="unofficial" title="Not affiliated with, endorsed by, or sponsored by 2K, Visual Concepts, Take-Two Interactive or the NBA.">
+          Unofficial fan tool · not affiliated with 2K
+        </span>
         <div className="header-spacer" />
         <div className="seg" style={{ width: 260 }}>
           <button className={mode === 'builder' ? 'active' : ''} onClick={() => setMode('builder')}>
