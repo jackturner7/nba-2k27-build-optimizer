@@ -12,7 +12,7 @@ import {
   type OptimizeResult,
   type ParseNote,
 } from '@2k27/core';
-import { describeBuild, fetchDataset, reloadDataset, runOptimize, type DatasetPayload } from './lib/api';
+import { describeBuild, fetchDataset, fetchHealth, reloadDataset, runOptimize, type DatasetPayload } from './lib/api';
 import { BodyPanel } from './components/BodyPanel';
 import { BuildCard } from './components/BuildCard';
 import { DataBanner } from './components/DataBanner';
@@ -44,6 +44,9 @@ export default function App() {
   const [payload, setPayload] = useState<DatasetPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
+  // Reload rewrites server state, so it is disabled in production unless a
+  // RELOAD_TOKEN is set. Hide the button rather than offer a guaranteed 404.
+  const [reloadEnabled, setReloadEnabled] = useState(true);
 
   const [mode, setMode] = useState<Mode>('builder');
   const [body, setBody] = useState<BuildBody | null>(null);
@@ -77,6 +80,12 @@ export default function App() {
   }, []);
 
   const dataset = payload?.dataset ?? null;
+
+  useEffect(() => {
+    fetchHealth()
+      .then((h) => setReloadEnabled(h.reloadEnabled))
+      .catch(() => setReloadEnabled(false));
+  }, []);
 
   const handleReload = useCallback(async () => {
     setReloading(true);
@@ -203,6 +212,7 @@ export default function App() {
         issues={payload.issues}
         onReload={handleReload}
         reloading={reloading}
+        reloadEnabled={reloadEnabled}
       />
 
       <div className="layout">

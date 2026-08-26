@@ -135,6 +135,11 @@ Nothing in the application code hard-codes a game value. The optimizer, the
 scoring model, the natural-language parser and the UI all read from these JSON
 files, so replacing a file changes the app's behaviour with no code change.
 
+In a deployed container the dataset is baked into the image, and the Docker
+build refuses to produce one if `data:validate` or `data:crosscheck` fails. To
+change data without rebuilding, mount a volume and point `DATA_ROOT` at it —
+see [`DEPLOY.md`](DEPLOY.md).
+
 ---
 
 ## The workflow

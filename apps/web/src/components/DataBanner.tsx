@@ -11,12 +11,14 @@ export function DataBanner({
   issues,
   onReload,
   reloading,
+  reloadEnabled = true,
 }: {
   dataset: Dataset;
   verification: VerificationReport;
   issues: DataIssue[];
   onReload: () => void;
   reloading: boolean;
+  reloadEnabled?: boolean;
 }) {
   const errors = issues.filter((i) => i.severity === 'error');
   const unverifiedPct = Math.round(verification.unverifiedShare * 100);
@@ -36,9 +38,11 @@ export function DataBanner({
           <div>
             {dataset.meta.datasetId} v{dataset.meta.datasetVersion}
           </div>
-          <button className="btn small" style={{ marginTop: 6 }} onClick={onReload} disabled={reloading}>
-            {reloading ? <span className="spinner" /> : 'Reload data'}
-          </button>
+          {reloadEnabled && (
+            <button className="btn small" style={{ marginTop: 6 }} onClick={onReload} disabled={reloading}>
+              {reloading ? <span className="spinner" /> : 'Reload data'}
+            </button>
+          )}
         </div>
       </div>
 
